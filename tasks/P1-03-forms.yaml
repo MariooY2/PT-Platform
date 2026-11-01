@@ -1,0 +1,82 @@
+id: P1-03
+title: Form builder, intake on first login, check-in review queue
+phase: 1
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-01
+depends_on: [P1-01]
+
+objective: >
+  Coaches build intake and weekly check-in forms; new clients complete the intake on first login; the
+  coach reviews responses in a queue and replies. Per docs/features.md §7.7, docs/ui/screens/
+  program-builder.md (Forms builder), client-app.md (Check-in), coach.md (Check-in review).
+
+context:
+  - docs/features.md               # §7.7
+  - docs/data-model.md             # §5 forms, form_responses, checkin_schedules
+  - docs/security.md               # §6 RLS
+  - docs/ui/screens/program-builder.md  # Forms builder
+  - docs/ui/screens/client-app.md       # Check-in (one question per screen on mobile)
+  - docs/ui/screens/coach.md            # Check-in review queue
+  - docs/ui/patterns.md, docs/ui/copy.md
+
+scope:
+  - supabase/migrations/<new>_forms.sql        # forms, form_responses, checkin_schedules + RLS + grants + indexes + default-forms trigger on trainers insert
+  - supabase/seed.sql                          # default intake + weekly check-in for the already-seeded trainers
+  - src/lib/supabase/types.ts                  # regenerated via pnpm db:types
+  - src/features/forms/**                       # schemas (Zod; the questions jsonb shape), server actions, components
+  - src/app/coach/(app)/forms/**               # replace the P0-05 placeholder: forms list + builder
+  - src/app/coach/(app)/checkins/**            # replace the P0-05 placeholder: review queue + reply
+  - src/app/client/(app)/layout.tsx            # intake gate: redirect a client with a pending intake to /client/checkin/[id]
+  - src/app/client/checkin/[id]/**             # the client fill-in screen (outside the (app) shell)
+  - tests/rls/forms.ts, tests/e2e/ (forms + intake + review spec), tests/unit (questions schema)
+
+constraints:
+  - New tables → new migration, enable RLS, policies per §6, `pnpm db:types`, RLS tests. Never edit a committed migration.
+  - RLS: forms — trainer owns their forms (trainer_id = auth.uid()); a client reads their trainer's forms (via an is_trainer_of-style link). form_responses — the trainer reads/updates all of their own (coach_reply, reviewed_at); the client reads their own and may UPDATE their own ONLY while submitted_at is null (`using (client_id = auth.uid() and submitted_at is null)`). checkin_schedules — trainer-only. Admin per §6.
+  - Each trainer has exactly one default intake and one default weekly check-in (is_default), created by a trigger on trainers insert and backfilled in seed.sql for existing trainers.
+  - The "intake on first login" gate lives in src/app/client/(app)/layout.tsx (a server-side redirect to /client/checkin/[id] while an intake form_response is unsubmitted), NOT on the Today page — so it does not collide with P1-09's habits on Today.
+  - The questions jsonb is validated with a Zod schema (types text|long_text|number|scale|choice|yes_no|photo|weight per §5); answers validated server-side; trainer_id/client_id from the session.
+  - Tokens only; every data view has loading/empty/no-results/error states; the check-in fill is one question per screen on mobile with ≥44px targets; 360 px first; copy per docs/ui/copy.md.
+  - Server Components reading the session: `await connection()` or Suspense (L-002). Browser Supabase config via a server action, not process.env (L-003).
+
+acceptance:
+  - id: A1
+    claim: forms, form_responses, checkin_schedules exist with RLS; a trigger creates a default intake + weekly check-in per trainer; seeded trainers have them
+    evidence: migration; tests/rls/forms.ts; a count/seed assertion
+  - id: A2
+    claim: RLS isolation — a trainer reads/manages only their forms + responses; a client reads their trainer's forms, reads their own responses, and can update a response only while unsubmitted; another client/trainer is denied
+    evidence: step test:rls (incl. the submitted_at lock)
+  - id: A3
+    claim: A coach builds a form (add/reorder/remove questions of each type) and previews it
+    evidence: e2e as coach
+  - id: A4
+    claim: A new client is redirected to the intake on first login and, after submitting, is no longer redirected and lands on Today
+    evidence: e2e (invited→accepted client: redirected, submit, then Today)
+  - id: A5
+    claim: The check-in review queue lists responses oldest-unreviewed first; the coach replies and it is marked reviewed and leaves the queue
+    evidence: e2e as coach
+  - id: A6
+    claim: All views have loading/empty/no-results/error states; the mobile check-in is one question per screen with ≥44px targets; screenshots at 360/1280 light+dark; zero axe; verify --full green with regenerated types
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A7
+    claim: The screens match the specs and the checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs: [docs/ui/screens/program-builder.md, docs/ui/screens/client-app.md, docs/ui/screens/coach.md]
+  routes:
+    - { path: /coach/forms, as: coach, states: [default] }
+    - { path: /coach/checkins, as: coach, states: [default, empty] }
+  gallery_states: []
+
+approval_required:
+  - A new Postgres extension or a dependency not already pre-approved
+
+out_of_scope:
+  - Photo upload inside a response beyond the existing storage pattern (reuse where trivial; otherwise a follow-up)
+  - Weekly check-in scheduling automation / notifications (P1-10 / Phase 3) — this task builds the forms, intake and review, not the due-date cron
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 50

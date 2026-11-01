@@ -1,0 +1,75 @@
+id: P1-09
+title: Habits — coach sets them, client ticks them on Today
+phase: 1
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-01
+depends_on: [P1-01]
+
+objective: >
+  A coach defines habits for a client (name, target, unit); the client sees their active habits on the
+  Today screen and ticks them off, optimistically. Per docs/features.md §7.6 / docs/ui/screens/client-app.md.
+
+context:
+  - docs/data-model.md              # §5 habits, habit_logs (unique (habit_id, log_date))
+  - docs/security.md                # §6 RLS
+  - docs/ui/screens/client-app.md   # Today: Habits ("tap to tick, optimistic")
+  - docs/ui/screens/coach.md        # Client profile (where the coach manages habits)
+  - docs/ui/patterns.md, docs/ui/copy.md
+
+scope:
+  - supabase/migrations/<new>_habits.sql      # habits, habit_logs + RLS + grants + indexes
+  - src/lib/supabase/types.ts                 # regenerated via pnpm db:types
+  - src/features/habits/**                     # schemas (Zod), server actions, components
+  - src/app/client/(app)/page.tsx              # add a Habits section (above the install card)
+  - src/app/coach/(app)/clients/[id]/**        # a Habits manager on the client profile (add/edit/deactivate)
+  - tests/rls/habits.ts, tests/e2e/ (habits spec), tests/unit for the tick/upsert helper
+
+constraints:
+  - New tables → new migration, enable RLS, policies per §6, `pnpm db:types`, RLS tests. Never edit a committed migration.
+  - RLS: a trainer manages (CRUD) habits for clients they are is_trainer_of; the client reads their own habits and reads/writes their own habit_logs; admin per §6.
+  - The Today tick is optimistic and idempotent — it UPSERTs on the unique (habit_id, log_date); a double-tap must not raise 23505.
+  - Server actions validate with Zod; client_id/trainer_id come from the session, never the browser.
+  - Tokens only; each data view has loading/empty/no-results/error states; 360 px first; copy per docs/ui/copy.md.
+  - A Server Component that reads the Supabase session in its body must `await connection()` first or wrap the read in Suspense (L-002).
+  - Browser-side Supabase calls get config from a server action, not process.env (L-003).
+
+acceptance:
+  - id: A1
+    claim: habits and habit_logs tables exist with RLS; habit_logs has unique (habit_id, log_date)
+    evidence: migration; tests/rls/habits.ts
+  - id: A2
+    claim: RLS isolation — a trainer sees/manages only their clients' habits; a client reads only their own habits and writes only their own habit_logs; another client/trainer is denied
+    evidence: step test:rls
+  - id: A3
+    claim: The client Today screen shows the client's active habits, each tappable to tick for today; the tick is optimistic and persists after reload
+    evidence: e2e as client
+  - id: A4
+    claim: Ticking the same habit twice (or re-ticking after reload) upserts on (habit_id, log_date) and never raises a unique-violation
+    evidence: e2e + unit test on the upsert path
+  - id: A5
+    claim: A coach adds, edits and deactivates a habit for a client from the client profile; it appears/stops appearing on the client's Today
+    evidence: e2e as coach then client
+  - id: A6
+    claim: Habits views have loading/empty/no-results/error states; screenshots at 360/1280 light+dark; zero axe; verify --full green with regenerated types
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A7
+    claim: The screens match the spec and the checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs: [docs/ui/screens/client-app.md, docs/ui/screens/coach.md]
+  routes:
+    - { path: /client, as: client, states: [default] }
+    - { path: /coach/clients/33333333-0000-0000-0000-000000000001, as: coach, states: [habits] }
+  gallery_states: []
+
+approval_required:
+  - A new Postgres extension or a dependency not already pre-approved
+
+out_of_scope:
+  - Habit streaks / analytics (later); nutrition (Phase 3)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 35

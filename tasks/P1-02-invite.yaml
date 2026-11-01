@@ -1,0 +1,75 @@
+id: P1-02
+title: Invite clients by email and link, CSV import
+phase: 1
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-01
+depends_on: [P1-01]
+
+objective: >
+  A coach invites clients: by a copy-able link (with a WhatsApp share), by email, and by importing a
+  CSV of emails. Wires the (currently disabled) "Invite client" button on the Clients list. Per
+  docs/features.md §7.2 and docs/ui/screens/coach.md (Clients invite dialog). The invite link + token
+  flow already exists (trainer_clients.invite_email/invite_token, the /invite/[token] route from P0-04);
+  this task is the coach-side creation UI + CSV + the email template behind a provider interface.
+
+context:
+  - docs/features.md               # §7.2 invite/import
+  - docs/ui/screens/coach.md       # Clients → Invite dialog (email / copy-link tabs, WhatsApp share, Import from CSV)
+  - docs/data-model.md             # §5 trainer_clients (invite_email, invite_token, status, source)
+  - docs/security.md               # §6 — client_id is service-role/invite-accept only (D-010/D-014)
+  - docs/payments.md               # D-003 provider-interface-with-a-mock pattern to mirror for email
+  - docs/ui/patterns.md, docs/ui/copy.md
+
+scope:
+  - src/features/clients/components/invite-client-button.tsx   # replace the disabled stub with the real dialog trigger
+  - src/features/clients/components/invite-dialog.tsx          # email / copy-link tabs + WhatsApp share + CSV import
+  - src/features/clients/{invite-actions,invite-schemas}.ts    # create invite(s), generate token, CSV parse (papaparse, server-side)
+  - src/lib/email/**                                           # provider interface + mock (logs) + a react-email invite template
+  - supabase/seed.sql                                          # optional: nothing new required
+  - tests/rls/ (invite import isolation), tests/e2e/ (invite spec), tests/unit (CSV parse, token)
+
+constraints:
+  - No new table — invites live on trainer_clients (invite_email, invite_token unique, status 'invited', source 'invite'|'import'). A trainer may create invite rows but can NEVER set client_id (D-010/D-014) — imports create 'invited'/'lead' rows only.
+  - CSV is parsed server-side only (papaparse), Zod-validated per row, with a sensible row cap; invalid rows are reported, not silently dropped; trainer_id comes from the session.
+  - Email send goes through a provider interface with a `mock` that logs (mirror D-003). The real send (Resend) needs RESEND_API_KEY (a secret) and a verified domain — that is a (human) acceptance line, not built here.
+  - Tokens only; dialog has loading/empty/error states; 360 px first; copy per docs/ui/copy.md. No secret reaches the browser.
+  - Server Components reading the session: `await connection()` or Suspense (L-002). Browser Supabase config via a server action, not process.env (L-003).
+
+acceptance:
+  - id: A1
+    claim: The Clients "Invite client" button opens a dialog with a copy-link tab (token link + WhatsApp share) and an email tab; creating a link invite writes an 'invited' trainer_clients row with a unique token
+    evidence: e2e as coach (link created, row present, token on the row)
+  - id: A2
+    claim: Importing a CSV of emails creates one 'invited'/'lead' row per valid email (source 'import'); invalid rows are reported; a row that tries to set client_id is rejected
+    evidence: e2e + unit (CSV parse) + tests/rls (import cannot set client_id → 42501/ignored)
+  - id: A3
+    claim: Email invites render a react-email template and are sent through the provider; with the mock provider the send is logged (no real email); the real Resend send is a (human) line
+    evidence: unit/integration on the mock provider; (human) for the real send
+  - id: A4
+    claim: Invite creation validates every input with Zod; trainer_id is from the session; duplicate email to the same trainer is handled with a specific message, not a crash
+    evidence: e2e + unit
+  - id: A5
+    claim: The dialog has loading/error states; screenshots at 360/1280 light+dark; zero axe; verify --full green
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A6
+    claim: The screens match the spec and the checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs: [docs/ui/screens/coach.md]
+  routes:
+    - { path: /coach/clients, as: coach, states: [invite-dialog] }
+  gallery_states: []
+
+approval_required:
+  - Setting RESEND_API_KEY / verifying a sending domain (real email send)
+  - A dependency not already pre-approved
+
+out_of_scope:
+  - The real Resend send (human: key + domain) — the mock provider stands in locally (mirrors D-003)
+  - Bulk re-invite / reminder scheduling (later)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 40

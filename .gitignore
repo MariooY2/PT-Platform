@@ -26,3 +26,4 @@ _scaffold/
 # Worktrees made for parallel builders, and the autopilot switch (local state)
 .claude/worktrees/
 .harness/autopilot-state.json
+.harness/full-verify.log
