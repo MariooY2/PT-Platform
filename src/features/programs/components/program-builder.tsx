@@ -120,7 +120,7 @@ export function ProgramBuilder({
       </div>
 
       {/* Week tabs */}
-      <div className="flex flex-wrap gap-1" role="tablist" aria-label="Weeks">
+      <div className="flex flex-wrap gap-1" role="group" aria-label="Weeks">
         {Array.from({ length: program.weeks }, (_, i) => i + 1).map((w) => (
           <Button
             key={w}

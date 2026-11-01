@@ -12,6 +12,13 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-025 — a habit tick toggles (tap again to untick) and "today" is server-derived from the client's timezone (2026-11-01, decided by: autopilot (D-006))
+Why: on the client Today screen, tapping a habit logs it for today (idempotent UPSERT on the unique
+(habit_id, log_date)); tapping a ticked habit unticks it (deletes the log), mirroring the workout
+player's "undo by tapping again". The log_date is computed server-side from the client's profile
+timezone (date-fns-tz), never the browser, so the rendered state and the action agree across reloads.
+Affects: src/features/habits/ (setHabitTickAction, lib.todayFor), P1-09. (From the P1-09 builder; adopt at merge.)
+
 ## D-024 — on /coach/exercises the empty-state primary is consolidated into the always-present header action (2026-11-01, decided by: autopilot (D-006))
 Why: patterns.md §States puts the one primary action inside the EmptyState, but the global library is
 never truly empty (only the "My exercises" view can be), and rendering a New exercise button both in the

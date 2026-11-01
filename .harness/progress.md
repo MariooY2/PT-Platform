@@ -14,9 +14,9 @@ parked (done locally; `(human)` lines wait in approvals.md) · blocked.
 | P1-01 | Clients list and profile | done | 3 | [receipt](receipts/P1-01.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); D-019/D-020/D-021; tabs+checkbox variant fix (L-004) |
 | P1-04 | Exercise library and global seed | done | 3 | [receipt](receipts/P1-04.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); ~148 seed; D-023/D-024; videoUrl http(s) refine |
 | P1-13 | PWA manifest and install prompt | done | 2 | [receipt](receipts/P1-13.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); D-022; manifest + install card + og icons |
-| P1-02 | Invite by email and link, CSV import | building | 0 | — | No schema; builder on app code from base e1f57407 |
+| P1-02 | Invite by email and link, CSV import | building | 0 | — | NEEDS-SCHEMA: branch worktree-agent-acb06619a91ff6a5e HEAD 092d58d7; needs a migration `alter trainer_clients alter invite_expires_at set default (now()+interval '14 days')` (else app-created invites are born expired — D-015) before merge; email via mock provider (EMAIL_PROVIDER env), real send (human) |
 | P1-03 | Form builder, intake, check-in review | building | 0 | — | Schema lane done (e1f57407); builder on app code from base e1f57407 |
-| P1-09 | Habits (coach sets, client ticks) | building | 0 | — | Schema lane done (e1f57407); builder on app code from base e1f57407 |
+| P1-09 | Habits (coach sets, client ticks) | building | 0 | — | READY-TO-MERGE: branch worktree-agent-a3949902e3d107546 HEAD f3e2d76 (base 9d23e5db); fast verify pass. Queued behind the running P1-05 full verify; merge then add /client default + /coach/clients/[id] habits routes (D-025) |
 | P1-05 | Program builder (grid, editor, quick entry, supersets) | approved | 0 | — | Approved (D-006); schema lane DONE + validated (f764f6e, 7 RLS tests) and quick-entry parser DONE (f500400, 12 unit tests); builder/editor UI remains — runs as its own focused wave after P1-02/03/09 close |
 
 ## Blocked items needing the human
