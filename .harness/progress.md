@@ -17,7 +17,7 @@ parked (done locally; `(human)` lines wait in approvals.md) · blocked.
 | P1-02 | Invite by email and link, CSV import | building | 0 | — | No schema; builder on app code from base e1f57407 |
 | P1-03 | Form builder, intake, check-in review | building | 0 | — | Schema lane done (e1f57407); builder on app code from base e1f57407 |
 | P1-09 | Habits (coach sets, client ticks) | building | 0 | — | Schema lane done (e1f57407); builder on app code from base e1f57407 |
-| P1-05 | Program builder (grid, editor, quick entry, supersets) | approved | 0 | — | Approved (D-006); runs as its own wave AFTER P1-02/03/09 (biggest P1 task); schema + parser + UI split |
+| P1-05 | Program builder (grid, editor, quick entry, supersets) | approved | 0 | — | Approved (D-006); schema lane DONE + validated (f764f6e, 7 RLS tests) and quick-entry parser DONE (f500400, 12 unit tests); builder/editor UI remains — runs as its own focused wave after P1-02/03/09 close |
 
 ## Blocked items needing the human
 
