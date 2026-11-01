@@ -33,10 +33,12 @@ async function signIn(email: string): Promise<DB> {
 
 let trainerA: DB;
 let client1: DB;
+let adminUser: DB;
 
 beforeAll(async () => {
   trainerA = await signIn('trainer.a@ptplatform.test');
   client1 = await signIn('client.one@ptplatform.test');
+  adminUser = await signIn('admin@ptplatform.test');
 });
 
 describe('sign-in', () => {
@@ -158,6 +160,47 @@ describe('client isolation', () => {
       .select();
     expect(denied.error).toBeNull();
     expect(denied.data).toEqual([]);
+  });
+});
+
+describe('trainers table isolation', () => {
+  it("Trainer A reads their own trainers row but not Trainer B's (select → [])", async () => {
+    const own = await trainerA.from('trainers').select('*').eq('id', TRAINER_A);
+    expect(own.error).toBeNull();
+    expect(own.data).toHaveLength(1);
+
+    const other = await trainerA.from('trainers').select('*').eq('id', TRAINER_B);
+    expect(other.error).toBeNull();
+    expect(other.data).toEqual([]);
+  });
+
+  it("Trainer A cannot update Trainer B's trainers row (0 rows, unchanged)", async () => {
+    const res = await trainerA
+      .from('trainers')
+      .update({ business_name: 'hijacked' })
+      .eq('id', TRAINER_B)
+      .select();
+    expect(res.error).toBeNull();
+    expect(res.data).toEqual([]);
+
+    const check = await admin.from('trainers').select('business_name').eq('id', TRAINER_B).single();
+    expect(check.data?.business_name).not.toBe('hijacked');
+  });
+});
+
+describe('admin can read all', () => {
+  it('an admin reads every profile, trainer and link (is_admin)', async () => {
+    const profiles = await adminUser.from('profiles').select('id');
+    expect(profiles.error).toBeNull();
+    expect(profiles.data).toHaveLength(5);
+
+    const trainers = await adminUser.from('trainers').select('id');
+    expect(trainers.error).toBeNull();
+    expect(trainers.data).toHaveLength(2);
+
+    const links = await adminUser.from('trainer_clients').select('id');
+    expect(links.error).toBeNull();
+    expect(links.data).toHaveLength(3);
   });
 });
 

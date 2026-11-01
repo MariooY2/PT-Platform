@@ -1,9 +1,9 @@
 id: P0-02
 title: Local Supabase, base schema, RLS and RLS tests
 phase: 0
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-01
 depends_on: [P0-01]
 
 objective: >
@@ -24,6 +24,7 @@ scope:
   - src/lib/supabase/ (server.ts, browser.ts, admin.ts, types.ts generated)
   - tests/rls/
   - package.json scripts test:rls and db:types (real commands)
+  - playwright.config.ts (scope added: dedicated e2e port 3100 to avoid local collisions, D-009)
 
 constraints:
   - Local stack only. No `supabase link`, no `supabase db push`.
