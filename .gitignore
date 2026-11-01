@@ -27,3 +27,4 @@ _scaffold/
 .claude/worktrees/
 .harness/autopilot-state.json
 .harness/full-verify.log
+.harness/logs/

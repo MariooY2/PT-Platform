@@ -136,14 +136,26 @@ export function ProgramBuilder({
       </div>
 
       {/* Day grid */}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 xl:grid-cols-7">
         {DAYS.map((label, idx) => {
           const day = idx + 1;
           const dayWorkouts = workouts.filter((w) => w.day === day);
           return (
-            <div key={day} className="rounded-xl border bg-card p-2">
-              <p className="px-1 pb-1 text-xs font-medium text-muted-foreground">{label}</p>
-              <ul className="space-y-1">
+            <div key={day} className="flex min-h-24 flex-col rounded-xl border bg-card p-2">
+              <div className="flex items-center justify-between gap-1">
+                <p className="px-1 text-xs font-medium text-muted-foreground">{label}</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Add workout on ${label}`}
+                  disabled={pending}
+                  onClick={() => run(() => addWorkoutAction(program.id, week, day))}
+                >
+                  <Plus className="size-4" aria-hidden />
+                </Button>
+              </div>
+              <ul className="mt-1 space-y-1">
                 {dayWorkouts.map((w) => (
                   <li key={w.id}>
                     <button
@@ -159,16 +171,6 @@ export function ProgramBuilder({
                   </li>
                 ))}
               </ul>
-              <Button
-                type="button"
-                variant="ghost"
-                size="default"
-                className="mt-1 w-full justify-start"
-                disabled={pending}
-                onClick={() => run(() => addWorkoutAction(program.id, week, day))}
-              >
-                <Plus className="size-4" aria-hidden /> Add
-              </Button>
             </div>
           );
         })}
