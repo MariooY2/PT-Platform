@@ -97,7 +97,8 @@ export default async function DevUiPage() {
             <div key={c} className={`size-10 rounded-md ${c}`} title={c} />
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
+        {/* On a card surface: border-input meets 3:1 vs card but not vs the page background (D-012). */}
+        <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card p-4 text-sm">
           <span className="rounded-md border border-border px-3 py-1">border</span>
           <span className="rounded-md border-2 border-input px-3 py-1">input</span>
           <span className="rounded-md border border-border px-3 py-1 outline-2 outline-offset-2 outline-ring">
@@ -175,15 +176,16 @@ export default async function DevUiPage() {
             <Input id="g-disabled" placeholder="Disabled" disabled />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="g-select">Plan</Label>
+            <Label htmlFor="g-select">Client status</Label>
             <Select>
               <SelectTrigger id="g-select">
-                <SelectValue placeholder="Choose a plan" />
+                <SelectValue placeholder="Choose a status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="pro">Pro</SelectItem>
-                <SelectItem value="elite">Elite</SelectItem>
+                <SelectItem value="lead">Lead</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -7,11 +7,14 @@ export type Role = 'anon' | 'coach' | 'coach-empty' | 'client' | 'buyer' | 'admi
 export interface UiRoute {
   path: string;
   as: Role;
-  /** Page states reachable for this route; each is captured + axe-scanned. */
+  /**
+   * Page states to capture + axe-scan, one screenshot each. `default` loads the route plainly;
+   * any other state is reached via `?state=<state>` (the screen reads the param to render it).
+   */
   states: string[];
 }
 
-// Later UI tasks append their routes here; the screenshot + axe suite iterates them.
+// Later UI tasks append their routes here; ui.spec.ts iterates route × state × viewport × theme.
 export const uiRoutes: UiRoute[] = [{ path: '/dev/ui', as: 'anon', states: ['default'] }];
 
 export async function signInAs(_page: Page, role: Role): Promise<void> {

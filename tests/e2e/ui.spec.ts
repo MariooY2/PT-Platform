@@ -20,25 +20,31 @@ async function settle(page: Page) {
 for (const route of uiRoutes) {
   const slug = routeSlug(route.path);
   test.describe(`${route.path}`, () => {
-    for (const theme of THEMES) {
-      for (const vp of VIEWPORTS) {
-        test(`${route.states.join('+')} · ${vp.label} · ${theme}`, async ({ page }) => {
-          await page.emulateMedia({ colorScheme: theme });
-          await page.setViewportSize({ width: vp.width, height: vp.height });
-          await signInAs(page, route.as);
-          await page.goto(route.path);
-          await settle(page);
+    // Capture + axe-scan each state × viewport × theme separately. A non-default state is reached by
+    // the `?state=<state>` query param (screens read it); `default` loads the route plainly.
+    for (const state of route.states) {
+      for (const theme of THEMES) {
+        for (const vp of VIEWPORTS) {
+          test(`${state} · ${vp.label} · ${theme}`, async ({ page }) => {
+            await page.emulateMedia({ colorScheme: theme });
+            await page.setViewportSize({ width: vp.width, height: vp.height });
+            await signInAs(page, route.as);
+            const url =
+              state === 'default' ? route.path : `${route.path}?state=${encodeURIComponent(state)}`;
+            await page.goto(url);
+            await settle(page);
 
-          const dir = join(EVIDENCE_ROOT, slug);
-          mkdirSync(dir, { recursive: true });
-          await page.screenshot({
-            path: join(dir, `${route.states.join('-')}-${vp.label}-${theme}.png`),
-            fullPage: true,
+            const dir = join(EVIDENCE_ROOT, slug);
+            mkdirSync(dir, { recursive: true });
+            await page.screenshot({
+              path: join(dir, `${state}-${vp.label}-${theme}.png`),
+              fullPage: true,
+            });
+
+            const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
+            expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
           });
-
-          const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
-          expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
-        });
+        }
       }
     }
   });
@@ -54,7 +60,7 @@ test('num utilities use tabular figures (equal width for 000 and 111)', async ({
   expect(Math.abs(zeros!.width - ones!.width)).toBeLessThan(0.5);
 });
 
-test('dialog is accessible, traps and returns focus', async ({ page }) => {
+test('dialog is accessible and returns focus to its trigger on close', async ({ page }) => {
   await page.goto('/dev/ui');
   await settle(page);
   const trigger = page.getByRole('button', { name: 'Open dialog' });
