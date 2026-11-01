@@ -30,7 +30,9 @@ type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 function newQuestion(type: QuestionType): Question {
   const id = `q_${crypto.randomUUID().slice(0, 8)}`;
-  const base = { id, type, label: '', required: false } as Question;
+  // A non-empty default label keeps the form valid so autosave succeeds the moment it's added;
+  // the coach edits the label in place.
+  const base = { id, type, label: 'New question', required: false } as Question;
   if (type === 'choice') base.options = ['Option 1', 'Option 2'];
   return base;
 }

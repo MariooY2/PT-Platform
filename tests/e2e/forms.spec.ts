@@ -84,9 +84,9 @@ test.describe('P1-03 forms, intake, check-ins', () => {
     await signInUi(page, 'trainer.a@ptplatform.test');
     await page.goto('/coach/forms');
 
-    // Start a clean custom form.
+    // Start a clean custom form and wait for it to load (its title is "New form", not "Intake").
     await page.getByRole('button', { name: 'New form' }).click();
-    await expect(page.getByLabel('Form title')).toBeVisible();
+    await expect(page.getByLabel('Form title')).toHaveValue('New form', { timeout: 10_000 });
 
     // Add one question of each type.
     for (const type of [
