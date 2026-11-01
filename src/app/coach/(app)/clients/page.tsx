@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { connection } from 'next/server';
 import { PageHeader } from '@/components/shared/page-header';
 import { ListSkeleton } from '@/components/shared/states';
 import { createClient } from '@/lib/supabase/server';
@@ -34,6 +35,9 @@ export default async function CoachClientsPage({
 }
 
 async function ClientsData({ initialQuery }: { initialQuery: string }) {
+  // Dynamic data access so Next renders at request time instead of attempting a
+  // prerender that hits Date.now() in Supabase's session load (L-002).
+  await connection();
   const supabase = await createClient();
   const {
     data: { user },
