@@ -76,13 +76,7 @@ export function HabitsManager({ clientId, habits }: { clientId: string; habits: 
         <EmptyState
           icon={ListChecks}
           title="No habits yet"
-          description="Habits you set appear on the client’s Today screen to tick off each day."
-          action={
-            <Button onClick={() => setAddOpen(true)}>
-              <Plus aria-hidden />
-              Add habit
-            </Button>
-          }
+          description="Habits you set appear on the client’s Today screen to tick off each day. Add the first one."
         />
       ) : (
         <ul className="space-y-2">
@@ -113,7 +107,7 @@ export function HabitsManager({ clientId, habits }: { clientId: string; habits: 
                 className="flex min-h-11 items-center gap-3 rounded-md border border-dashed px-3 py-2 text-muted-foreground"
               >
                 <span className="min-w-0 flex-1 truncate">{habit.name}</span>
-                <Button variant="outline" size="sm" onClick={() => setActive(habit, true)}>
+                <Button variant="outline" onClick={() => setActive(habit, true)}>
                   Reactivate
                 </Button>
               </li>
@@ -122,12 +116,7 @@ export function HabitsManager({ clientId, habits }: { clientId: string; habits: 
         </div>
       )}
 
-      <HabitDialog
-        key={addOpen ? 'add-open' : 'add-closed'}
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        clientId={clientId}
-      />
+      <HabitDialog open={addOpen} onOpenChange={setAddOpen} clientId={clientId} />
       <HabitDialog
         key={editing?.id ?? 'edit'}
         open={editing !== null}

@@ -88,7 +88,7 @@ test.describe('P1-09 habits', () => {
     await page.getByLabel('Target (optional)').fill('20');
     await page.getByLabel('Unit (optional)').fill('reps');
     await page.getByRole('button', { name: 'Save habit' }).click();
-    await expect(page.getByText('Habit added.')).toBeVisible();
+    await expect(page.getByText('Habit saved.')).toBeVisible();
     await expect(page.getByText('E2E Pushups')).toBeVisible();
 
     // The client sees the active habit on Today.
@@ -114,18 +114,22 @@ test.describe('P1-09 habits', () => {
     await signInUi(page, clientEmail);
     await page.goto('/client');
 
+    const logCount = async () =>
+      (
+        await admin
+          .from('habit_logs')
+          .select('id')
+          .eq('habit_id', habitId)
+          .eq('client_id', clientId)
+      ).data?.length ?? 0;
+
     const row = page.getByRole('button', { name: /E2E Water/ });
     await expect(row).toHaveAttribute('aria-pressed', 'false');
     await row.click();
     await expect(row).toHaveAttribute('aria-pressed', 'true');
 
-    // The tick landed in habit_logs for today.
-    const { data } = await admin
-      .from('habit_logs')
-      .select('id')
-      .eq('habit_id', habitId)
-      .eq('client_id', clientId);
-    expect(data?.length ?? 0).toBe(1);
+    // The tick lands in habit_logs for today (poll: the server action settles after the optimistic flip).
+    await expect.poll(logCount).toBe(1);
 
     // Persists across a full reload.
     await page.reload();
@@ -136,18 +140,33 @@ test.describe('P1-09 habits', () => {
   });
 
   test('A4: re-ticking never raises a unique violation (idempotent upsert)', async ({ page }) => {
-    await seedHabit('E2E Sleep');
+    const habitId = await seedHabit('E2E Sleep');
     await signInUi(page, clientEmail);
     await page.goto('/client');
 
+    const logCount = async () =>
+      (
+        await admin
+          .from('habit_logs')
+          .select('id')
+          .eq('habit_id', habitId)
+          .eq('client_id', clientId)
+      ).data?.length ?? 0;
+
     const row = page.getByRole('button', { name: /E2E Sleep/ });
-    // Tick, untick, tick again — the upsert/delete path must never surface an error.
+    // Tick → untick → tick again, letting each round-trip settle. The upsert (re-tick) path must
+    // never surface a unique violation, and no round-trip may error.
     await row.click();
     await expect(row).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(logCount).toBe(1);
+
     await row.click();
     await expect(row).toHaveAttribute('aria-pressed', 'false');
+    await expect.poll(logCount).toBe(0);
+
     await row.click();
     await expect(row).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(logCount).toBe(1);
 
     await expect(page.getByText('Something went wrong. Try again.')).toHaveCount(0);
 

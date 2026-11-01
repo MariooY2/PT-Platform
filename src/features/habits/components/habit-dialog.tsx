@@ -38,6 +38,11 @@ export function HabitDialog({
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
+  function handleOpenChange(next: boolean) {
+    if (!next) setError(null);
+    onOpenChange(next);
+  }
+
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -55,13 +60,13 @@ export function HabitDialog({
         setError(res.error);
         return;
       }
-      toast.success(isEdit ? 'Habit updated.' : 'Habit added.');
+      toast.success('Habit saved.');
       onOpenChange(false);
     });
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Edit habit' : 'Add habit'}</DialogTitle>
