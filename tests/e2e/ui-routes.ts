@@ -37,7 +37,7 @@ export const uiRoutes: UiRoute[] = [
   { path: '/coach/earnings', as: 'coach-empty', states: ['empty'] },
   { path: '/coach/more', as: 'coach-empty', states: ['default'] },
   { path: '/coach/settings', as: 'coach-empty', states: ['default'] },
-  { path: '/client', as: 'client', states: ['empty'] },
+  { path: '/client', as: 'client', states: ['empty', 'install-prompt'] },
   { path: '/client/progress', as: 'client', states: ['empty'] },
   { path: '/client/messages', as: 'client', states: ['empty'] },
   { path: '/client/checkins', as: 'client', states: ['empty'] },
