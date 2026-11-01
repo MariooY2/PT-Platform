@@ -1,9 +1,9 @@
 id: P0-04
 title: Authentication, roles, onboarding and role-based routing
 phase: 0
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-01
 depends_on: [P0-03]
 
 objective: >
