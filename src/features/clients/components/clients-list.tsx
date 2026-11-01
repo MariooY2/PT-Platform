@@ -83,7 +83,13 @@ export function ClientsList({
   const [tag, setTag] = useState<string>('all');
 
   const tags = useMemo(() => distinctTags(items), [items]);
-  const filtered = useMemo(() => filterClients(items, { q, status, tag }), [items, q, status, tag]);
+  // Tag option values are namespaced so a user tag literally named "all" can't collide with the
+  // "all tags" sentinel; the raw tag is recovered before filtering.
+  const selectedTag = tag === 'all' ? 'all' : tag.slice(4);
+  const filtered = useMemo(
+    () => filterClients(items, { q, status, tag: selectedTag }),
+    [items, q, status, selectedTag],
+  );
   const filtersActive = q.trim() !== '' || status !== 'all' || tag !== 'all';
 
   function clearFilters() {
@@ -161,7 +167,7 @@ export function ClientsList({
               <SelectContent>
                 <SelectItem value="all">All tags</SelectItem>
                 {tags.map((t) => (
-                  <SelectItem key={t} value={t}>
+                  <SelectItem key={t} value={`tag:${t}`}>
                     {t}
                   </SelectItem>
                 ))}
