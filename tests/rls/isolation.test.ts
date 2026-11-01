@@ -200,7 +200,7 @@ describe('trainers table isolation', () => {
     const res = await client1
       .from('trainers')
       .insert({ id: CLIENT_1, slug: 'sneaky-client', storefront_published: true });
-    expect(res.error).not.toBeNull();
+    expect(res.error?.code).toBe('42501');
 
     const check = await admin.from('trainers').select('id').eq('id', CLIENT_1);
     expect(check.data).toEqual([]);
