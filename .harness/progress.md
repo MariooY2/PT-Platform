@@ -10,8 +10,7 @@ parked (done locally; `(human)` lines wait in approvals.md) · blocked.
 | P0-03 | Design system, UI gallery, screenshot + axe suite | done | 2 | [P0-03](receipts/P0-03.md) | verifier ACCEPT (A1-A7) + ui-reviewer ACCEPT (A8); verify --full green (fp 690cb5d6) |
 | P0-04 | Auth, roles, onboarding, routing | done | 1 | [P0-04](receipts/P0-04.md) | verifier ACCEPT (A1-A5) + ui-reviewer ACCEPT (A6); verify --full green (fp 6579a889) |
 | P0-05 | Navigation and layout shells | done | 2 | [receipt](receipts/P0-05.md) | verify --full green (fp 5eee889c); verifier + ui-reviewer ACCEPT (HEAD 6cbb3ec); D-017/D-018 recorded |
-| P0-06 | CI and Vercel preview | parked | 1 | [receipt](receipts/P0-06.md) | verifier ACCEPT (A1-A4 local); A5-A7 (push, Vercel preview, cloud Supabase) are (human) in approvals.md; verify --full green (fp 5eee889c) |
-| P0-06 | CI and Vercel preview | draft | 0 | — | |
+| P0-06 | CI and Vercel preview | parked | 1 | [receipt](receipts/P0-06.md) | verifier ACCEPT (A1-A4 local); A5-A7 (push, preview deploy, cloud Supabase) are (human) in approvals.md; verify --full green (fp 5eee889c) |
 
 ## Blocked items needing the human
 
