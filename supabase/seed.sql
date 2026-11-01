@@ -200,3 +200,13 @@ insert into public.exercises (name, primary_muscle, secondary_muscles, equipment
   ('Depth jump', 'quads', array['calves'], 'bodyweight', 'plyometric'),
   ('Clap push-up', 'chest', array['triceps'], 'bodyweight', 'plyometric'),
   ('Tuck jump', 'quads', array['core'], 'bodyweight', 'plyometric');
+
+-- Sample template program for Trainer Alpha (P1-05; the Programs empty state references a sample).
+insert into public.programs (id, trainer_id, title, description, weeks, is_template, status) values
+  ('bbbb0000-0000-0000-0000-000000000001', '11111111-0000-0000-0000-000000000001', 'Sample 3-Day Strength', 'A starter template you can duplicate.', 4, true, 'published');
+insert into public.program_workouts (id, program_id, week, day, title, position) values
+  ('bbbb0000-0000-0000-0000-000000000002', 'bbbb0000-0000-0000-0000-000000000001', 1, 1, 'Lower A', 0);
+insert into public.workout_exercises (id, program_workout_id, exercise_id, position) values
+  ('bbbb0000-0000-0000-0000-000000000003', 'bbbb0000-0000-0000-0000-000000000002', (select id from public.exercises where trainer_id is null and name = 'Back squat' limit 1), 0);
+insert into public.prescribed_sets (workout_exercise_id, set_number, set_type, reps_min, reps_max, weight_kg) values
+  ('bbbb0000-0000-0000-0000-000000000003', 1, 'working', 5, 5, 80);

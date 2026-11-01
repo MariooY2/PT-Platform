@@ -231,6 +231,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"prescribed_sets": {
+                  Row: {
+                    "created_at": string,"distance_m": number | null,"duration_sec": number | null,"id": string,"percent_1rm": number | null,"reps_max": number | null,"reps_min": number | null,"rir": number | null,"rpe": number | null,"set_number": number,"set_type": Database["public"]['Enums']["prescribed_set_type"],"weight_kg": number | null,"workout_exercise_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"distance_m"?: number | null,"duration_sec"?: number | null,"id"?: string,"percent_1rm"?: number | null,"reps_max"?: number | null,"reps_min"?: number | null,"rir"?: number | null,"rpe"?: number | null,"set_number": number,"set_type"?: Database["public"]['Enums']["prescribed_set_type"],"weight_kg"?: number | null,"workout_exercise_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"distance_m"?: number | null,"duration_sec"?: number | null,"id"?: string,"percent_1rm"?: number | null,"reps_max"?: number | null,"reps_min"?: number | null,"rir"?: number | null,"rpe"?: number | null,"set_number"?: number,"set_type"?: Database["public"]['Enums']["prescribed_set_type"],"weight_kg"?: number | null,"workout_exercise_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "prescribed_sets_workout_exercise_id_fkey"
+      columns: ["workout_exercise_id"]
+isOneToOne: false
+      referencedRelation: "workout_exercises"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"profiles": {
                   Row: {
                     "avatar_path": string | null,"created_at": string,"full_name": string | null,"id": string,"phone": string | null,"role": Database["public"]['Enums']["user_role"],"timezone": string,"unit_system": Database["public"]['Enums']["unit_system"],"updated_at": string
@@ -244,6 +264,58 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"program_workouts": {
+                  Row: {
+                    "created_at": string,"day": number,"id": string,"notes": string | null,"position": number,"program_id": string,"title": string | null,"updated_at": string,"week": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"day": number,"id"?: string,"notes"?: string | null,"position"?: number,"program_id": string,"title"?: string | null,"updated_at"?: string,"week": number
+                  }
+                  Update: {
+                    "created_at"?: string,"day"?: number,"id"?: string,"notes"?: string | null,"position"?: number,"program_id"?: string,"title"?: string | null,"updated_at"?: string,"week"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "program_workouts_program_id_fkey"
+      columns: ["program_id"]
+isOneToOne: false
+      referencedRelation: "programs"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"programs": {
+                  Row: {
+                    "client_id": string | null,"created_at": string,"description": string | null,"id": string,"is_template": boolean,"source_program_id": string | null,"status": Database["public"]['Enums']["program_status"],"title": string,"trainer_id": string,"updated_at": string,"weeks": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_id"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_template"?: boolean,"source_program_id"?: string | null,"status"?: Database["public"]['Enums']["program_status"],"title": string,"trainer_id": string,"updated_at"?: string,"weeks"?: number
+                  }
+                  Update: {
+                    "client_id"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_template"?: boolean,"source_program_id"?: string | null,"status"?: Database["public"]['Enums']["program_status"],"title"?: string,"trainer_id"?: string,"updated_at"?: string,"weeks"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "programs_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "programs_source_program_id_fkey"
+      columns: ["source_program_id"]
+isOneToOne: false
+      referencedRelation: "programs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "programs_trainer_id_fkey"
+      columns: ["trainer_id"]
+isOneToOne: false
+      referencedRelation: "trainers"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"trainer_clients": {
                   Row: {
@@ -291,13 +363,57 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"workout_exercises": {
+                  Row: {
+                    "created_at": string,"exercise_id": string,"group_label": string | null,"id": string,"notes": string | null,"position": number,"program_workout_id": string,"rest_seconds": number | null,"tempo": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"exercise_id": string,"group_label"?: string | null,"id"?: string,"notes"?: string | null,"position"?: number,"program_workout_id": string,"rest_seconds"?: number | null,"tempo"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"exercise_id"?: string,"group_label"?: string | null,"id"?: string,"notes"?: string | null,"position"?: number,"program_workout_id"?: string,"rest_seconds"?: number | null,"tempo"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "workout_exercises_exercise_id_fkey"
+      columns: ["exercise_id"]
+isOneToOne: false
+      referencedRelation: "exercises"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workout_exercises_program_workout_id_fkey"
+      columns: ["program_workout_id"]
+isOneToOne: false
+      referencedRelation: "program_workouts"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            "has_client_link":
+            "can_edit_program":
+{ Args: { "p": string }; Returns: boolean
+                           },
+"can_edit_wex":
+{ Args: { "x": string }; Returns: boolean
+                           },
+"can_edit_workout":
+{ Args: { "w": string }; Returns: boolean
+                           },
+"can_read_program":
+{ Args: { "p": string }; Returns: boolean
+                           },
+"can_read_wex":
+{ Args: { "x": string }; Returns: boolean
+                           },
+"can_read_workout":
+{ Args: { "w": string }; Returns: boolean
+                           },
+"has_client_link":
 { Args: { "client": string }; Returns: boolean
                            },
 "is_admin":
@@ -314,7 +430,7 @@ isOneToOne: true
                            }
           }
           Enums: {
-            "client_source": "invite"|"purchase"|"import","client_status": "lead"|"invited"|"active"|"paused"|"archived","exercise_category": "strength"|"cardio"|"mobility"|"plyometric"|"other","form_kind": "intake"|"checkin","trainer_plan": "free"|"pro"|"elite","unit_system": "metric"|"imperial","user_role": "admin"|"trainer"|"client"
+            "client_source": "invite"|"purchase"|"import","client_status": "lead"|"invited"|"active"|"paused"|"archived","exercise_category": "strength"|"cardio"|"mobility"|"plyometric"|"other","form_kind": "intake"|"checkin","prescribed_set_type": "warmup"|"working"|"drop"|"amrap","program_status": "draft"|"published","trainer_plan": "free"|"pro"|"elite","unit_system": "metric"|"imperial","user_role": "admin"|"trainer"|"client"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -434,7 +550,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "client_source": ["invite", "purchase", "import"],"client_status": ["lead", "invited", "active", "paused", "archived"],"exercise_category": ["strength", "cardio", "mobility", "plyometric", "other"],"form_kind": ["intake", "checkin"],"trainer_plan": ["free", "pro", "elite"],"unit_system": ["metric", "imperial"],"user_role": ["admin", "trainer", "client"]
+            "client_source": ["invite", "purchase", "import"],"client_status": ["lead", "invited", "active", "paused", "archived"],"exercise_category": ["strength", "cardio", "mobility", "plyometric", "other"],"form_kind": ["intake", "checkin"],"prescribed_set_type": ["warmup", "working", "drop", "amrap"],"program_status": ["draft", "published"],"trainer_plan": ["free", "pro", "elite"],"unit_system": ["metric", "imperial"],"user_role": ["admin", "trainer", "client"]
           }
         }
 } as const
