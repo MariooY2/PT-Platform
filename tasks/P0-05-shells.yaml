@@ -28,6 +28,10 @@ scope:
   - src/app/admin/layout.tsx and placeholder pages
   - src/components/shared/nav/ (AppShell, BottomNav, SideNav, skip link)
   - supabase/seed.sql (new seed accounts only: coach-empty, buyer)
+  - "note: coach-empty already seeded in P0-04; buyer seed DEFERRED to P2-02 — no P0-05 route uses as:buyer, and adding it would re-churn the tests/rls counts"
+  - "note: coach/client layouts live in route groups src/app/coach/(app)/ and src/app/client/(app)/ so /coach/onboarding and the future /client/workout/[id] stay outside the nav shell"
+  - "note: empty-state primary actions (e.g. Clients 'Invite client' / 'Import from CSV') are DEFERRED to their feature tasks (P1+); shells show spec copy only, no dead buttons"
+  - "note: admin mobile nav is a bottom bar of the sidebar destinations (D-017) since patterns.md leaves admin mobile unspecified"
   - tests/e2e/ui-routes.ts (entries), tests/e2e/nav.spec.ts
 
 constraints:
@@ -65,11 +69,27 @@ ui:
     - { path: /client, as: client, states: [empty] }
     - { path: /client/progress, as: client, states: [empty] }
     - { path: /client/messages, as: client, states: [empty] }
+    - { path: /client/checkins, as: client, states: [empty] }
+    - { path: /client/billing, as: client, states: [empty] }
+    - { path: /client/more, as: client, states: [default] }
+    - { path: /client/settings, as: client, states: [default] }
     - { path: /coach/clients, as: coach-empty, states: [empty] }
     - { path: /coach/checkins, as: coach-empty, states: [empty] }
+    - { path: /coach/messages, as: coach-empty, states: [empty] }
     - { path: /coach/programs, as: coach-empty, states: [empty] }
+    - { path: /coach/exercises, as: coach-empty, states: [empty] }
+    - { path: /coach/forms, as: coach-empty, states: [empty] }
+    - { path: /coach/products, as: coach-empty, states: [empty] }
+    - { path: /coach/orders, as: coach-empty, states: [empty] }
+    - { path: /coach/earnings, as: coach-empty, states: [empty] }
+    - { path: /coach/more, as: coach-empty, states: [default] }
+    - { path: /coach/settings, as: coach-empty, states: [default] }
     - { path: /c/demo-coach, as: anon, states: [unpublished-visitor] }
     - { path: /admin, as: admin, states: [default] }
+    - { path: /admin/orders, as: admin, states: [empty] }
+    - { path: /admin/payments, as: admin, states: [empty] }
+    - { path: /admin/payouts, as: admin, states: [empty] }
+    - { path: /admin/settings, as: admin, states: [default] }
   gallery_states: []
 
 approval_required:

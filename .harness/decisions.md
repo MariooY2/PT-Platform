@@ -12,6 +12,16 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-017 — admin mobile navigation is a bottom bar of the sidebar destinations (2026-11-01, decided by: autopilot (D-006))
+Why: `docs/ui/patterns.md` specifies the admin desktop sidebar but leaves mobile as "not optimised;
+usable". The app's shared AppShell needs a mobile nav, so admin reuses its five sidebar destinations
+(Trainers, Orders, Payments, Payouts, Settings) as a labelled bottom bar below `lg`, matching the
+coach/client bottom-bar pattern rather than inventing a new structure.
+Alternatives considered: no mobile nav (sidebar `hidden lg:flex` leaves mobile with no navigation —
+not "usable"); a hamburger drawer (more components, no spec need at this phase).
+Affects: src/components/shared/nav/nav-items.ts (ADMIN_BOTTOM), src/app/admin/layout.tsx, P0-05.
+Flagged for the human in .harness/approvals.md — revert if a different admin mobile nav is wanted.
+
 ## D-013 — inline error text uses destructive-soft-foreground in dark (2026-11-01, decided by: autopilot (D-006))
 Why: axe (WCAG AA) flagged inline error text — dark `--destructive` (#c93c3c) on the dark `--background`
 (#121821) is 3.56:1, below 4.5:1 for normal text. `--destructive` is correct for solid buttons/icons
