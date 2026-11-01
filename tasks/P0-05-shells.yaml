@@ -1,0 +1,83 @@
+id: P0-05
+title: Navigation and layout shells for coach, client, storefront and admin
+phase: 0
+status: draft
+approved_by:
+approved_at:
+depends_on: [P0-04]
+
+objective: >
+  Each area has its navigation and page frame from docs/ui/patterns.md — client bottom tabs, coach
+  bottom tabs on mobile and sidebar on desktop, the storefront frame, the admin sidebar — and every
+  navigation destination exists as a placeholder page with a spec-correct empty state, proven by
+  screenshots, axe and the ui-reviewer.
+
+context:
+  - docs/ui/README.md
+  - docs/ui/patterns.md       # Navigation, Page header, non-happy states
+  - docs/ui/screens/client-app.md
+  - docs/ui/screens/coach.md
+  - docs/ui/screens/storefront.md
+  - docs/ui/copy.md
+  - docs/routes.md            # §4
+
+scope:
+  - src/app/client/layout.tsx and placeholder pages for Today, Progress, Messages, More
+  - src/app/coach/layout.tsx and placeholder pages for every sidebar / More destination
+  - src/app/c/[slug]/layout.tsx and a placeholder storefront page
+  - src/app/admin/layout.tsx and placeholder pages
+  - src/components/shared/nav/ (AppShell, BottomNav, SideNav, skip link)
+  - supabase/seed.sql (new seed accounts only: coach-empty, buyer)
+  - tests/e2e/ui-routes.ts (entries), tests/e2e/nav.spec.ts
+
+constraints:
+  - Navigation labels and groupings exactly as in docs/ui/patterns.md; changes need a decision entry.
+  - Placeholder pages use EmptyState with the copy from the screen specs, not lorem ipsum.
+  - Tokens only; no new primitives without adding them to the /dev/ui gallery.
+
+acceptance:
+  - id: A1
+    claim: Every navigation item reaches its page, and the current item has aria-current="page"
+    evidence: e2e test nav.spec.ts
+  - id: A2
+    claim: Coach shows 5 labelled bottom tabs below 768 px and the grouped sidebar at 1024 px and above; the client app always shows the 4 labelled bottom tabs in a column of at most 560 px
+    evidence: e2e viewport tests + screenshots
+  - id: A3
+    claim: Screenshots exist for every shell and destination at 360 and 1280 px in light and dark
+    evidence: .harness/evidence/ui/
+  - id: A4
+    claim: Zero axe violations on every listed route in both themes
+    evidence: step test:e2e
+  - id: A5
+    claim: Coach pages have a working skip link and a visible focus ring through a full keyboard pass of the navigation
+    evidence: e2e keyboard test
+  - id: A6
+    claim: Shells match the specs and the checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs:
+    - docs/ui/patterns.md
+    - docs/ui/screens/client-app.md
+    - docs/ui/screens/coach.md
+    - docs/ui/screens/storefront.md
+  routes:
+    - { path: /client, as: client, states: [empty] }
+    - { path: /client/progress, as: client, states: [empty] }
+    - { path: /client/messages, as: client, states: [empty] }
+    - { path: /coach/clients, as: coach-empty, states: [empty] }
+    - { path: /coach/checkins, as: coach-empty, states: [empty] }
+    - { path: /coach/programs, as: coach-empty, states: [empty] }
+    - { path: /c/demo-coach, as: anon, states: [unpublished-visitor] }
+    - { path: /admin, as: admin, states: [default] }
+  gallery_states: []
+
+approval_required:
+  - Any navigation structure different from docs/ui/patterns.md
+
+out_of_scope:
+  - Real data on any page (Phase 1 onward)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 50

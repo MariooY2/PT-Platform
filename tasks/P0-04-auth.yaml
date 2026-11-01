@@ -1,0 +1,83 @@
+id: P0-04
+title: Authentication, roles, onboarding and role-based routing
+phase: 0
+status: draft
+approved_by:
+approved_at:
+depends_on: [P0-03]
+
+objective: >
+  A trainer can sign up, finish an onboarding wizard and land on /coach; a trainer can create an
+  invite link that a new user opens to sign up as their client and land on /client; middleware sends
+  every role to its own area and unauthenticated users to /login.
+
+context:
+  - docs/product.md       # §3 Roles and authentication
+  - docs/routes.md        # §4
+  - docs/features.md      # §7.1 Trainer onboarding
+  - docs/architecture.md  # §2 Supabase in Next.js
+  - docs/ui/README.md
+  - docs/ui/screens/auth-onboarding-admin.md
+  - docs/ui/copy.md
+
+scope:
+  - src/app/(auth)/ (login, signup, invite/[token], reset)
+  - src/app/coach/onboarding/
+  - src/middleware.ts, src/lib/supabase/middleware.ts
+  - src/features/auth/, src/features/onboarding/
+  - supabase/migrations/ (new files only, e.g. invite token expiry, signup trigger)
+  - tests/unit/, tests/e2e/auth.spec.ts, tests/rls/
+
+constraints:
+  - Role is set server-side (trigger or server action), never from a client-supplied field.
+  - Slug validation and uniqueness are enforced in the database and in Zod.
+  - Invite tokens expire after 14 days and work once.
+  - Google OAuth code is present but disabled unless its env vars are set; it is not required for acceptance.
+
+acceptance:
+  - id: A1
+    claim: Trainer signup → onboarding → /coach works end to end
+    evidence: e2e test name in .harness/last-verify.json step test:e2e
+    how: "node scripts/verify.mjs --full"
+  - id: A2
+    claim: Invite link → client signup → /client, and the trainer_clients row is active and linked
+    evidence: e2e test + RLS/DB assertion
+  - id: A3
+    claim: A client visiting /coach, a trainer visiting /admin and a signed-out user visiting /client are each redirected correctly
+    evidence: e2e tests
+  - id: A4
+    claim: An expired or reused invite token is rejected
+    evidence: unit or e2e test
+  - id: A5
+    claim: No client-supplied role, trainer ID or slug bypasses validation
+    evidence: verifier
+  - id: A6
+    claim: Login, signup, invite (valid and expired), onboarding steps and the setup checklist match docs/ui/screens/auth-onboarding-admin.md
+    evidence: screenshots + axe in .harness/last-verify.json (test:e2e) and ui-reviewer ACCEPT
+
+ui:
+  specs:
+    - docs/ui/screens/auth-onboarding-admin.md
+  routes:
+    - { path: /login, as: anon, states: [default, error] }
+    - { path: /signup, as: anon, states: [default, slug-taken] }
+    - { path: /invite/valid-token, as: anon, states: [valid, expired] }
+    - { path: /coach/onboarding, as: coach-empty, states: [step-1, step-2, step-3] }
+    - { path: /coach, as: coach-empty, states: [setup-checklist] }
+  gallery_states: []
+
+approval_required:
+  - Changing Supabase auth settings beyond local config (email confirmation, redirect URLs in the cloud project)
+  - Adding an auth library beyond @supabase/ssr
+
+out_of_scope:
+  - The coach and client navigation shells (P0-05)
+  - Phone OTP
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 40
+
+notes: >
+  Local Supabase exposes an Inbucket/Mailpit inbox for confirmation and magic-link emails; e2e tests can
+  read it or the local config can turn email confirmation off for tests.

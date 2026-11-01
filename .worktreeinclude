@@ -1,0 +1,2 @@
+# Gitignored files copied into every worktree Claude creates (parallel builders need local env to run unit tests).
+.env.local

@@ -1,0 +1,71 @@
+id: P0-02
+title: Local Supabase, base schema, RLS and RLS tests
+phase: 0
+status: draft
+approved_by:
+approved_at:
+depends_on: [P0-01]
+
+objective: >
+  The local Supabase stack runs, migrations create profiles, trainers and trainer_clients with RLS
+  policies and helper functions, a seed creates an admin, two trainers and two clients, types are
+  generated, and an RLS test suite proves tenants are isolated.
+
+context:
+  - docs/data-model.md    # §5 Accounts only
+  - docs/security.md      # §6
+  - docs/architecture.md  # §2 DB workflow and conventions
+  - docs/commands.md
+
+scope:
+  - supabase/config.toml (from `supabase init`)
+  - supabase/migrations/ (new files only)
+  - supabase/seed.sql
+  - src/lib/supabase/ (server.ts, browser.ts, admin.ts, types.ts generated)
+  - tests/rls/
+  - package.json scripts test:rls and db:types (real commands)
+
+constraints:
+  - Local stack only. No `supabase link`, no `supabase db push`.
+  - Every `create table` is followed by `enable row level security` and explicit policies.
+  - Helper functions is_admin() and is_trainer_of(uuid) are `security definer`, `stable`, with a fixed search_path.
+  - admin.ts is the only file that reads SUPABASE_SERVICE_ROLE_KEY and is server-only (`import 'server-only'`).
+  - Seed passwords are obvious test values documented in README, never real ones.
+
+acceptance:
+  - id: A1
+    claim: Migrations and seed apply cleanly to a fresh database
+    evidence: command output
+    how: "supabase db reset"
+  - id: A2
+    claim: Generated types match the schema (no diff after regenerating)
+    evidence: command
+    how: "pnpm db:types && git diff --exit-code src/lib/supabase/types.ts"
+  - id: A3
+    claim: RLS suite proves trainer A cannot read or write trainer B's trainer_clients or trainers row; a client cannot read another client's profile; anonymous users read nothing from these tables; admin can read all
+    evidence: test names in .harness/last-verify.json step test:rls (at least 8 cases)
+    how: "node scripts/verify.mjs --full"
+  - id: A4
+    claim: Static RLS check passes (every created table has RLS enabled)
+    evidence: check-architecture step in .harness/last-verify.json
+    how: "node scripts/verify.mjs"
+  - id: A5
+    claim: The verifier finds no policy that grants broader access than §6 describes
+    evidence: verifier
+
+approval_required:
+  - Any change to Supabase project settings outside supabase/config.toml defaults
+  - Adding a Postgres extension
+
+out_of_scope:
+  - Auth UI and middleware (P0-03)
+  - Tables beyond profiles, trainers, trainer_clients
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 25
+
+notes: >
+  Docker Desktop must be running for `supabase start`. RLS tests can sign in as seeded users through
+  the local anon key and assert on query results, or use pgTAP; either is fine if it runs from
+  `pnpm test:rls` against the local stack.

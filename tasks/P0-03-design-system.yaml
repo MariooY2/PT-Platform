@@ -1,0 +1,92 @@
+id: P0-03
+title: Design system foundation, UI gallery and the UI evidence suite
+phase: 0
+status: draft
+approved_by:
+approved_at:
+depends_on: [P0-02]
+
+objective: >
+  docs/ui/design-system.md exists as code — tokens (light and dark), Archivo with its width axis,
+  the num utilities, shadcn/ui restyled through tokens, the product primitives and formatting
+  components — shown on a dev-only /dev/ui gallery, and the screenshot + axe suite that every later
+  UI task uses to prove its screens.
+
+context:
+  - docs/ui/README.md
+  - docs/ui/design-system.md
+  - docs/ui/patterns.md       # states, forms, feedback, accessibility
+  - docs/ui/copy.md
+  - docs/ui/checklist.md
+  - docs/architecture.md      # §2 stack and conventions
+
+scope:
+  - src/app/globals.css (from the design-system starting block; token names unchanged)
+  - src/app/layout.tsx (Archivo via next/font with the wdth axis, theme provider, lang="en")
+  - components.json and src/components/ui/ (shadcn init; add Button, Input, Label, Select, Checkbox,
+    Switch, Tabs, Dialog, Sheet, DropdownMenu, Popover, Tooltip, Sonner, Table, Badge, Avatar,
+    Skeleton, Separator, Form)
+  - src/components/shared/ (PageHeader, EmptyState, ErrorState, ListSkeleton, StatusChip)
+  - src/components/format/ (Money, Weight, Reps, Duration, RelativeDate) and src/lib/format/
+  - src/app/dev/ui/ (the gallery; 404 in production)
+  - tests/unit/tokens-contrast.test.ts, tests/unit/format.test.ts
+  - tests/e2e/ui-routes.ts, tests/e2e/ui.spec.ts, playwright.config.* (viewports and themes)
+  - package.json (approved dependencies only)
+
+constraints:
+  - Token names and values come from docs/ui/design-system.md; any value change needs the human.
+  - No raw colors, palette colors or arbitrary text sizes outside globals.css (check-architecture enforces).
+  - The gallery is not reachable in production builds.
+  - Screenshots are written only to .harness/evidence/ui/<route>/<state>-<width>-<theme>.png.
+
+acceptance:
+  - id: A1
+    claim: Every text pair in the design-system color table meets 4.5:1 and input/ring meet 3:1, in light and dark, computed from globals.css
+    evidence: unit test "token contrast" in .harness/last-verify.json step test
+  - id: A2
+    claim: num-xl renders tabular figures ("000" and "111" have equal width) in Archivo, or an approved fallback face is in place
+    evidence: e2e test in step test:e2e
+  - id: A3
+    claim: /dev/ui shows every color token, every type style, every Button variant and size with hover/focus/disabled/loading, form controls in default/focus/error/disabled, StatusChip for each status, EmptyState, ErrorState, ListSkeleton and examples of each formatting component
+    evidence: screenshots in .harness/evidence/ui/dev-ui/ at 360 and 1280 px, light and dark
+  - id: A4
+    claim: The axe scan of /dev/ui has zero violations (wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa) in both themes
+    evidence: step test:e2e
+  - id: A5
+    claim: Formatting is correct — "62.5 kg × 8", kg↔lb conversion, "$49" vs "$49.50", "LBP 1,500,000", day-first dates, relative dates
+    evidence: unit test "format" in step test
+  - id: A6
+    claim: /dev/ui returns 404 in a production build
+    evidence: test (e2e against `next start` or a unit test of the route guard)
+  - id: A7
+    claim: tests/e2e/ui.spec.ts reads tests/e2e/ui-routes.ts and, for each route × state × (360, 1280) × (light, dark), saves a screenshot and runs axe — so later tasks only add entries
+    evidence: verifier (reads the spec) + the gallery run above
+  - id: A8
+    claim: The gallery matches the design system and reads as a distinct, calm, numbers-first product rather than a default template
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs:
+    - docs/ui/design-system.md
+    - docs/ui/patterns.md
+  routes:
+    - { path: /dev/ui, as: anon, states: [default] }
+  gallery_states: [loading, empty, no-results, error]
+
+approval_required:
+  - "New dependencies. Expected (approve together): next-themes, @axe-core/playwright, lucide-react, tw-animate-css and the Radix packages shadcn installs. Anything else asks separately."
+  - Any change to a token value or a typeface
+
+out_of_scope:
+  - Navigation shells (P0-05), real feature screens, charts (added with the first chart task)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 60
+
+notes: >
+  Archivo is variable (wght 100–900, wdth 62–125) on Google Fonts; load it with next/font/google
+  including the wdth axis and a CSS variable (--font-archivo), and check the current next/font API.
+  shadcn's CLI generates globals.css for Tailwind v4: keep its structure, replace the values with the
+  design-system block. Authenticated routes in later tasks sign in through seeded accounts; build the
+  `as:` login helper in ui.spec.ts now (anon only is enough for this task).

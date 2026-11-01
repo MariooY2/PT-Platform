@@ -1,0 +1,27 @@
+# --- Harness (P0-01 merges the Next.js entries below these) ---
+# Evidence and traces are local; receipts, contracts and state files are committed.
+.harness/last-verify.json
+.harness/trace.log
+.harness/trace.log.1
+.harness/evidence/
+.claude/settings.local.json
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+dist/
+coverage/
+playwright-report/
+test-results/
+supabase/.temp/
+_scaffold/
+
+# Worktrees made for parallel builders, and the autopilot switch (local state)
+.claude/worktrees/
+.harness/autopilot-state.json

@@ -1,0 +1,50 @@
+# Task contract template. Copy to tasks/<ID>-<short-name>.yaml (or run /contract <ID>).
+# Every acceptance line must name evidence a machine or the verifier can check.
+
+id: PX-NN
+title: Short imperative title
+phase: 0
+status: draft            # draft -> approved -> in_progress -> verifying -> done | blocked
+approved_by:             # filled by Claude only after the human says yes in chat
+approved_at:
+depends_on: []
+
+objective: >
+  One or two sentences: the outcome that must exist when this task is done.
+
+context:                 # the only docs to load up front (progressive disclosure)
+  - docs/architecture.md
+
+scope:                   # what may change
+  - src/...
+
+constraints:             # what must not change or happen
+  - Do not edit committed migrations; add new ones.
+
+acceptance:              # evidence that proves completion
+  - id: A1
+    claim: What is true when done
+    evidence: command | test name | artifact path | verifier
+    how: "node scripts/verify.mjs --full"
+
+ui:                      # only for tasks that add or change screens (delete otherwise)
+  specs:
+    - docs/ui/screens/coach.md        # the section(s) this task implements
+  routes:                # copied into tests/e2e/ui-routes.ts; screenshots + axe run on each
+    - path: /coach/clients
+      as: coach          # seeded account to sign in as (coach | coach-empty | client | buyer | admin | anon)
+      states: [populated, empty]       # page states reachable via seed accounts
+  gallery_states: [loading, error, no-results]  # shown in /dev/ui for components with no live trigger
+
+approval_required:       # stop and ask before any of these
+  - Adding a dependency not listed in docs/architecture.md
+
+out_of_scope:
+  - Anything not listed in scope
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 40
+
+notes: >
+  Facts or hints that save the agent from rediscovering them.

@@ -1,0 +1,70 @@
+id: P0-01
+title: Scaffold the Next.js app and the tooling the harness checks rely on
+phase: 0
+status: draft
+approved_by:
+approved_at:
+depends_on: []
+
+objective: >
+  A Next.js (latest stable, App Router, TypeScript strict) app managed with pnpm, with Tailwind,
+  ESLint, Prettier, Vitest and Playwright set up, and every package.json script the
+  harness expects, so `node scripts/verify.mjs` runs real checks and passes.
+
+context:
+  - docs/architecture.md
+  - docs/commands.md
+  - docs/payments.md   # only §8.4, for .env.example
+
+scope:
+  - package.json, pnpm-lock.yaml
+  - next.config.*, tsconfig.json, postcss/tailwind config
+  - eslint and prettier config files (.prettierignore must ignore .harness/ and docs/whish/)
+  - vitest.config.*, playwright.config.*
+  - src/app/layout.tsx, src/app/(marketing)/page.tsx (placeholder landing page)
+  - tests/unit/smoke.test.ts, tests/e2e/smoke.spec.ts
+  - .env.example, .gitignore (merge, keep existing harness lines), README.md
+
+constraints:
+  - Keep every existing harness file (CLAUDE.md, docs/, tasks/, scripts/, .claude/, .harness/, .github/) unchanged.
+  - TypeScript strict mode on; no `any` in new code.
+  - package.json declares "packageManager" (pnpm) and "engines.node" (current LTS), so CI and local agree.
+  - Only the packages named in docs/architecture.md §2 for this step.
+  - No Supabase, auth or design-system code yet (later tasks).
+
+acceptance:
+  - id: A1
+    claim: All scripts listed in docs/commands.md "App" table exist in package.json
+    evidence: command
+    how: "node -e \"const s=require('./package.json').scripts;for(const k of ['dev','build','lint','format:check','typecheck','test','test:rls','test:e2e','db:types','verify'])if(!s[k])throw k\""
+  - id: A2
+    claim: Fast checks are green on the scaffold
+    evidence: .harness/last-verify.json (mode fast, result pass, matching tree)
+    how: "node scripts/verify.mjs"
+  - id: A3
+    claim: The production build succeeds and the smoke e2e test passes
+    evidence: .harness/last-verify.json steps build and test:e2e
+    how: "node scripts/verify.mjs --full"   # test:rls may be a placeholder that exits 0 until P0-02
+  - id: A4
+    claim: .env.example lists every variable from docs/payments.md §8.4, with no real values
+    evidence: verifier
+  - id: A5
+    claim: README explains setup on Windows (Node LTS, pnpm, Docker Desktop, Supabase CLI) and the verify commands
+    evidence: verifier
+
+approval_required:
+  - Any package beyond Next.js, React, TypeScript, Tailwind, ESLint, Prettier, Vitest, Playwright
+  - Changing the Node or pnpm version policy
+
+out_of_scope:
+  - Supabase, auth, the design system and shadcn/ui (P0-03), layout shells, CI
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 40
+
+notes: >
+  create-next-app refuses a folder that already has files. Scaffold into ./_scaffold, move its files to
+  the root without overwriting harness files, merge .gitignore, then delete ./_scaffold.
+  test:rls can be `node -e "console.log('no RLS tests yet')"` until P0-02 replaces it.
+  On Windows, pnpm runs through a shell; verify.mjs already handles that.

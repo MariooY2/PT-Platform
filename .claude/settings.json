@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(node scripts/verify.mjs *)",
+      "Bash(node scripts/check-architecture.mjs *)",
+      "Bash(pnpm verify *)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm format:check *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm test:rls *)",
+      "Bash(pnpm test:e2e *)",
+      "Bash(pnpm build *)",
+      "Bash(pnpm dev *)",
+      "Bash(pnpm db:types *)",
+      "Bash(pnpm install)",
+      "Bash(pnpm install --frozen-lockfile)",
+      "Bash(pnpm exec playwright *)",
+      "Bash(pnpm exec vitest *)",
+      "Bash(pnpm exec prettier *)",
+      "Bash(pnpm exec eslint *)",
+      "Bash(supabase start *)",
+      "Bash(supabase stop *)",
+      "Bash(supabase status *)",
+      "Bash(supabase db reset)",
+      "Bash(supabase db reset --local *)",
+      "Bash(supabase migration new *)",
+      "Bash(supabase gen types typescript --local *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git branch *)",
+      "Bash(git switch *)",
+      "Bash(git rev-parse *)",
+      "PowerShell(node scripts/verify.mjs *)",
+      "PowerShell(node scripts/check-architecture.mjs *)",
+      "PowerShell(pnpm lint *)",
+      "PowerShell(pnpm typecheck *)",
+      "PowerShell(pnpm test *)",
+      "PowerShell(pnpm test:rls *)",
+      "PowerShell(pnpm test:e2e *)",
+      "PowerShell(pnpm build *)",
+      "PowerShell(pnpm db:types *)",
+      "PowerShell(supabase status *)",
+      "PowerShell(supabase migration new *)",
+      "PowerShell(git status *)",
+      "PowerShell(git diff *)",
+      "PowerShell(git log *)",
+      "PowerShell(git add *)",
+      "PowerShell(git commit *)",
+      "Bash(node scripts/autopilot.mjs *)",
+      "Bash(git merge *)",
+      "Bash(git worktree list *)",
+      "Bash(git worktree remove *)",
+      "Bash(git worktree prune *)",
+      "Bash(git checkout --theirs *)",
+      "Bash(git checkout --ours *)",
+      "PowerShell(node scripts/autopilot.mjs *)",
+      "PowerShell(git merge *)",
+      "PowerShell(git worktree list *)",
+      "PowerShell(git worktree remove *)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(git reset --hard *)",
+      "Bash(supabase db push *)",
+      "Bash(supabase link *)",
+      "Bash(supabase secrets *)",
+      "Bash(supabase functions deploy *)",
+      "Bash(vercel *)",
+      "Bash(npm install *)",
+      "Bash(gh pr merge *)",
+      "PowerShell(git push *)",
+      "PowerShell(supabase db push *)",
+      "PowerShell(supabase link *)",
+      "PowerShell(vercel *)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Read(!.env.example)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(npm publish *)",
+      "Bash(pnpm publish *)",
+      "Bash(supabase db reset --linked *)",
+      "Bash(printenv *)",
+      "PowerShell(git push --force *)",
+      "PowerShell(Get-Content .env*)"
+    ]
+  },
+  "worktree": {
+    "baseRef": "head"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start.mjs"
+            ],
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-bash.mjs"
+            ],
+            "timeout": 20,
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-paths.mjs"
+            ],
+            "timeout": 20,
+            "onFailure": "block"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit.mjs"
+            ],
+            "timeout": 60
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/trace.mjs"
+            ],
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/trace.mjs"
+            ],
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-gate.mjs"
+            ],
+            "timeout": 900
+          }
+        ]
+      }
+    ]
+  }
+}

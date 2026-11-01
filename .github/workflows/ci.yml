@@ -1,0 +1,57 @@
+# Runs the same checks Claude runs locally, independent of the agent: if Claude skips a check, CI won't.
+# Template — task P0-06 makes it green and adjusts anything the real scaffold needs.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PAYMENTS_PROVIDER: mock
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      CRON_SECRET: ci-only-not-a-secret
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4   # reads the "packageManager" field in package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Export local Supabase URL and keys
+        run: |
+          eval "$(supabase status -o env)"
+          echo "NEXT_PUBLIC_SUPABASE_URL=${API_URL}" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY:-$PUBLISHABLE_KEY}" >> "$GITHUB_ENV"
+          echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY:-$SECRET_KEY}" >> "$GITHUB_ENV"
+
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - name: Full verify
+        run: node scripts/verify.mjs --full
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-report
+          path: |
+            .harness/last-verify.json
+            playwright-report/
+          if-no-files-found: ignore

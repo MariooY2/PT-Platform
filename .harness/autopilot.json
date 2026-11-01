@@ -1,0 +1,29 @@
+{
+  "_about": "Autopilot policy, owned by the human (D-006, D-007). Claude may not edit this file. Running /autopilot means: you pre-approve contracts Claude drafts for these phases, and installing the dependencies listed here. Everything under human_only is queued in .harness/approvals.md instead of being done.",
+  "phases": [0, 1, 2, 3],
+  "max_parallel_builders": 3,
+  "max_idle_continuations": 3,
+  "preapproved_dependencies": [
+    "next", "react", "react-dom", "typescript", "server-only", "@types/*",
+    "eslint", "eslint-config-next", "@eslint/*", "eslint-plugin-*", "typescript-eslint",
+    "prettier", "prettier-plugin-tailwindcss",
+    "tailwindcss", "@tailwindcss/postcss", "postcss", "tw-animate-css",
+    "class-variance-authority", "clsx", "tailwind-merge", "lucide-react", "next-themes", "sonner", "cmdk", "vaul",
+    "radix-ui", "@radix-ui/*", "react-day-picker", "input-otp", "@tanstack/react-table", "@dnd-kit/*",
+    "react-hook-form", "@hookform/resolvers", "zod",
+    "@supabase/supabase-js", "@supabase/ssr", "supabase",
+    "recharts", "date-fns", "date-fns-tz", "@date-fns/tz",
+    "resend", "react-email", "@react-email/*",
+    "@serwist/next", "serwist", "dexie", "web-push", "papaparse",
+    "vitest", "@vitest/*", "@vitejs/plugin-react", "jsdom", "@testing-library/*", "fake-indexeddb",
+    "@playwright/test", "@axe-core/playwright", "tsx"
+  ],
+  "human_only": [
+    "git push, pull requests, merges to a remote",
+    "deploys (Vercel) and anything on the remote Supabase project (link, db push, secrets)",
+    "real Whish credentials and sandbox runs (P2-09) — the mock provider stands in until then",
+    "dependencies not listed above",
+    "changes to harness files (.claude/, scripts/, CLAUDE.md, docs/HARNESS.md), this policy, design tokens or docs/ui specs",
+    "Phase 4 and anything in docs/phases.md §14"
+  ]
+}

@@ -1,0 +1,53 @@
+id: P0-06
+title: CI on every pull request and a Vercel preview deployment
+phase: 0
+status: draft
+approved_by:
+approved_at:
+depends_on: [P0-05]
+
+objective: >
+  GitHub Actions runs `node scripts/verify.mjs --full` (with a local Supabase stack) on every push and
+  pull request, and the app deploys to a Vercel preview, closing the Phase 0 gate in docs/phases.md.
+
+context:
+  - docs/phases.md        # §13 Phase 0 gate
+  - docs/commands.md
+  - .github/workflows/ci.yml
+
+scope:
+  - .github/workflows/ci.yml (finish the template)
+  - README.md (CI badge, preview URL)
+  - docs/commands.md
+  - .harness/facts.md (record the preview URL and any CI quirks)
+
+constraints:
+  - CI must not use production secrets; it uses the local Supabase stack and mock payments.
+  - Never push or deploy without the human approving that exact action.
+
+acceptance:
+  - id: A1
+    claim: The CI workflow passes on a pull request
+    evidence: link to the green GitHub Actions run, recorded in the receipt
+  - id: A2
+    claim: A Vercel preview deployment of this branch loads the landing page and /login
+    evidence: preview URL recorded in .harness/facts.md and the receipt
+  - id: A3
+    claim: Every Phase 0 gate line in docs/phases.md §13 has evidence in a P0 receipt
+    evidence: verifier
+
+approval_required:
+  - git push
+  - Creating or linking the Vercel project and setting its environment variables (the human does this)
+  - Any deploy
+
+out_of_scope:
+  - Production deployment and custom domain
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 10
+
+notes: >
+  The human creates the GitHub repo and the Vercel project. Claude prepares everything else and asks
+  before each push.
