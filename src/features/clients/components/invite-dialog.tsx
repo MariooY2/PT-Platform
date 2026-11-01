@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { Check, Copy, Link2, Mail, Upload, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -334,6 +334,17 @@ function ImportTab() {
 
 export function InviteDialog({ triggerClassName }: { triggerClassName?: string }) {
   const [open, setOpen] = useState(false);
+
+  // The UI gallery/axe pass reaches this screen's "invite-dialog" state via ?state=invite-dialog
+  // (tests/e2e/ui-routes.ts). Read it on the client so there's no prerender/session coupling; defer
+  // the open to a frame so it's not a synchronous setState in the effect body.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const wantsOpen = new URLSearchParams(window.location.search).get('state') === 'invite-dialog';
+    if (!wantsOpen) return;
+    const frame = requestAnimationFrame(() => setOpen(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   return (
     <Dialog
