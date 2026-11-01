@@ -113,8 +113,8 @@ export function InstallPrompt() {
           </h2>
           <p className="text-sm text-muted-foreground">
             {deferredPrompt
-              ? 'Add PT to your home screen for one-tap access to today’s workout.'
-              : 'Add PT to your home screen: open your browser menu and choose “Add to Home Screen”.'}
+              ? 'Add this app to your home screen for one-tap access to today’s workout.'
+              : 'Add this app to your home screen: open your browser menu and choose “Add to Home Screen”.'}
           </p>
         </div>
       </div>
