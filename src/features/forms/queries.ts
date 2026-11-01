@@ -25,6 +25,16 @@ export interface QueueItem {
   answers: Record<string, unknown>;
 }
 
+export interface ClientResponse {
+  id: string;
+  formTitle: string;
+  formKind: 'intake' | 'checkin';
+  questions: Question[];
+  answers: Record<string, unknown>;
+  submittedAt: string | null;
+  coachReply: string | null;
+}
+
 const questionsArray = z.array(questionSchema);
 
 /** Stored questions are trusted (written through our schema) but parse defensively anyway. */
@@ -54,6 +64,33 @@ export async function listForms(
     questions: toQuestions(f.questions),
   }));
   return { forms, error: null };
+}
+
+/** One of the client's own responses, with its form. Returns null when it isn't theirs (→ not-found). */
+export async function getResponseForClient(
+  supabase: DB,
+  clientId: string,
+  responseId: string,
+): Promise<ClientResponse | null> {
+  const { data, error } = await supabase
+    .from('form_responses')
+    .select(
+      'id, answers, submitted_at, coach_reply, form:forms!form_responses_form_id_fkey(title, kind, questions)',
+    )
+    .eq('id', responseId)
+    .eq('client_id', clientId)
+    .maybeSingle();
+  if (error || !data || !data.form) return null;
+
+  return {
+    id: data.id,
+    formTitle: data.form.title,
+    formKind: data.form.kind,
+    questions: toQuestions(data.form.questions),
+    answers: (data.answers ?? {}) as Record<string, unknown>,
+    submittedAt: data.submitted_at ?? null,
+    coachReply: data.coach_reply ?? null,
+  };
 }
 
 /** The review queue: submitted, not-yet-reviewed responses, oldest first. */
