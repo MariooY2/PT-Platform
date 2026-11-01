@@ -27,6 +27,7 @@ scope:
   - tests/rls/**               # the RLS test suite
   - package.json               # add `supabase` + `@supabase/ssr`/`@supabase/supabase-js` (pre-approved); real `test:rls` script
   - vitest.config.ts           # include tests/rls if run through vitest
+  - playwright.config.ts       # (scope added during build) dedicated e2e port 3100 to avoid local server collisions
 
 constraints:
   - Enable row level security on every table created here (profiles, trainers, trainer_clients); check-architecture.mjs enforces it.

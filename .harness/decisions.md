@@ -12,6 +12,15 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-009 — e2e uses a dedicated port (3100) (2026-11-01, decided by: autopilot (D-006))
+Why: during P0-02 the default port 3000 was held by an unrelated local process (a peer session's Remotion
+render), so Playwright's `next start` could not bind and e2e failed. A fixed, project-specific port (3100,
+overridable via `PORT`) decouples this project's e2e from other local dev servers and prevents the flake
+recurring across tasks.
+Alternatives considered: kill whatever holds 3000 (unsafe — could be another project's work); rely on the
+port clearing (fragile, timing-dependent).
+Affects: playwright.config.ts (baseURL + webServer), P0-01 scaffold artifact amended under P0-02.
+
 ## D-008 — P0-01 scaffold choices (2026-11-01, decided by: autopilot (D-006))
 Why: get a green scaffold within the contract's allowed packages and the harness checks.
 - **Tailwind v4 via `@tailwindcss/postcss` + `postcss`**, not `@tailwindcss/turbopack` (what create-next-app 16's
