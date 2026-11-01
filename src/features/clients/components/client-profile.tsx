@@ -16,8 +16,6 @@ import { DataError } from './data-error';
 import { NotesPanel } from './notes-panel';
 import { FilesPanel } from './files-panel';
 
-const DEFERRED_TABS = ['Program', 'Workout log', 'Progress', 'Check-ins'];
-
 export function ClientProfile({
   profile,
   trainerId,
@@ -66,11 +64,6 @@ export function ClientProfile({
           <TabsList className="w-max">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="notes">Notes &amp; files</TabsTrigger>
-            {DEFERRED_TABS.map((label) => (
-              <TabsTrigger key={label} value={label} disabled>
-                {label}
-              </TabsTrigger>
-            ))}
           </TabsList>
         </div>
 
@@ -96,6 +89,9 @@ export function ClientProfile({
           )}
         </TabsContent>
       </Tabs>
+      <p className="text-xs text-muted-foreground">
+        Program, workout log, progress and check-ins arrive with their features.
+      </p>
       <Toaster />
     </div>
   );

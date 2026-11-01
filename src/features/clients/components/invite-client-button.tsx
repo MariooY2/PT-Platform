@@ -13,14 +13,16 @@ export function InviteClientButton({ className }: { className?: string }) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span tabIndex={0} className={className} aria-describedby="invite-coming-soon">
-            <Button type="button" disabled className="pointer-events-none w-full">
+          {/* A disabled <button> swallows pointer/focus events, so the focusable wrapper span is
+              the trigger. Radix wires aria-describedby to the content only while the tooltip is open. */}
+          <span tabIndex={0} className={className}>
+            <Button type="button" tabIndex={-1} disabled className="pointer-events-none w-full">
               <UserPlus />
               Invite client
             </Button>
           </span>
         </TooltipTrigger>
-        <TooltipContent id="invite-coming-soon">Coming soon</TooltipContent>
+        <TooltipContent>Coming soon</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
