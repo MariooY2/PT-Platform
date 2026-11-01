@@ -66,7 +66,7 @@ remote database changes, secrets, harness files, tokens and UI specs stay with t
 session going until COMPLETE / NEEDS-HUMAN, with a loop breaker after 3 continuations without progress.
 Affects: CLAUDE.md, .claude/skills/autopilot/, .claude/hooks/stop-gate.mjs, guard-bash.mjs, guard-paths.mjs, session-start.mjs, scripts/autopilot.mjs.
 
-## D-005 — Visual direction "chalk and iron" (2026-11-01, decided by: pending human review)
+## D-005 — Visual direction "chalk and iron" (2026-11-01, decided by: human; approved 2026-11-01)
 Why: grounded in the gym itself (chalk surfaces, iron ink, 20 kg competition blue, 15 kg plate yellow
 for PRs only), numbers-first with one typeface (Archivo, condensed for figures); avoids generic
 template looks. All values are tokens, so a brand change is one file.

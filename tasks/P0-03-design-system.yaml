@@ -1,9 +1,9 @@
 id: P0-03
 title: Design system foundation, UI gallery and the UI evidence suite
 phase: 0
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: human (D-005 approved)
+approved_at: 2026-11-01
 depends_on: [P0-02]
 
 objective: >
