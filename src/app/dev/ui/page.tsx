@@ -148,7 +148,8 @@ export default async function DevUiPage() {
       </Section>
 
       <Section title="Form controls">
-        <div className="grid max-w-md gap-4">
+        {/* Form controls sit on a card surface (border-input meets 3:1 vs card; see D-012). */}
+        <div className="grid max-w-md gap-4 rounded-xl border bg-card p-4">
           <div className="grid gap-2">
             <Label htmlFor="g-name">Client name</Label>
             <Input id="g-name" placeholder="e.g. Rami" />
@@ -243,11 +244,7 @@ export default async function DevUiPage() {
             <EmptyState
               icon={Search}
               title="No clients match these filters"
-              action={
-                <Button variant="outline" size="sm">
-                  Clear filters
-                </Button>
-              }
+              action={<Button variant="outline">Clear filters</Button>}
             />
           </div>
         </div>

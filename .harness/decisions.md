@@ -21,6 +21,9 @@ background and card). Applied to FormMessage, FormLabel error state, and inline 
 Alternatives considered: darken the `--destructive` token (gated, and it would dull the solid button);
 larger/bold error text (14px normal can't reach 3:1 large-text exemption).
 Affects: src/components/ui/form.tsx, src/app/dev/ui/page.tsx; future screens' inline errors.
+Also: radix-nova's resting `dark:bg-input/30` on Input/SelectTrigger composited to ~#363e49, where the
+muted-foreground placeholder was 4.32:1 (under AA). Removed it so controls are `bg-transparent` on the card
+(placeholder 6.2:1); structure comes from the border, per the design direction.
 
 ## D-012 — input border contrast is measured against card (2026-11-01, decided by: autopilot (D-006), palette human-approved via D-005)
 Why: the contrast test (A1) recomputes WCAG ratios from globals.css. All text pairs meet AA 4.5:1 and the
@@ -35,14 +38,34 @@ Affects: tests/unit/tokens-contrast.test.ts, docs/ui note for future screens.
 ## D-011 — shadcn base is radix-nova, standardized toolchain (2026-11-01, decided by: human-approved P0-03)
 Why: shadcn CLI 4.23 only ships the new "radix-nova" styles (no classic preset). Kept it (its classes are
 semantic tokens + interaction details that match the spec once our tokens load), with three fixes:
-- `cn` standardized on clsx + tailwind-merge (`src/lib/utils.ts`); the non-pre-approved `cn` package and the
-  stray `shadcn` runtime dep were removed. After any `shadcn add`, rewrite `from "cn"` → `from "@/lib/utils"`.
+- `cn` standardized on clsx + tailwind-merge (`src/lib/utils.ts`). The radix-nova registry declares a `cn`
+  package as a dependency, so **every `shadcn add` re-installs it** (and the stray `shadcn` runtime dep). After
+  any `shadcn add`: rewrite `from "cn"` → `from "@/lib/utils"` across `src/components/ui/**`, then
+  `pnpm remove cn shadcn`, and confirm `grep '"cn"' package.json` is empty. `cn`/`shadcn` are not pre-approved.
+- Overlay scrims (`dialog.tsx`, `sheet.tsx`) use `bg-black/N` — the one permitted raw color, because a scrim
+  must darken in both themes (a `foreground/N` token would invert). It lives inside `src/components/ui/`, where
+  `check-architecture` is warning-tier by design.
 - `destructive` button restored to SOLID (`bg-destructive`/`-foreground`) per design-system (delete/refund/errors);
   `-soft` tokens are for banners/chips only.
 - Button sizes set to the spec: `sm` 36px (h-9), `default` 44px (h-11), `lg` 48px (h-12), icons to match.
 - shadcn 4 has no `form` component; `src/components/ui/form.tsx` is the hand-authored RHF wrapper (react-hook-form + zod, pre-approved).
 Alternatives considered: re-init with a classic preset (none exists in shadcn 4); hand-author all 18 components (a week of work for the same result).
 Affects: src/components/ui/**, src/lib/utils.ts, package.json, P0-04/P0-05 (builders must run the cn-import fixup after `shadcn add`).
+
+## D-014 — Becoming a trainer / pgcrypto / client link-read (2026-11-01, decided by: autopilot (D-006))
+- **Trainer creation is service-role-only.** The P0-02 verifier found that `trainers_insert_own` + the column
+  INSERT grant let any authenticated user (incl. a client) insert their own `trainers` row. Migration
+  `20261101042136_trainers_insert_service_only.sql` drops that policy and revokes INSERT on `public.trainers`
+  from `authenticated`; P0-04 onboarding creates the trainers row via the admin client / a security-definer
+  function. Same boundary as role/plan/client_id (extends [[D-010]]). Tested: a client inserting its own
+  trainers row is denied.
+- **pgcrypto**: the base migration runs `create extension if not exists pgcrypto` for the seed's
+  `crypt()`/`gen_salt()`. It is pre-installed on Supabase local, so this is a no-op; recorded because the
+  contract's `approval_required` lists adding an extension (queued as an FYI in approvals.md).
+- **Client reads their own trainer_clients link** (`trainer_clients_client_select`): intentional — a client
+  must see their own coaching link/status in the client app. §6's policy table marks the Client column "—"
+  for trainer-owned rows; this one own-row read is the documented exception (coach-only fields like
+  `goals`/`injuries_notes` remain read-only to the client, which is acceptable for their own record).
 
 ## D-010 — Privileged columns are service-role-only (column privileges) (2026-11-01, decided by: autopilot (D-006))
 Why: the P0-02 verifier found two self-escalation paths — a client could `update profiles set role='admin'`

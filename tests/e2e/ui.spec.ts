@@ -53,3 +53,19 @@ test('num utilities use tabular figures (equal width for 000 and 111)', async ({
   expect(ones).not.toBeNull();
   expect(Math.abs(zeros!.width - ones!.width)).toBeLessThan(0.5);
 });
+
+test('dialog is accessible, traps and returns focus', async ({ page }) => {
+  await page.goto('/dev/ui');
+  await settle(page);
+  const trigger = page.getByRole('button', { name: 'Open dialog' });
+  await trigger.click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+
+  const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+});

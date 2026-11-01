@@ -74,8 +74,8 @@ function DemoForm() {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(() => toast.success('Saved'))}
-        className="max-w-sm space-y-4"
+        onSubmit={form.handleSubmit(() => toast.success('Client saved'))}
+        className="max-w-sm space-y-4 rounded-xl border bg-card p-4"
         noValidate
       >
         <FormField
@@ -124,10 +124,10 @@ export function GalleryInteractive() {
           <SheetTrigger asChild>
             <Button variant="outline">Open sheet</Button>
           </SheetTrigger>
-          <SheetContent>
+          <SheetContent side="bottom">
             <SheetHeader>
               <SheetTitle>Filters</SheetTitle>
-              <SheetDescription>Bottom sheet on mobile, side sheet on desktop.</SheetDescription>
+              <SheetDescription>A bottom sheet, rounded at the top.</SheetDescription>
             </SheetHeader>
           </SheetContent>
         </Sheet>
