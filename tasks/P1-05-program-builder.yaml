@@ -89,3 +89,18 @@ notes: |
   sink the whole task); then the builder/editor UI. Consider two builders if scope allows: one for the
   parser + server actions, one for the grid/editor UI — but their scopes overlap src/features/programs,
   so more likely a single builder or self-build.
+  Do NOT start this until P1-02/03/09 have closed (the current wave is at the 3-builder cap; P1-05 waits).
+
+  ## Schema-lane design (pre-worked so its wave isn't rushed)
+  Tables (§5): programs, program_workouts(program_id), workout_exercises(program_workout_id, exercise_id),
+  prescribed_sets(workout_exercise_id). RLS via security-definer helpers to avoid recursion:
+    - can_edit_program(p)  = exists(programs where id=p and trainer_id=auth.uid())
+    - can_read_program(p)  = exists(programs where id=p and (trainer_id=auth.uid() or client_id=auth.uid()))
+    - can_edit_workout(w)  = program_workouts w -> programs.trainer_id = auth.uid()
+    - can_edit_wex(x)      = workout_exercises x -> program_workouts -> programs.trainer_id = auth.uid()
+    (plus can_read_* variants that also allow the client's own copy)
+  Policies: programs — trainer all (trainer_id=auth.uid()), client select (client_id=auth.uid()), admin.
+  Nested tables — `for all` using/with-check the matching can_edit_* helper; a separate `for select`
+  using can_read_* (so the client reads their assigned copy); admin all. Seed one sample template.
+  RLS test must prove: another trainer can't read/edit any nested row of a template; a client reads
+  only their own copy's nested rows.
