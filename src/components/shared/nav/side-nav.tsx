@@ -11,7 +11,7 @@ export function SideNav({ variant }: { variant: NavVariant }) {
   return (
     <nav
       aria-label={`${NAV_LABEL[variant]} sidebar`}
-      className="hidden w-60 shrink-0 flex-col gap-6 border-r bg-sidebar p-4 text-sidebar-foreground lg:flex"
+      className="hidden w-60 shrink-0 flex-col gap-6 overflow-y-auto border-r bg-sidebar p-4 text-sidebar-foreground lg:flex"
     >
       <span className="px-2 text-lg font-bold">PT Platform</span>
       {groups.map((group, i) => (

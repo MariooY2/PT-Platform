@@ -17,7 +17,7 @@ export function BottomNav({
   return (
     <nav
       aria-label={NAV_LABEL[variant]}
-      className={cn('sticky bottom-0 z-40 border-t bg-card', hideOnDesktop && 'lg:hidden')}
+      className={cn('shrink-0 border-t bg-card', hideOnDesktop && 'lg:hidden')}
     >
       <ul className="mx-auto flex max-w-[560px]">
         {items.map((item) => {

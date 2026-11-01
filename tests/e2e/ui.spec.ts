@@ -36,10 +36,24 @@ for (const route of uiRoutes) {
 
             const dir = join(EVIDENCE_ROOT, slug);
             mkdirSync(dir, { recursive: true });
+            // The app shell uses an inner scroll region (`#main`), so the document itself doesn't
+            // scroll and `fullPage` would capture only the viewport. Grow the viewport to the content
+            // height to capture everything, then restore the real viewport before axe runs (so
+            // target-size and friends are judged at the actual 360/1280 layout).
+            const contentHeight = await page.evaluate(
+              () =>
+                document.getElementById('main')?.scrollHeight ??
+                document.documentElement.scrollHeight,
+            );
+            await page.setViewportSize({
+              width: vp.width,
+              height: Math.max(vp.height, Math.ceil(contentHeight) + 64),
+            });
             await page.screenshot({
               path: join(dir, `${state}-${vp.label}-${theme}.png`),
               fullPage: true,
             });
+            await page.setViewportSize({ width: vp.width, height: vp.height });
 
             const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
             expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
