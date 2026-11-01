@@ -7,6 +7,9 @@ import { ClientsList } from '@/features/clients/components/clients-list';
 import { DataError } from '@/features/clients/components/data-error';
 import { InviteClientButton } from '@/features/clients/components/invite-client-button';
 
+// Reads searchParams + the session (cookies): a blocking dynamic route, not prerendered.
+export const instant = false;
+
 export default async function CoachClientsPage({
   searchParams,
 }: {

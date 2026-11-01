@@ -4,6 +4,9 @@ import { clientIdSchema } from '@/features/clients/schemas';
 import { getClientForTrainer, listFiles, listNotes } from '@/features/clients/queries';
 import { ClientProfile } from '@/features/clients/components/client-profile';
 
+// Reads params/searchParams + the session (cookies): a blocking dynamic route, not prerendered.
+export const instant = false;
+
 export default async function CoachClientProfilePage({
   params,
   searchParams,
