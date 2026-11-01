@@ -23,7 +23,59 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "profiles": {
+            "client_files": {
+                  Row: {
+                    "client_id": string,"created_at": string,"file_name": string,"id": string,"storage_path": string,"trainer_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_id": string,"created_at"?: string,"file_name": string,"id"?: string,"storage_path": string,"trainer_id": string
+                  }
+                  Update: {
+                    "client_id"?: string,"created_at"?: string,"file_name"?: string,"id"?: string,"storage_path"?: string,"trainer_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "client_files_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "client_files_trainer_id_fkey"
+      columns: ["trainer_id"]
+isOneToOne: false
+      referencedRelation: "trainers"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"client_notes": {
+                  Row: {
+                    "body": string,"client_id": string,"created_at": string,"id": string,"trainer_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"client_id": string,"created_at"?: string,"id"?: string,"trainer_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "body"?: string,"client_id"?: string,"created_at"?: string,"id"?: string,"trainer_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "client_notes_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "client_notes_trainer_id_fkey"
+      columns: ["trainer_id"]
+isOneToOne: false
+      referencedRelation: "trainers"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"profiles": {
                   Row: {
                     "avatar_path": string | null,"created_at": string,"full_name": string | null,"id": string,"phone": string | null,"role": Database["public"]['Enums']["user_role"],"timezone": string,"unit_system": Database["public"]['Enums']["unit_system"],"updated_at": string
                   }
@@ -89,7 +141,10 @@ isOneToOne: true
             [_ in never]: never
           }
           Functions: {
-            "is_admin":
+            "has_client_link":
+{ Args: { "client": string }; Returns: boolean
+                           },
+"is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "is_trainer_of":
