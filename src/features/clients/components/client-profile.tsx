@@ -15,19 +15,23 @@ import { DetailsForm } from './details-form';
 import { DataError } from './data-error';
 import { NotesPanel } from './notes-panel';
 import { FilesPanel } from './files-panel';
+import { HabitsManager } from '@/features/habits/components/habits-manager';
+import type { TrainerHabit } from '@/features/habits/queries';
 
 export function ClientProfile({
   profile,
   trainerId,
   notes,
   files,
+  habits,
   initialTab = 'overview',
 }: {
   profile: ClientProfileData;
   trainerId: string;
   notes: ClientNote[] | null;
   files: ClientFile[] | null;
-  initialTab?: 'overview' | 'notes';
+  habits: TrainerHabit[] | null;
+  initialTab?: 'overview' | 'notes' | 'habits';
 }) {
   const name = clientDisplayName(profile);
 
@@ -63,6 +67,7 @@ export function ClientProfile({
         <div className="overflow-x-auto">
           <TabsList className="w-max">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="habits">Habits</TabsTrigger>
             <TabsTrigger value="notes">Notes &amp; files</TabsTrigger>
           </TabsList>
         </div>
@@ -74,6 +79,14 @@ export function ClientProfile({
             injuries={profile.injuries}
             tags={profile.tags}
           />
+        </TabsContent>
+
+        <TabsContent value="habits" className="pt-4">
+          {habits === null ? (
+            <DataError description="We couldn’t load habits." />
+          ) : (
+            <HabitsManager clientId={profile.clientId} habits={habits} />
+          )}
         </TabsContent>
 
         <TabsContent value="notes" className="space-y-8 pt-4">
