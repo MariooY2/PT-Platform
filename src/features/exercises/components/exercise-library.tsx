@@ -190,7 +190,8 @@ export function ExerciseLibrary({
             </div>
 
             <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
-              {filtered.length} {filtered.length === 1 ? 'exercise' : 'exercises'}
+              <span className="num">{filtered.length}</span>{' '}
+              {filtered.length === 1 ? 'exercise' : 'exercises'}
             </p>
           </div>
 
