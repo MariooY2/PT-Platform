@@ -100,7 +100,9 @@ export default async function DevUiPage() {
         <div className="flex flex-wrap items-center gap-4 text-sm">
           <span className="rounded-md border border-border px-3 py-1">border</span>
           <span className="rounded-md border-2 border-input px-3 py-1">input</span>
-          <span className="rounded-md px-3 py-1 outline-2 outline-ring">ring</span>
+          <span className="rounded-md border border-border px-3 py-1 outline-2 outline-offset-2 outline-ring">
+            ring
+          </span>
         </div>
       </Section>
 
