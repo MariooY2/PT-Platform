@@ -8,6 +8,7 @@ export default function Loading() {
       <PageHeader
         title="Exercises"
         description="Your exercises and the built-in library. Search, filter, or add your own."
+        action={<Skeleton className="h-11 w-36 rounded-md" />}
       />
       <div className="space-y-3" aria-hidden>
         <Skeleton className="h-11 w-full rounded-md" />

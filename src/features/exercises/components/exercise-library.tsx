@@ -85,16 +85,12 @@ export function ExerciseLibrary({
   const showError = hadError || forcedState === 'error';
   const showLoading = forcedState === 'loading';
   const isEmptyLibrary = forcedState === 'empty' || exercises.length === 0;
-  // When an empty state shows its own New exercise CTA, don't also render one in the header.
-  const emptyWithCta = isEmptyLibrary || (mine && !exercises.some(isCustom));
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-      <PageHeader
-        title="Exercises"
-        description={DESCRIPTION}
-        action={emptyWithCta ? undefined : <NewExerciseDialog />}
-      />
+      {/* The New exercise action is always in the header (the single primary), so toggling filters
+          or hitting an empty state never reflows the layout and loading.tsx can mirror it exactly. */}
+      <PageHeader title="Exercises" description={DESCRIPTION} action={<NewExerciseDialog />} />
 
       {showError ? (
         <ErrorState
@@ -122,8 +118,7 @@ export function ExerciseLibrary({
       ) : isEmptyLibrary ? (
         <EmptyState
           title="No exercises yet"
-          description="Exercises you create appear here. Add one to use it in your programs."
-          action={<NewExerciseDialog />}
+          description="Exercises you create appear here. Use New exercise to add one."
         />
       ) : (
         <>
@@ -212,8 +207,7 @@ export function ExerciseLibrary({
             mine && !exercises.some(isCustom) ? (
               <EmptyState
                 title="No exercises yet"
-                description="Exercises you create appear here. Add one to use it in your programs."
-                action={<NewExerciseDialog />}
+                description="Exercises you create appear here. Use New exercise to add one."
               />
             ) : (
               <EmptyState
