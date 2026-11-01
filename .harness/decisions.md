@@ -12,6 +12,14 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-018 — coach "More" (mobile) is a flat list of every destination not in the bottom bar (2026-11-01, decided by: autopilot (D-006))
+Why: `docs/ui/patterns.md` summarises coach More as "programs, exercises, store, settings", where
+"store" is the Products/Orders/Earnings group. The mobile More page must surface everything the
+bottom bar omits, so it is a flat link list of Programs, Exercises, Forms, Products, Orders, Earnings,
+Settings — the same destinations as the desktop sidebar's Library + Store + Settings groups, just
+ungrouped. No labels or destinations differ from the sidebar; only the mobile presentation is flat.
+Affects: src/components/shared/nav/nav-items.ts (COACH_MORE), src/app/coach/(app)/more/page.tsx, P0-05.
+
 ## D-017 — admin mobile navigation is a bottom bar of the sidebar destinations (2026-11-01, decided by: autopilot (D-006))
 Why: `docs/ui/patterns.md` specifies the admin desktop sidebar but leaves mobile as "not optimised;
 usable". The app's shared AppShell needs a mobile nav, so admin reuses its five sidebar destinations

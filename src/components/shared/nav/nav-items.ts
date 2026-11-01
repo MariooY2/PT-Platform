@@ -1,4 +1,5 @@
 import {
+  Activity,
   Banknote,
   ClipboardCheck,
   CreditCard,
@@ -55,7 +56,7 @@ export const COACH_SIDEBAR: NavGroup[] = [
     title: 'Library',
     items: [
       { href: '/coach/programs', label: 'Programs', icon: Dumbbell },
-      { href: '/coach/exercises', label: 'Exercises', icon: Dumbbell },
+      { href: '/coach/exercises', label: 'Exercises', icon: Activity },
       { href: '/coach/forms', label: 'Forms', icon: FileText },
     ],
   },
@@ -73,7 +74,7 @@ export const COACH_SIDEBAR: NavGroup[] = [
 // Coach "More" (mobile) collects everything not in the bottom bar.
 export const COACH_MORE: NavItem[] = [
   { href: '/coach/programs', label: 'Programs', icon: Dumbbell },
-  { href: '/coach/exercises', label: 'Exercises', icon: Dumbbell },
+  { href: '/coach/exercises', label: 'Exercises', icon: Activity },
   { href: '/coach/forms', label: 'Forms', icon: FileText },
   { href: '/coach/products', label: 'Products', icon: Tag },
   { href: '/coach/orders', label: 'Orders', icon: Receipt },

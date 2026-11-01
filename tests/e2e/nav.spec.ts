@@ -61,6 +61,9 @@ test.describe('A1 — every destination reaches its page and marks the current i
     await expect(
       page.locator('a[href="/client/progress"][aria-current="page"]').first(),
     ).toBeVisible();
+    // The More tab is current on its child routes (check-ins, billing, settings).
+    await page.goto('/client/billing');
+    await expect(page.locator('a[href="/client/more"][aria-current="page"]')).toBeVisible();
   });
 
   test('admin destinations (desktop)', async ({ page }) => {

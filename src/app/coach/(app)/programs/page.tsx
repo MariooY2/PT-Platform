@@ -7,7 +7,7 @@ export default function CoachProgramsPage() {
       title="Programs"
       icon={Dumbbell}
       emptyTitle="No programs yet"
-      emptyDescription="Programs you build appear here. Start blank or duplicate the sample program."
+      emptyDescription="Programs you build appear here. Start with a blank program or a template."
     />
   );
 }
