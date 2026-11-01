@@ -126,7 +126,7 @@ describe('client isolation', () => {
     expect(res.data).toEqual([]);
   });
 
-  it('Client One cannot write coach-authored fields on their link (0 rows)', async () => {
+  it('Client One cannot write coach-authored fields on their link (0 rows, unchanged)', async () => {
     // Clients have no write policy on trainer_clients (coach-only fields: goals, injuries_notes).
     const res = await client1
       .from('trainer_clients')
@@ -135,6 +135,13 @@ describe('client isolation', () => {
       .select();
     expect(res.error).toBeNull();
     expect(res.data).toEqual([]);
+
+    const check = await admin
+      .from('trainer_clients')
+      .select('goals')
+      .eq('client_id', CLIENT_1)
+      .single();
+    expect(check.data?.goals).not.toBe('client-set goal');
   });
 
   it('Client One can update their own profile but not another’s', async () => {
@@ -156,14 +163,81 @@ describe('client isolation', () => {
   });
 });
 
+describe('privilege escalation is blocked (column privileges)', () => {
+  it('a client cannot promote itself to admin via update (42501, role unchanged)', async () => {
+    const res = await client1
+      .from('profiles')
+      .update({ role: 'admin' })
+      .eq('id', CLIENT_1)
+      .select();
+    expect(res.error?.code).toBe('42501');
+
+    const check = await admin.from('profiles').select('role').eq('id', CLIENT_1).single();
+    expect(check.data?.role).toBe('client');
+  });
+
+  it('a client cannot insert a profile row with an elevated role (42501)', async () => {
+    const res = await client1.from('profiles').insert({ id: CLIENT_1, role: 'admin' });
+    expect(res.error?.code).toBe('42501');
+  });
+
+  it('a trainer cannot link an arbitrary client to read their data (42501, no link created)', async () => {
+    const res = await trainerA.from('trainer_clients').insert({
+      trainer_id: TRAINER_A,
+      client_id: CLIENT_2,
+      status: 'active',
+      source: 'invite',
+    });
+    expect(res.error?.code).toBe('42501');
+
+    const check = await admin
+      .from('trainer_clients')
+      .select('id')
+      .eq('trainer_id', TRAINER_A)
+      .eq('client_id', CLIENT_2);
+    expect(check.data).toEqual([]);
+  });
+
+  it('a trainer cannot self-grant a paid plan (42501, plan unchanged)', async () => {
+    const res = await trainerA
+      .from('trainers')
+      .update({ plan: 'elite' })
+      .eq('id', TRAINER_A)
+      .select();
+    expect(res.error?.code).toBe('42501');
+
+    const check = await admin.from('trainers').select('plan').eq('id', TRAINER_A).single();
+    expect(check.data?.plan).toBe('pro');
+  });
+
+  it('a trainer can still create an invite row (allowed path intact)', async () => {
+    const res = await trainerA
+      .from('trainer_clients')
+      .insert({
+        trainer_id: TRAINER_A,
+        invite_email: 'probe@ptplatform.test',
+        status: 'lead',
+        source: 'invite',
+      })
+      .select();
+    expect(res.error).toBeNull();
+    expect(res.data).toHaveLength(1);
+    // keep the suite idempotent
+    if (res.data?.[0]?.id) await admin.from('trainer_clients').delete().eq('id', res.data[0].id);
+  });
+});
+
 describe('anonymous access', () => {
   it('cannot read private profiles, trainers or links', async () => {
     const a = anon();
     const profiles = await a.from('profiles').select('*');
-    expect(profiles.data ?? []).toEqual([]);
+    expect(profiles.error).toBeNull();
+    expect(profiles.data).toEqual([]);
     const trainers = await a.from('trainers').select('*');
-    expect(trainers.data ?? []).toEqual([]);
+    expect(trainers.error).toBeNull();
+    expect(trainers.data).toEqual([]);
     const links = await a.from('trainer_clients').select('*');
-    expect(links.data ?? []).toEqual([]);
+    expect(links.error).toBeNull();
+    expect(links.data).toEqual([]);
   });
 });

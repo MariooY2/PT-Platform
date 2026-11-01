@@ -12,6 +12,19 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-010 — Privileged columns are service-role-only (column privileges) (2026-11-01, decided by: autopilot (D-006))
+Why: the P0-02 verifier found two self-escalation paths — a client could `update profiles set role='admin'`
+on itself (then `is_admin()` opens everything), and a trainer could insert a `trainer_clients` row linking
+an arbitrary `client_id` and then read that client via `is_trainer_of`. RLS controls rows, not columns, so
+the fix is PostgreSQL column privileges: `authenticated` is granted INSERT/UPDATE only on non-privileged
+columns. `profiles.role`, `trainers.plan` and `trainer_clients.client_id` become writable only by the
+service role (seed) or security-definer server code — i.e. role is set at signup and client linking at
+invite-accept (P0-04), never by a user via the API.
+Alternatives considered: BEFORE triggers guarded by `auth.role()='authenticated'` — rejected as fragile
+(depends on JWT-claim GUCs that are empty for the postgres/seed context and vary by CLI version); column
+privileges are static and PostgREST-native.
+Affects: supabase/migrations/20261101025837_harden_rls_column_privileges.sql, tests/rls/isolation.test.ts, P0-04 (signup role + invite-accept must use the admin client / a security-definer function).
+
 ## D-009 — e2e uses a dedicated port (3100) (2026-11-01, decided by: autopilot (D-006))
 Why: during P0-02 the default port 3000 was held by an unrelated local process (a peer session's Remotion
 render), so Playwright's `next start` could not bind and e2e failed. A fixed, project-specific port (3100,
