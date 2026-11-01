@@ -1,0 +1,70 @@
+id: P1-13
+title: PWA manifest and install prompt
+phase: 1
+status: draft
+depends_on: [P0-05]
+
+objective: >
+  The client app is installable: a web app manifest (name, icons, theme colour, display standalone,
+  start URL /client) and a dismissible install-prompt card on the client Today screen. Per
+  docs/platform.md §10 this is the Phase 1 scope only — the service worker, offline caching and the
+  IndexedDB sync queue are Phase 3 and are NOT built here.
+
+context:
+  - docs/platform.md            # §10 PWA and offline (Phase 1 vs Phase 3 split)
+  - docs/ui/screens/client-app.md   # Today: "Install prompt (PWA) appears once, as a dismissible card"
+  - docs/ui/patterns.md         # card, dismiss, states
+  - docs/ui/copy.md             # install-card copy
+  - src/app/client/(app)/page.tsx   # where the card mounts
+
+scope:
+  - src/app/manifest.ts         # Next metadata manifest route
+  - src/app/icon.svg            # app icon (favicon); add apple-icon if needed
+  - public/                     # PWA icons (192 + 512, maskable) referenced by the manifest
+  - src/features/pwa/components/install-prompt.tsx   # self-contained client component
+  - src/app/client/(app)/page.tsx                    # mount the install card (import, not inline)
+  - tests/e2e/pwa.spec.ts, tests/e2e/ui-routes.ts    # manifest + install-card states
+
+constraints:
+  - Phase 1 only — NO service worker, NO Serwist, NO offline/IndexedDB (that is Phase 3, §10).
+  - The install card is a self-contained component imported by Today (so the P1-07 Today rebuild keeps it); not inline.
+  - Dismiss state lives in localStorage (per-device UI convenience), never a DB or cookie.
+  - Tokens only; the card has the dismissible/again-later affordance; 360 px first; no hover-only control.
+
+acceptance:
+  - id: A1
+    claim: The manifest is served with name, short_name, start_url "/client", display "standalone", theme_color and background_color from the design tokens, and at least a 192px and a 512px icon (one maskable)
+    evidence: e2e fetches the manifest URL, parses JSON, asserts the fields
+  - id: A2
+    claim: Every page links the manifest and sets a theme-color meta (via the root layout metadata)
+    evidence: e2e asserts <link rel="manifest"> and theme-color in the document head
+  - id: A3
+    claim: The client Today screen shows a dismissible install card; dismissing it hides it and it stays hidden after reload
+    evidence: e2e as client — card visible, click dismiss, assert hidden, reload, assert still hidden
+  - id: A4
+    claim: The install card is a standalone component under src/features/pwa imported by Today, not inlined into the page
+    evidence: file exists; verifier confirms the import
+  - id: A5
+    claim: Zero axe violations on /client with the install card shown, at 360 and 1280 in light and dark
+    evidence: step test:e2e (ui.spec.ts) on the /client install-prompt state
+  - id: A6
+    claim: The manifest icons resolve (HTTP 200, image content-type)
+    evidence: e2e fetches each icon URL
+
+ui:
+  specs:
+    - docs/ui/screens/client-app.md
+  routes:
+    - { path: /client, as: client, states: [install-prompt] }
+  gallery_states: []
+
+approval_required:
+  - Any service-worker / offline work (that is Phase 3, not this task)
+
+out_of_scope:
+  - Service worker, offline caching, IndexedDB sync queue, "saved offline / synced" indicator (Phase 3, §10)
+  - Install prompt gating on "first completed workout" (no workouts exist until P1-07; show on Today, dismissible)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 15

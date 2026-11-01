@@ -1,0 +1,87 @@
+id: P1-04
+title: Exercise library and global seed
+phase: 1
+status: draft
+depends_on: [P0-05]
+
+objective: >
+  Coaches have an exercise library at /coach/exercises: a seeded global library (~150 exercises,
+  trainer_id null, read-only to trainers) plus their own custom exercises they can create, edit and
+  archive. Grid on desktop, list on mobile, instant client-side search and filters (muscle, equipment,
+  category, My exercises), and an exercise detail with video/instructions/muscles/equipment. The
+  program-builder exercise picker (Command) is P1-05 and is out of scope here.
+
+context:
+  - docs/data-model.md              # §5 Training → exercises columns
+  - docs/security.md                # §6 RLS; exercises readable global+own; exercise-media bucket public-read owner-write
+  - docs/ui/screens/program-builder.md  # Exercise library + detail + New exercise
+  - docs/ui/patterns.md             # grid/list, states, filters
+  - docs/ui/copy.md
+  - docs/commands.md                # db:types, test:rls
+
+scope:
+  - supabase/migrations/<new>_exercises.sql   # exercises table, RLS, grants, indexes
+  - supabase/seed.sql                         # ~150 global exercises (trainer_id null)
+  - src/lib/supabase/types.ts                 # regenerated via pnpm db:types (never hand-edited)
+  - src/features/exercises/**                 # schema (Zod), server actions, components
+  - src/app/coach/(app)/exercises/page.tsx    # replace the P0-05 placeholder
+  - src/app/coach/(app)/exercises/[id]/page.tsx  # exercise detail (optional if detail is a dialog)
+  - tests/rls/exercises.ts                    # RLS isolation tests
+  - tests/e2e/ (exercises spec) + tests/e2e/ui-routes.ts
+  - tests/unit for any parsing/validation
+
+constraints:
+  - New table → new migration, `enable row level security`, policies per §6, `pnpm db:types`, RLS tests. Never edit a committed migration.
+  - RLS: any authenticated user reads global rows (trainer_id is null) and their own; a trainer cannot read another trainer's private exercises; a trainer may insert/update/delete only rows with trainer_id = auth.uid(); a trainer cannot create or mutate a global row. Admin per §6.
+  - Server actions validate every input with Zod; trainer_id comes from the session, never the browser.
+  - Global exercises are read-only to trainers (seeded via the service role / seed.sql).
+  - Tokens only; grid/list has loading, empty, no-results and error states; 360 px first; English copy per docs/ui/copy.md.
+  - The exercise picker Command component belongs to P1-05 (program builder), not here.
+
+acceptance:
+  - id: A1
+    claim: The exercises table exists with the §5 columns, RLS enabled, and the policies above (global+own read, own-only write, no trainer-authored global rows)
+    evidence: migration file; RLS tests in tests/rls/exercises.ts
+  - id: A2
+    claim: RLS tests prove isolation — trainer A cannot see or mutate trainer B's private exercises, neither can create a global (trainer_id null) row, and both see the global library
+    evidence: step test:rls
+  - id: A3
+    claim: About 150 global exercises are seeded (trainer_id null) spanning muscle groups, equipment and categories
+    evidence: a count assertion over the seeded library (unit or rls setup) + seed.sql
+  - id: A4
+    claim: /coach/exercises shows the library as a grid at >=lg and a list below, with instant client-side search and working muscle / equipment / category / "My exercises" filters
+    evidence: e2e as coach (filter narrows results; search matches)
+  - id: A5
+    claim: A coach creates a custom exercise via New exercise; it is saved with trainer_id = their id and appears under "My exercises"; invalid input is rejected server-side with a specific message
+    evidence: e2e + Zod unit test
+  - id: A6
+    claim: Exercise detail shows video, instructions, primary/secondary muscles and equipment
+    evidence: e2e
+  - id: A7
+    claim: The library has loading, empty, no-results and error states
+    evidence: screenshots in .harness/evidence/ui/ for each state
+  - id: A8
+    claim: Screenshots at 360 and 1280 in light and dark; zero axe violations on the route in both themes; verify --full green with regenerated types
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A9
+    claim: The screens match the spec and the UI checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs:
+    - docs/ui/screens/program-builder.md
+  routes:
+    - { path: /coach/exercises, as: coach, states: [default, no-results] }
+  gallery_states: []
+
+approval_required:
+  - A new Postgres extension or a dependency not already pre-approved
+
+out_of_scope:
+  - The program-builder exercise picker (Command) — P1-05
+  - Exercise video upload to storage (YouTube/URL embed is enough here); the exercise-media bucket can land with media upload later
+  - "Used in N programs" counts (needs programs — P1-05)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 40

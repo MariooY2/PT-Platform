@@ -1,0 +1,88 @@
+id: P1-01
+title: Clients list and profile — status, tags, notes, files
+phase: 1
+status: draft
+depends_on: [P0-05]
+
+objective: >
+  Coaches manage their clients: a filterable, searchable Clients list and a Client profile with the
+  Overview (goals, injuries, tags, status) and a Notes & files tab (private trainer-only notes and
+  file uploads). Uses the existing trainer_clients row (status, tags, goals, injuries) and adds the
+  client_notes and client_files tables plus the private client-files storage bucket. Invite/CSV
+  import is P1-02; the Program, Workout log, Progress and Check-ins profile tabs arrive with their
+  feature tasks and are placeholders here.
+
+context:
+  - docs/data-model.md              # §5 Accounts → trainer_clients, client_notes, client_files
+  - docs/security.md                # §6 RLS (is_trainer_of), client-files bucket (private, trainer_id/client_id prefix, signed URLs)
+  - docs/ui/screens/coach.md        # Clients list + Client profile tabs
+  - docs/ui/patterns.md             # table→rows <768px, filters, states
+  - docs/ui/copy.md
+  - docs/commands.md                # db:types, test:rls
+
+scope:
+  - supabase/migrations/<new>_client_notes_files.sql   # client_notes, client_files tables + RLS + grants + indexes
+  - supabase/migrations/<new>_client_files_bucket.sql  # private storage bucket + storage policies (or in the same migration)
+  - supabase/seed.sql               # a seed note/file for an existing client (optional, for state screenshots)
+  - src/lib/supabase/types.ts       # regenerated via pnpm db:types
+  - src/features/clients/**         # schemas (Zod), server actions, list + profile components
+  - src/app/coach/(app)/clients/page.tsx           # replace the P0-05 placeholder: the list
+  - src/app/coach/(app)/clients/[id]/page.tsx      # client profile (Overview + Notes & files)
+  - tests/rls/client_notes_files.ts
+  - tests/e2e/ (clients spec) + tests/e2e/ui-routes.ts
+
+constraints:
+  - New tables → new migrations, `enable row level security`, policies per §6, `pnpm db:types`, RLS tests. Never edit a committed migration.
+  - client_notes and client_files are trainer-only: a trainer reads/writes rows only for clients they are is_trainer_of; the client and other trainers see nothing. Admin per §6.
+  - The client-files bucket is private, path prefix trainer_id/client_id/..., policies mirror the table, files served via signed URLs.
+  - Server actions validate with Zod; trainer_id and client linkage come from the session + is_trainer_of, never the browser. Opening a client you are not is_trainer_of returns not-found (no existence leak).
+  - Tokens only; the list and each data view have loading, empty, no-results and error states; table collapses to rows below 768 px with no horizontal scroll; 360 px first; copy per docs/ui/copy.md.
+
+acceptance:
+  - id: A1
+    claim: client_notes and client_files tables exist with RLS enabled and trainer-only policies keyed on is_trainer_of; the private client-files bucket exists with matching storage policies
+    evidence: migration files; RLS tests
+  - id: A2
+    claim: RLS tests prove isolation — a trainer can read/write notes and files only for their own clients; another trainer and the client itself are denied; the same holds for the storage bucket paths
+    evidence: step test:rls
+  - id: A3
+    claim: /coach/clients lists the trainer's clients with a status chip, tags and last-activity line; filters by Status and Tag and searches by name or email; the empty state uses the spec copy
+    evidence: e2e as coach (seeded clients shown; filter + search narrow the list; a trainer sees only their own clients)
+  - id: A4
+    claim: The client profile Overview edits goals, injuries and tags (saved server-side via Zod) and shows the status chip
+    evidence: e2e (edit persists after reload)
+  - id: A5
+    claim: The Notes & files tab adds a private note (appears in the timeline with an "Only you can see notes" label) and uploads a file that is listed and retrievable via a signed URL
+    evidence: e2e
+  - id: A6
+    claim: Opening another trainer's client profile is not possible (returns not-found / redirect), matching the RLS denial
+    evidence: e2e (signed in as the other trainer)
+  - id: A7
+    claim: All data views have loading, empty, no-results and error states
+    evidence: screenshots per state in .harness/evidence/ui/
+  - id: A8
+    claim: Screenshots at 360 and 1280 in light and dark; zero axe violations on each route in both themes; verify --full green with regenerated types
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A9
+    claim: The screens match the spec and the UI checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs:
+    - docs/ui/screens/coach.md
+  routes:
+    - { path: /coach/clients, as: coach, states: [default, no-results] }
+    - { path: /coach/clients, as: coach-empty, states: [empty] }
+  gallery_states: []
+
+approval_required:
+  - A new Postgres extension or a dependency not already pre-approved
+
+out_of_scope:
+  - Invite by email/link and CSV import (P1-02)
+  - The Program, Workout log, Progress, Check-ins, Nutrition and Billing profile tabs (their feature tasks; placeholders here)
+  - Messaging from the profile (P1-11)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 45

@@ -1,9 +1,11 @@
 id: P0-06
 title: CI and Vercel preview
 phase: 0
-status: approved
+status: parked
 approved_by: autopilot (D-006)
 approved_at: 2026-11-01
+closed_at: 2026-11-01
+receipt: .harness/receipts/P0-06.md
 depends_on: [P0-05]
 
 objective: >
