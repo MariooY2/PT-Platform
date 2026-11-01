@@ -177,7 +177,7 @@ export function ClientsList({
           {filtersActive ? ' match' : ''}
         </p>
         {filtersActive && (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
+          <Button variant="ghost" onClick={clearFilters}>
             Clear filters
           </Button>
         )}
