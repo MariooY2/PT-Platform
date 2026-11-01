@@ -5,8 +5,8 @@ parked (done locally; `(human)` lines wait in approvals.md) · blocked.
 
 | ID | Title | Status | Attempts | Receipt | Notes |
 | --- | --- | --- | --- | --- | --- |
-| P0-01 | Scaffold Next.js + tooling | verifying | 1 | — | verify --full green (fp c12ef5a4); awaiting verifier |
-| P0-02 | Local Supabase, base schema, RLS | draft | 0 | — | |
+| P0-01 | Scaffold Next.js + tooling | done | 1 | [P0-01](receipts/P0-01.md) | verify --full green (fp c12ef5a4); verifier ACCEPT |
+| P0-02 | Local Supabase, base schema, RLS | approved | 0 | — | Approved by autopilot (D-006); schema-lane, orchestrator builds after P0-01 closes |
 | P0-03 | Design system, UI gallery, screenshot + axe suite | draft | 0 | — | |
 | P0-04 | Auth, roles, onboarding, routing | draft | 0 | — | |
 | P0-05 | Navigation and layout shells | draft | 0 | — | |
