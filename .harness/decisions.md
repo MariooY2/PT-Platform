@@ -12,6 +12,23 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-028 — the fixed-nav target-size gap on dense mobile pages is a human-gated app-shell fix, not a per-task defect (2026-11-01, decided by: autopilot (D-006))
+Why: `src/components/shared/nav/app-shell.tsx` uses a `fixed bottom-0` nav over document-scrolled content, so
+at 360 scroll-top any interactive control in the nav's ~56px band fails axe `target-size` (partiallyObscured).
+`/coach/programs/[id]` was fixed per-page (4871cbc: grid-cols-2 + Add in card header + min-h-24 so the fold
+lands on empty card body). `/coach/forms` cannot be fixed per-page — it is a uniformly dense editor (Q2's move
+chevrons sit at the fold) with no control-free band; the spec (program-builder.md §Forms) is silent on a
+phone builder-as-own-view, so stacked-on-one-scroll is to spec. The robust fix (inner-scroll shell) touches all
+37 routes and forces a coordinated tests/e2e/ui.spec.ts screenshot change (fullPage would otherwise capture
+only the viewport), so it is design-system + harness work reserved for the human. P1-03 is therefore blocked on
+A5 only; P1-02/P1-05/P1-09 are code-complete and close on the green tree with no further code change. This is
+a human-gated boundary, NOT a 3-strikes exhaustion (forms had one relevant attempt; its controls were already
+44px `size="icon"`).
+Alternatives considered: (a) inner-scroll shell now — rejected (unreviewed, broad, breaks fullPage evidence for
+all screens); (b) back out P1-03's merge to green the tree — rejected (it carries the client intake gate + 6
+dynamic pages + the habits intake seed; backing out re-breaks P1-09 and reintroduces L-005).
+Affects: src/components/shared/nav/app-shell.tsx, tests/e2e/ui.spec.ts, P1-03, P1-02, P1-05, P1-09; approvals.md.
+
 ## D-027 — the intake gate is create-in-gate + fail-open; the client never sees the coach's name (2026-11-01, decided by: autopilot (D-006))
 Why: src/app/client/(app)/layout.tsx redirects a client with no submitted intake to /client/checkin/[id];
 resolveIntakeGate finds the client's trainer → default intake → creates the unsubmitted response if none

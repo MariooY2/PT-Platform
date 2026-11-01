@@ -14,11 +14,19 @@ parked (done locally; `(human)` lines wait in approvals.md) · blocked.
 | P1-01 | Clients list and profile | done | 3 | [receipt](receipts/P1-01.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); D-019/D-020/D-021; tabs+checkbox variant fix (L-004) |
 | P1-04 | Exercise library and global seed | done | 3 | [receipt](receipts/P1-04.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); ~148 seed; D-023/D-024; videoUrl http(s) refine |
 | P1-13 | PWA manifest and install prompt | done | 2 | [receipt](receipts/P1-13.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); D-022; manifest + install card + og icons |
-| P1-02 | Invite by email and link, CSV import | building | 0 | — | NEEDS-SCHEMA: branch worktree-agent-acb06619a91ff6a5e HEAD 092d58d7; needs a migration `alter trainer_clients alter invite_expires_at set default (now()+interval '14 days')` (else app-created invites are born expired — D-015) before merge; email via mock provider (EMAIL_PROVIDER env), real send (human) |
-| P1-03 | Form builder, intake, check-in review | building | 0 | — | Schema lane done (e1f57407); builder on app code from base e1f57407 |
-| P1-09 | Habits (coach sets, client ticks) | building | 0 | — | READY-TO-MERGE: branch worktree-agent-a3949902e3d107546 HEAD f3e2d76 (base 9d23e5db); fast verify pass. Queued behind the running P1-05 full verify; merge then add /client default + /coach/clients/[id] habits routes (D-025) |
-| P1-05 | Program builder (grid, editor, quick entry, supersets) | approved | 0 | — | Approved (D-006); schema lane DONE + validated (f764f6e, 7 RLS tests) and quick-entry parser DONE (f500400, 12 unit tests); builder/editor UI remains — runs as its own focused wave after P1-02/03/09 close |
+| P1-02 | Invite by email and link, CSV import | verifying | 0 | — | Merged f2c127e; migration 20261101103000 defaults invite_expires_at +14d (D-015). Code-complete; green on every route. Clients L-002 prerender fix 033d89e. Waiting on a green tree (blocked only by P1-03's /coach/forms target-size — app-shell, see approvals); closes with no further code change once forms is green. Real email send is (human). |
+| P1-03 | Form builder, intake, check-in review | blocked | 1 | — | Merged 9f85cfd. Blocked on A5 (zero-axe at 360): `/coach/forms` default fails WCAG 2.2 target-size — the fixed bottom nav obscures Question 2's move-chevrons mid-page at the fold (44×9px). Spec (program-builder.md §Forms) is silent on a phone builder-as-own-view, so this is the app-shell overlap, not a P1-03 layout bug; no per-card tweak produces a 56px control-free band. Needs the human-gated inner-scroll shell (see approvals). All other P1-03 routes/acceptance green. |
+| P1-09 | Habits (coach sets, client ticks) | verifying | 0 | — | Merged 73fb7b3; /client default + /coach/clients/[id] habits routes added (D-025). Code-complete; green on every route. Waiting on a green tree (blocked only by P1-03's forms target-size — app-shell, see approvals); closes with no further code change once forms is green. |
+| P1-05 | Program builder (grid, editor, quick entry, supersets) | verifying | 1 | — | Schema (f764f6e, 7 RLS) + parser (f500400, 12 unit) + builder UI on master. Day-grid target-size cleared by 4871cbc (grid-cols-2 + Add in card header + min-h-24) — `/coach/programs/[id]` passes target-size in verify --full e2e. Code-complete; green on every route. Waiting on a green tree (blocked only by P1-03's forms target-size — app-shell, see approvals); closes with no further code change once forms is green. v1 keyboard/preview deferrals recorded in the contract. |
 
 ## Blocked items needing the human
 
-None yet.
+- **P1-03** blocked on A5 (zero-axe at 360). `/coach/forms` fails WCAG 2.2 `target-size`: the
+  `fixed bottom-0` nav overlaps mid-page interactive controls at scroll-top (Question 2's move
+  chevrons, obscured to 44×9px). This is the shared app-shell overlap, not a per-task bug — the same
+  mechanism hit `/coach/programs/[id]` (fixable there only because its fold could land on empty card
+  body; the forms builder is uniformly dense and has no such band). The fix is the human-gated
+  inner-scroll shell + a coordinated `tests/e2e/ui.spec.ts` screenshot change — see the
+  `harness / design-system · persistent bottom nav obscures…` line in approvals.md. **Resolving it
+  turns the tree green and closes P1-02, P1-05 and P1-09 (all code-complete) with no further code
+  change, and unblocks P1-03.**
