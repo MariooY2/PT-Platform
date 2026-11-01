@@ -1,0 +1,24 @@
+# Build output and dependencies
+node_modules/
+.next/
+out/
+build/
+coverage/
+playwright-report/
+test-results/
+pnpm-lock.yaml
+
+# Harness-owned files — not formatted by the app's Prettier (contract requires .harness/ and docs/whish/)
+.harness/
+.claude/
+.github/
+scripts/
+docs/
+tasks/
+CLAUDE.md
+AGENTS.md
+README.md
+
+# Generated
+src/lib/supabase/types.ts
+next-env.d.ts

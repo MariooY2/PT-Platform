@@ -1,9 +1,9 @@
 id: P0-01
 title: Scaffold the Next.js app and the tooling the harness checks rely on
 phase: 0
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-01
 depends_on: []
 
 objective: >

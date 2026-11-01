@@ -69,6 +69,40 @@ remote Supabase, Whish credentials, extra packages, harness changes) is added to
 After each task, read `.harness/receipts/<ID>.md`: what changed, what is proven, what is **not**
 verified, and what needs your approval (pushes, deploys, remote database changes).
 
+## Develop the app
+
+The app is a Next.js (App Router, TypeScript strict) project managed with pnpm. On Windows, install
+Node.js LTS (≥ 24), pnpm (`npm install -g pnpm`), Docker Desktop (for the local Supabase stack, used
+from P0-02 on) and the Supabase CLI, then:
+
+```powershell
+cd C:\dev\pt-platform
+pnpm install
+pnpm exec playwright install chromium   # one-time browser download for e2e tests
+pnpm dev                                 # http://localhost:3000
+```
+
+Everyday scripts (full list in `docs/commands.md`):
+
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` | Start the dev server |
+| `pnpm build` / `pnpm start` | Production build, then serve it |
+| `pnpm lint` | ESLint |
+| `pnpm format:check` / `pnpm format` | Prettier check / write |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm test` | Unit tests (Vitest) |
+| `pnpm test:e2e` | End-to-end tests (Playwright) |
+| `pnpm test:rls` | RLS tests against the local Supabase stack (placeholder until P0-02) |
+| `pnpm db:types` | Regenerate Supabase types (needs the local stack running) |
+
+Verify before committing:
+
+```powershell
+node scripts/verify.mjs          # fast: architecture, format, lint, typecheck, unit tests
+node scripts/verify.mjs --full   # also RLS tests, production build, e2e tests
+```
+
 ## What's where
 
 | Path | Purpose |

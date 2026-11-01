@@ -12,6 +12,22 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-008 — P0-01 scaffold choices (2026-11-01, decided by: autopilot (D-006))
+Why: get a green scaffold within the contract's allowed packages and the harness checks.
+- **Tailwind v4 via `@tailwindcss/postcss` + `postcss`**, not `@tailwindcss/turbopack` (what create-next-app 16's
+  empty template emits): the turbopack plugin is not in the autopilot pre-approved list; postcss is. Turbopack
+  (default bundler in Next 16) reads `postcss.config.mjs`, so build/dev/e2e all pass. The turbopack CSS rule was
+  removed from `next.config.ts`.
+- **Prettier and ESLint ignore harness-owned paths** (`docs/`, `tasks/`, `scripts/`, `.claude/`, `.github/`,
+  `.harness/`, `supabase/`) and prose docs (`README.md`, `CLAUDE.md`, `AGENTS.md`). These are not app code; the
+  app's formatter/linter must not rewrite or fail on files the task may not edit. This is config scoping, not
+  weakening a check — `check-architecture.mjs`, typecheck and the test suites are untouched.
+- **`engines.node` = `">=24.0.0"`** to match the installed LTS (Node 24). Revisit in P0-06 if Vercel/CI pins another LTS.
+- **Root layout uses an explicit `{ children: ReactNode }` type**, not Next 16's generated `LayoutProps<'/'>` global,
+  so `tsc --noEmit` is green on a fresh tree before any build generates `.next/types`.
+Alternatives considered: turbopack Tailwind plugin (not pre-approved); formatting the harness docs (out of scope, risks churn).
+Affects: package.json, next.config.ts, postcss.config.mjs, .prettierrc.json, .prettierignore, eslint.config.mjs, src/app/layout.tsx.
+
 ## D-007 — Parallel builders with a serial schema lane (2026-11-01, decided by: human)
 Why: the owner wants independent tasks built in parallel by agents. One local Supabase stack and one set of
 ports can't be shared safely, so the orchestrator does contracts, schema (migrations, RLS, seed, types),
