@@ -1,7 +1,9 @@
 id: P1-04
 title: Exercise library and global seed
 phase: 1
-status: draft
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-01
 depends_on: [P0-05]
 
 objective: >
@@ -37,6 +39,8 @@ constraints:
   - Global exercises are read-only to trainers (seeded via the service role / seed.sql).
   - Tokens only; grid/list has loading, empty, no-results and error states; 360 px first; English copy per docs/ui/copy.md.
   - The exercise picker Command component belongs to P1-05 (program builder), not here.
+  - "primary_muscle, equipment and category use fixed value lists from a shared src/features/exercises/taxonomy.ts const — the seed and the filters both import it, so filters line up across all ~150 rows (secondary_muscles are also drawn from the muscle list)."
+  - "The no-results state is reachable via ?state=no-results (the page pre-fills a non-matching search). tests/e2e/ui-routes.ts entries are added by the ORCHESTRATOR at integration (builder.md forbids builders from editing it); the builder reports its routes in the hand-back."
 
 acceptance:
   - id: A1

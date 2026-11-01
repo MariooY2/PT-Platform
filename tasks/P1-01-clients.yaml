@@ -1,7 +1,9 @@
 id: P1-01
 title: Clients list and profile — status, tags, notes, files
 phase: 1
-status: draft
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-01
 depends_on: [P0-05]
 
 objective: >
@@ -37,6 +39,11 @@ constraints:
   - The client-files bucket is private, path prefix trainer_id/client_id/..., policies mirror the table, files served via signed URLs.
   - Server actions validate with Zod; trainer_id and client linkage come from the session + is_trainer_of, never the browser. Opening a client you are not is_trainer_of returns not-found (no existence leak).
   - Tokens only; the list and each data view have loading, empty, no-results and error states; table collapses to rows below 768 px with no horizontal scroll; 360 px first; copy per docs/ui/copy.md.
+  - "List columns for THIS task: Client (avatar+name), Status chip, Tags, Since (start_date via RelativeDate), '…' menu. Program / Compliance 14d / Last workout / Next check-in / Plan columns are DEFERRED to their feature tasks (P1-06, P1-07, P1-10, P2) — do not fake them; omit rather than show blanks."
+  - "trainer_clients already grants update(status, goals, injuries_notes, tags, start_date) to authenticated (20261101025837), restricted to own rows by RLS — no new grant needed; client_id stays service-role/invite-only."
+  - "client_notes / client_files RLS must use an ANY-STATUS link check — exists(select 1 from trainer_clients tc where tc.trainer_id = auth.uid() and tc.client_id = <row.client_id>) — NOT is_trainer_of() (which only matches active/paused), so archiving a client never locks the coach out of their own notes. Record as decision D-019."
+  - "The 'Invite client' button is present but disabled with a 'Coming soon' tooltip in this task; it wires to the P1-02 dialog there. The no-results state is reachable via ?state=no-results (the page pre-fills a non-matching search)."
+  - "tests/e2e/ui-routes.ts entries for these routes are added by the ORCHESTRATOR at integration (builder.md forbids builders from editing it); the builder reports its routes in the hand-back."
 
 acceptance:
   - id: A1
@@ -66,6 +73,9 @@ acceptance:
   - id: A9
     claim: The screens match the spec and the UI checklist
     evidence: ui-reviewer ACCEPT
+  - id: A10
+    claim: The client "…" menu changes the client's status (Pause / Archive / Reactivate), writing trainer_clients.status, and the Status filter reflects the change
+    evidence: e2e (change status, assert the chip + filter update and persist after reload)
 
 ui:
   specs:
@@ -73,6 +83,7 @@ ui:
   routes:
     - { path: /coach/clients, as: coach, states: [default, no-results] }
     - { path: /coach/clients, as: coach-empty, states: [empty] }
+    - { path: /coach/clients/33333333-0000-0000-0000-000000000001, as: coach, states: [default, notes-files] }
   gallery_states: []
 
 approval_required:

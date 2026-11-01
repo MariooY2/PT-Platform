@@ -12,6 +12,14 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-019 — client_notes / client_files RLS uses an any-status link check, not is_trainer_of() (2026-11-01, decided by: autopilot (D-006))
+Why: is_trainer_of() matches only active/paused trainer_clients links, so archiving a client would lock
+the coach out of their own notes and files about that client. The policies instead check
+`exists(select 1 from trainer_clients tc where tc.trainer_id = auth.uid() and tc.client_id = <row>.client_id)`
+for any status. This still "mirrors the table" per docs/security.md §6 — the trainer owns the row and
+is linked to the client — without coupling note access to the client's active state.
+Affects: P1-01 (client_notes, client_files migrations + RLS tests), docs/security.md intent.
+
 ## D-018 — coach "More" (mobile) is a flat list of every destination not in the bottom bar (2026-11-01, decided by: autopilot (D-006))
 Why: `docs/ui/patterns.md` summarises coach More as "programs, exercises, store, settings", where
 "store" is the Products/Orders/Earnings group. The mobile More page must surface everything the
