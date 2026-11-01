@@ -75,6 +75,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"exercises": {
+                  Row: {
+                    "category": Database["public"]['Enums']["exercise_category"],"created_at": string,"equipment": string | null,"id": string,"instructions": string | null,"is_archived": boolean,"name": string,"primary_muscle": string,"secondary_muscles": (string)[],"trainer_id": string | null,"updated_at": string,"video_url": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "category"?: Database["public"]['Enums']["exercise_category"],"created_at"?: string,"equipment"?: string | null,"id"?: string,"instructions"?: string | null,"is_archived"?: boolean,"name": string,"primary_muscle": string,"secondary_muscles"?: (string)[],"trainer_id"?: string | null,"updated_at"?: string,"video_url"?: string | null
+                  }
+                  Update: {
+                    "category"?: Database["public"]['Enums']["exercise_category"],"created_at"?: string,"equipment"?: string | null,"id"?: string,"instructions"?: string | null,"is_archived"?: boolean,"name"?: string,"primary_muscle"?: string,"secondary_muscles"?: (string)[],"trainer_id"?: string | null,"updated_at"?: string,"video_url"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "exercises_trainer_id_fkey"
+      columns: ["trainer_id"]
+isOneToOne: false
+      referencedRelation: "trainers"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"profiles": {
                   Row: {
                     "avatar_path": string | null,"created_at": string,"full_name": string | null,"id": string,"phone": string | null,"role": Database["public"]['Enums']["user_role"],"timezone": string,"unit_system": Database["public"]['Enums']["unit_system"],"updated_at": string
@@ -152,7 +172,7 @@ isOneToOne: true
                            }
           }
           Enums: {
-            "client_source": "invite"|"purchase"|"import","client_status": "lead"|"invited"|"active"|"paused"|"archived","trainer_plan": "free"|"pro"|"elite","unit_system": "metric"|"imperial","user_role": "admin"|"trainer"|"client"
+            "client_source": "invite"|"purchase"|"import","client_status": "lead"|"invited"|"active"|"paused"|"archived","exercise_category": "strength"|"cardio"|"mobility"|"plyometric"|"other","trainer_plan": "free"|"pro"|"elite","unit_system": "metric"|"imperial","user_role": "admin"|"trainer"|"client"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -272,7 +292,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "client_source": ["invite", "purchase", "import"],"client_status": ["lead", "invited", "active", "paused", "archived"],"trainer_plan": ["free", "pro", "elite"],"unit_system": ["metric", "imperial"],"user_role": ["admin", "trainer", "client"]
+            "client_source": ["invite", "purchase", "import"],"client_status": ["lead", "invited", "active", "paused", "archived"],"exercise_category": ["strength", "cardio", "mobility", "plyometric", "other"],"trainer_plan": ["free", "pro", "elite"],"unit_system": ["metric", "imperial"],"user_role": ["admin", "trainer", "client"]
           }
         }
 } as const
