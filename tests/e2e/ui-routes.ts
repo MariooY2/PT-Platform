@@ -26,7 +26,13 @@ export const uiRoutes: UiRoute[] = [
   { path: '/coach/onboarding', as: 'coach-empty', states: ['step-1'] },
   { path: '/coach', as: 'coach-empty', states: ['setup-checklist'] },
   // P0-05 navigation and layout shells — every destination gets a screenshot + axe scan (A3/A4).
+  { path: '/coach/clients', as: 'coach', states: ['default', 'no-results'] },
   { path: '/coach/clients', as: 'coach-empty', states: ['empty'] },
+  {
+    path: '/coach/clients/33333333-0000-0000-0000-000000000001',
+    as: 'coach',
+    states: ['default', 'notes-files'],
+  },
   { path: '/coach/checkins', as: 'coach-empty', states: ['empty'] },
   { path: '/coach/messages', as: 'coach-empty', states: ['empty'] },
   { path: '/coach/programs', as: 'coach-empty', states: ['empty'] },

@@ -12,6 +12,15 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-020 — profiles_select_trainer_of uses has_client_link() (any status), not is_trainer_of() (2026-11-01, decided by: autopilot (D-006))
+Why: is_trainer_of() matches only active/paused links, so after a coach archives a client they could no
+longer read that client's profile (name/avatar), showing "Unnamed client" in the Clients list and
+profile header — right where the P1-01 "…" Archive action (A10) leaves them. This parallels D-019 for
+notes/files: a coach who is linked to a client (any status) keeps read access to that client's profile.
+A trainer with no link still sees nothing. New migration 20261101080000 replaces the base-schema policy
+(never edits the committed one); RLS test added.
+Affects: supabase/migrations/20261101080000_profiles_trainer_any_status.sql, tests/rls/client_notes_files.test.ts, P1-01. See [[D-019]].
+
 ## D-019 — client_notes / client_files RLS uses an any-status link check, not is_trainer_of() (2026-11-01, decided by: autopilot (D-006))
 Why: is_trainer_of() matches only active/paused trainer_clients links, so archiving a client would lock
 the coach out of their own notes and files about that client. The policies instead check

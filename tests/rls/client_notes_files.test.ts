@@ -167,3 +167,30 @@ describe('client-files storage bucket (private, path-scoped)', () => {
     expect(res.error ? true : (res.data?.length ?? 0) === 0).toBe(true);
   });
 });
+
+describe('D-020: trainer reads a linked client profile at any status', () => {
+  it('the coach still reads an archived client’s profile (not just active/paused)', async () => {
+    await admin
+      .from('trainer_clients')
+      .update({ status: 'archived' })
+      .eq('trainer_id', TRAINER_A)
+      .eq('client_id', CLIENT_1);
+    try {
+      const res = await trainerA.from('profiles').select('id, full_name').eq('id', CLIENT_1);
+      expect(res.error).toBeNull();
+      expect(res.data).toHaveLength(1);
+    } finally {
+      await admin
+        .from('trainer_clients')
+        .update({ status: 'active' })
+        .eq('trainer_id', TRAINER_A)
+        .eq('client_id', CLIENT_1);
+    }
+  });
+
+  it('a trainer still cannot read a profile they have no link to', async () => {
+    const res = await trainerA.from('profiles').select('id').eq('id', CLIENT_2);
+    expect(res.error).toBeNull();
+    expect(res.data).toEqual([]);
+  });
+});
