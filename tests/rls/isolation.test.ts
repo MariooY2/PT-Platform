@@ -197,6 +197,18 @@ describe('trainers table isolation', () => {
     expect(check.data).toHaveLength(1);
   });
 
+  it('a trainer cannot set a bad-format slug via a direct update (check 23514, unchanged)', async () => {
+    const res = await trainerA
+      .from('trainers')
+      .update({ slug: 'INVALID SLUG!!' })
+      .eq('id', TRAINER_A)
+      .select();
+    expect(res.error?.code).toBe('23514'); // check_violation
+
+    const check = await admin.from('trainers').select('slug').eq('id', TRAINER_A).single();
+    expect(check.data?.slug).toBe('trainer-alpha');
+  });
+
   it('a client cannot make itself a trainer by inserting a trainers row (denied)', async () => {
     const res = await client1
       .from('trainers')

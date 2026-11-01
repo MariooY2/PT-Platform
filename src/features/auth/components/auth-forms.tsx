@@ -44,11 +44,11 @@ function PasswordField({ id = 'password' }: { id?: string }) {
       <p
         className={cn(
           'flex items-center gap-1 text-xs',
-          touched
-            ? ok
+          !touched
+            ? 'text-muted-foreground'
+            : ok
               ? 'text-success-soft-foreground'
-              : 'text-muted-foreground'
-            : 'text-muted-foreground',
+              : 'text-destructive dark:text-destructive-soft-foreground',
         )}
       >
         {touched && ok && <Check className="size-3.5" aria-hidden />}

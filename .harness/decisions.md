@@ -52,6 +52,20 @@ semantic tokens + interaction details that match the spec once our tokens load),
 Alternatives considered: re-init with a classic preset (none exists in shadcn 4); hand-author all 18 components (a week of work for the same result).
 Affects: src/components/ui/**, src/lib/utils.ts, package.json, P0-04/P0-05 (builders must run the cn-import fixup after `shadcn add`).
 
+## D-016 — Slug DB check, button hover contrast, OAuth/email-confirm deferral (2026-11-01, decided by: autopilot (D-006))
+- **Slug format in the DB**: migration `20261101062024_trainers_slug_format_check.sql` adds a CHECK matching
+  the Zod `slugSchema`, so a trainer can't bypass validation via a direct REST PATCH of their own slug
+  (verifier A5). Tested in tests/rls (bad-slug update → 23514).
+- **Primary button hover** is `hover:bg-primary/90` (was radix-nova's `/80`, which lightened to #4c72da and
+  gave white text only 4.44:1 — below AA). `/90` is ~5.5:1. App-wide for the default button variant.
+- **Google OAuth deferred**: the contract says it's "present but disabled unless env vars set" and "not
+  required for acceptance". It needs a cloud OAuth app + redirect URLs (human/approval_required) and an
+  `/auth/callback` route; deferred and queued in approvals.md rather than shipping dead/misconfigured code.
+- **Email auto-confirm**: signup uses `email_confirm: true` (local dev has confirmations off anyway). Turning
+  on real email confirmation is a cloud auth setting = human (approval_required); queued in approvals.md.
+- **checkSlugAction** is callable anonymously (reads slugs via the admin client) — low impact (storefront
+  slugs are semi-public); note for P2 storefront to gate if needed.
+
 ## D-015 — Auth server-action input hardening (2026-11-01, decided by: autopilot (D-006))
 Why: the P0-04 verifier found an open redirect — `signInAction`'s `next` param (from `/login?next=`) was
 only checked with `.startsWith('/')`, which `//evil.com` passes (protocol-relative → external). Fixed with

@@ -7,6 +7,8 @@ Format: `- [ ] <task-id> · <what is needed> · <why> · <exact step for you>`
 
 ## Open
 
+- [ ] P0-04 · (later) Google OAuth · the contract lists it as "present but disabled unless env vars set"; it needs a Google OAuth app + cloud redirect URLs (approval-gated) and an /auth/callback route · deferred (D-016) — set up the OAuth app + envs when you want it, then it can be added. Not required for P0-04 acceptance.
+- [ ] P0-04 · (later) Real email confirmation · signup auto-confirms locally (local confirmations are off); turning on email confirmation is a cloud Supabase auth setting · enable it in the cloud project at deploy time (P0-06), then remove `email_confirm: true` from the signup action.
 - [ ] P0-02 · FYI: confirm the `pgcrypto` extension is acceptable · the base migration runs `create extension if not exists pgcrypto` (for the seed's password hashing); it's pre-installed on Supabase local so it's a no-op, but the contract lists "adding a Postgres extension" as approval-required · no action needed unless you object; it's standard on Supabase.
 
 ## Done

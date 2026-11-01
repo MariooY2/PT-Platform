@@ -1,9 +1,16 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import AxeBuilder from '@axe-core/playwright';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { expect, test, type Page } from '@playwright/test';
 import { SEED_PASSWORD } from './ui-routes';
+
+const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
+async function axeClean(page: Page) {
+  const r = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
+  expect(r.violations, JSON.stringify(r.violations, null, 2)).toEqual([]);
+}
 
 // Service client from the live local stack (same pattern as tests/rls/global-setup.ts).
 const status = JSON.parse(
@@ -152,48 +159,53 @@ test('A4: expired and reused invites are rejected', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /expired/i })).toBeVisible();
 });
 
-// Screenshots of the interaction-driven states for the ui-reviewer (A6). Light theme, both widths.
-test('state screenshots: login error, onboarding steps, slug taken, invite expired', async ({
-  page,
-}) => {
-  await page.emulateMedia({ colorScheme: 'light' });
+// Interaction-driven states for the ui-reviewer (A6), captured + axe-scanned in both themes, both widths.
+for (const theme of ['light', 'dark'] as const) {
+  test(`state screenshots (${theme}): login error, onboarding steps, slug taken, invite expired`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: theme });
 
-  for (const w of [360, 1280]) {
-    await page.context().clearCookies();
-    await page.setViewportSize({ width: w, height: 800 });
+    for (const w of [360, 1280]) {
+      await page.context().clearCookies();
+      await page.setViewportSize({ width: w, height: 800 });
 
-    // login error
-    await page.goto('/login');
-    await page.locator('#email').fill('nobody@ptplatform.test');
-    await page.locator('#password').fill('wrongpassword');
-    await page.getByRole('button', { name: 'Sign in' }).click();
-    await expect(page.getByText('Email or password is wrong.')).toBeVisible();
-    await shot(page, 'login', `error-${w}-light.png`);
+      // login error
+      await page.goto('/login');
+      await page.locator('#email').fill('nobody@ptplatform.test');
+      await page.locator('#password').fill('wrongpassword');
+      await page.getByRole('button', { name: 'Sign in' }).click();
+      await expect(page.getByText('Email or password is wrong.')).toBeVisible();
+      await shot(page, 'login', `error-${w}-${theme}.png`);
+      await axeClean(page);
 
-    // onboarding steps (coach-empty already onboarded; wizard still renders)
-    await signInUi(page, 'coach.empty@ptplatform.test');
-    await page.waitForURL((u) => u.pathname === '/coach', { timeout: 15_000 });
+      // onboarding steps (coach-empty already onboarded; wizard still renders)
+      await signInUi(page, 'coach.empty@ptplatform.test');
+      await page.waitForURL((u) => u.pathname === '/coach', { timeout: 15_000 });
 
-    await page.goto('/coach/onboarding?step=1');
-    await page.locator('#slug').fill('trainer-alpha'); // taken
-    await page.locator('#slug').blur();
-    await expect(page.getByText(/taken/i)).toBeVisible();
-    await shot(page, 'coach-onboarding', `slug-taken-${w}-light.png`);
+      await page.goto('/coach/onboarding?step=1');
+      await page.locator('#slug').fill('trainer-alpha'); // taken
+      await page.locator('#slug').blur();
+      await expect(page.getByText(/taken/i)).toBeVisible();
+      await shot(page, 'coach-onboarding', `slug-taken-${w}-${theme}.png`);
+      await axeClean(page);
 
-    await page.goto('/coach/onboarding?step=2');
-    await expect(page.getByRole('heading', { name: 'Your look' })).toBeVisible();
-    await shot(page, 'coach-onboarding', `step-2-${w}-light.png`);
-    await page.goto('/coach/onboarding?step=3');
-    await expect(page.getByRole('heading', { name: 'Your money' })).toBeVisible();
-    await shot(page, 'coach-onboarding', `step-3-${w}-light.png`);
+      await page.goto('/coach/onboarding?step=2');
+      await expect(page.getByRole('heading', { name: 'Your look' })).toBeVisible();
+      await shot(page, 'coach-onboarding', `step-2-${w}-${theme}.png`);
+      await page.goto('/coach/onboarding?step=3');
+      await expect(page.getByRole('heading', { name: 'Your money' })).toBeVisible();
+      await shot(page, 'coach-onboarding', `step-3-${w}-${theme}.png`);
 
-    // invite expired
-    const email = `shot-${tag()}@ptplatform.test`;
-    const token = `shot-${tag()}`;
-    await createInvite(email, token, new Date(Date.now() - 864e5).toISOString());
-    await page.context().clearCookies();
-    await page.goto(`/invite/${token}`);
-    await expect(page.getByRole('heading', { name: /expired/i })).toBeVisible();
-    await shot(page, 'invite-expired', `expired-${w}-light.png`);
-  }
-});
+      // invite expired
+      const email = `shot-${tag()}@ptplatform.test`;
+      const token = `shot-${tag()}`;
+      await createInvite(email, token, new Date(Date.now() - 864e5).toISOString());
+      await page.context().clearCookies();
+      await page.goto(`/invite/${token}`);
+      await expect(page.getByRole('heading', { name: /expired/i })).toBeVisible();
+      await shot(page, 'invite-expired', `expired-${w}-${theme}.png`);
+      await axeClean(page);
+    }
+  });
+}

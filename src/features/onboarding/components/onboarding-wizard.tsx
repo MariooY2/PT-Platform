@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState, useTransition } from 'react';
+import { useActionState, useRef, useState, useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ const BRAND_COLORS = ['#1F4FD1', '#0F8A7E', '#C77700', '#7048E8', '#B45309', '#1
 
 export function OnboardingWizard({ initialStep = 1 }: { initialStep?: number }) {
   const [step, setStep] = useState(Math.min(Math.max(initialStep, 1), 3));
+  const [businessName, setBusinessName] = useState('');
   const [slug, setSlug] = useState('');
   const [brandColor, setBrandColor] = useState(BRAND_COLORS[0]);
   const [slugState, setSlugState] = useState<{
@@ -29,15 +30,29 @@ export function OnboardingWizard({ initialStep = 1 }: { initialStep?: number }) 
     suggestion?: string;
   }>({});
   const [checking, startCheck] = useTransition();
+  const slugTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [state, action, pending] = useActionState<OnboardingState, FormData>(
     completeOnboardingAction,
     undefined,
   );
 
-  function onSlugBlur() {
-    if (!slug) return;
-    startCheck(async () => setSlugState(await checkSlugAction(slug)));
+  function runSlugCheck(value: string) {
+    startCheck(async () => setSlugState(await checkSlugAction(value)));
   }
+  // Check availability as the user types (debounced) so the result is settled before they can advance.
+  function onSlugChange(value: string) {
+    const v = value.toLowerCase();
+    setSlug(v);
+    setSlugState({});
+    if (slugTimer.current) clearTimeout(slugTimer.current);
+    if (v.length >= 3) slugTimer.current = setTimeout(() => runSlugCheck(v), 400);
+  }
+  function onSlugBlur() {
+    if (slugTimer.current) clearTimeout(slugTimer.current);
+    if (slug.length >= 3) runSlugCheck(slug);
+  }
+  const canContinueStep1 =
+    businessName.trim().length > 0 && !checking && slugState.available === true;
 
   return (
     <form action={action} className="space-y-6">
@@ -58,7 +73,13 @@ export function OnboardingWizard({ initialStep = 1 }: { initialStep?: number }) 
         <h2 className="text-lg font-semibold">Your business</h2>
         <div className="grid gap-2">
           <Label htmlFor="businessName">Business name</Label>
-          <Input id="businessName" name="businessName" required={step === 1} />
+          <Input
+            id="businessName"
+            name="businessName"
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            required={step === 1}
+          />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="slug">Storefront address</Label>
@@ -68,7 +89,7 @@ export function OnboardingWizard({ initialStep = 1 }: { initialStep?: number }) 
               id="slug"
               name="slug"
               value={slug}
-              onChange={(e) => setSlug(e.target.value.toLowerCase())}
+              onChange={(e) => onSlugChange(e.target.value)}
               onBlur={onSlugBlur}
               aria-invalid={slugState.available === false}
             />
@@ -175,7 +196,7 @@ export function OnboardingWizard({ initialStep = 1 }: { initialStep?: number }) 
             type="button"
             className="w-full sm:w-auto"
             onClick={() => setStep((s) => s + 1)}
-            disabled={step === 1 && (!slug || slugState.available === false)}
+            disabled={step === 1 && !canContinueStep1}
           >
             Continue
           </Button>
