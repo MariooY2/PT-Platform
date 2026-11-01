@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/shared/page-header';
@@ -8,6 +9,7 @@ export const instant = false;
 
 // Minimal client landing; the full client app shell is P0-05.
 export default async function ClientHomePage() {
+  await connection();
   const supabase = await createClient();
   const {
     data: { user },

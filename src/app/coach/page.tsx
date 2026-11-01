@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/shared/page-header';
@@ -8,6 +9,7 @@ import { SetupChecklist } from '@/features/onboarding/components/setup-checklist
 export const instant = false;
 
 export default async function CoachHomePage() {
+  await connection();
   const supabase = await createClient();
   const {
     data: { user },

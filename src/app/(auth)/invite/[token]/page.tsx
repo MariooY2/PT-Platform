@@ -1,9 +1,11 @@
+import { connection } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { InviteForm } from '@/features/auth/components/auth-forms';
 
 export const instant = false;
 
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
+  await connection();
   const { token } = await params;
   const admin = createAdminClient();
 

@@ -166,6 +166,7 @@ export function OnboardingWizard({ initialStep = 1 }: { initialStep?: number }) 
         )}
         {step < 3 ? (
           <Button
+            key="continue"
             type="button"
             onClick={() => setStep((s) => s + 1)}
             disabled={!slug && step === 1}
@@ -173,14 +174,18 @@ export function OnboardingWizard({ initialStep = 1 }: { initialStep?: number }) 
             Continue
           </Button>
         ) : (
-          <Button type="submit" size="lg" disabled={pending}>
+          <Button key="finish" type="submit" size="lg" disabled={pending}>
             {pending && <Loader2 className="animate-spin" />}
             {pending ? 'Finishing…' : 'Finish setup'}
           </Button>
         )}
       </div>
-      {step > 1 && (
-        <button type="submit" className="mx-auto block text-sm text-muted-foreground">
+      {step === 2 && (
+        <button
+          type="button"
+          onClick={() => setStep(3)}
+          className="mx-auto block text-sm text-muted-foreground"
+        >
           Skip for now
         </button>
       )}

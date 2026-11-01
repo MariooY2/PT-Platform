@@ -15,7 +15,9 @@ export default async function OnboardingPage({
         <h1 className="text-2xl font-bold">Set up your coaching</h1>
         <p className="text-sm text-muted-foreground">A few details and you’re ready.</p>
       </div>
-      <OnboardingWizard initialStep={initialStep} />
+      <div className="rounded-xl border bg-card p-6">
+        <OnboardingWizard initialStep={initialStep} />
+      </div>
     </main>
   );
 }

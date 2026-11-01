@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/shared/page-header';
@@ -8,6 +9,7 @@ export const instant = false;
 
 // Minimal admin landing; the full admin area is P2-07.
 export default async function AdminHomePage() {
+  await connection();
   const supabase = await createClient();
   const {
     data: { user },

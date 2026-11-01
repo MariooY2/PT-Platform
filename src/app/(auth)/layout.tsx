@@ -6,7 +6,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="text-center">
         <span className="text-2xl font-bold">PT Platform</span>
       </div>
-      {children}
+      {/* Form controls sit on a card so input borders meet the 3:1 non-text contrast floor (D-012). */}
+      <div className="rounded-xl border bg-card p-6">{children}</div>
     </main>
   );
 }
