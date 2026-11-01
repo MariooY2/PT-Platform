@@ -21,6 +21,8 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    // Enable the /dev/ui gallery in the production build the e2e runs against.
+    env: { ENABLE_DEV_UI: '1' },
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 });

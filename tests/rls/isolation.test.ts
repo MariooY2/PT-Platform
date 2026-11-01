@@ -32,12 +32,10 @@ async function signIn(email: string): Promise<DB> {
 }
 
 let trainerA: DB;
-let trainerB: DB;
 let client1: DB;
 
 beforeAll(async () => {
   trainerA = await signIn('trainer.a@ptplatform.test');
-  trainerB = await signIn('trainer.b@ptplatform.test');
   client1 = await signIn('client.one@ptplatform.test');
 });
 

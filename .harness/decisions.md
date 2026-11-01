@@ -12,6 +12,26 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-013 — inline error text uses destructive-soft-foreground in dark (2026-11-01, decided by: autopilot (D-006))
+Why: axe (WCAG AA) flagged inline error text — dark `--destructive` (#c93c3c) on the dark `--background`
+(#121821) is 3.56:1, below 4.5:1 for normal text. `--destructive` is correct for solid buttons/icons
+(white on destructive) but not as body text in dark. Inline field errors/messages now use
+`text-destructive dark:text-destructive-soft-foreground` (light #A51F1F and dark #FF9C9C both pass AA on
+background and card). Applied to FormMessage, FormLabel error state, and inline field error text.
+Alternatives considered: darken the `--destructive` token (gated, and it would dull the solid button);
+larger/bold error text (14px normal can't reach 3:1 large-text exemption).
+Affects: src/components/ui/form.tsx, src/app/dev/ui/page.tsx; future screens' inline errors.
+
+## D-012 — input border contrast is measured against card (2026-11-01, decided by: autopilot (D-006), palette human-approved via D-005)
+Why: the contrast test (A1) recomputes WCAG ratios from globals.css. All text pairs meet AA 4.5:1 and the
+focus `ring` meets 3:1 against both background and card. `--input` (#8A939D light) is 3.12:1 against `card`
+but 2.87:1 against the page `background` (#F5F6F4) — a hair under 3:1. The design says input/ring meet 3:1
+"against the surfaces they sit on"; form controls sit on `card` (raised panels/sheets/forms), so the test
+asserts input vs card. Tokens are human-owned and were approved whole (D-005), so the hex is not changed.
+How to apply: place inputs on a card/panel surface (not bare on the page background); if an input must sit
+directly on `background`, wrap it in a card or the border will be slightly under the non-text contrast floor.
+Affects: tests/unit/tokens-contrast.test.ts, docs/ui note for future screens.
+
 ## D-011 — shadcn base is radix-nova, standardized toolchain (2026-11-01, decided by: human-approved P0-03)
 Why: shadcn CLI 4.23 only ships the new "radix-nova" styles (no classic preset). Kept it (its classes are
 semantic tokens + interaction details that match the spec once our tokens load), with three fixes:
