@@ -47,6 +47,7 @@ describe('sign-in', () => {
       'admin@ptplatform.test',
       'trainer.a@ptplatform.test',
       'trainer.b@ptplatform.test',
+      'coach.empty@ptplatform.test',
       'client.one@ptplatform.test',
       'client.two@ptplatform.test',
     ]) {
@@ -211,11 +212,11 @@ describe('admin can read all', () => {
   it('an admin reads every profile, trainer and link (is_admin)', async () => {
     const profiles = await adminUser.from('profiles').select('id');
     expect(profiles.error).toBeNull();
-    expect(profiles.data).toHaveLength(5);
+    expect(profiles.data).toHaveLength(6);
 
     const trainers = await adminUser.from('trainers').select('id');
     expect(trainers.error).toBeNull();
-    expect(trainers.data).toHaveLength(2);
+    expect(trainers.data).toHaveLength(3);
 
     const links = await adminUser.from('trainer_clients').select('id');
     expect(links.error).toBeNull();

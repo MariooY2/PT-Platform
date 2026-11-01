@@ -39,14 +39,14 @@ export type Database = {
                   ]
                 },"trainer_clients": {
                   Row: {
-                    "client_id": string | null,"created_at": string,"goals": string | null,"id": string,"injuries_notes": string | null,"invite_email": string | null,"invite_token": string | null,"source": Database["public"]['Enums']["client_source"],"start_date": string | null,"status": Database["public"]['Enums']["client_status"],"tags": (string)[] | null,"trainer_id": string,"updated_at": string
+                    "client_id": string | null,"created_at": string,"goals": string | null,"id": string,"injuries_notes": string | null,"invite_email": string | null,"invite_expires_at": string | null,"invite_token": string | null,"source": Database["public"]['Enums']["client_source"],"start_date": string | null,"status": Database["public"]['Enums']["client_status"],"tags": (string)[] | null,"trainer_id": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "client_id"?: string | null,"created_at"?: string,"goals"?: string | null,"id"?: string,"injuries_notes"?: string | null,"invite_email"?: string | null,"invite_token"?: string | null,"source"?: Database["public"]['Enums']["client_source"],"start_date"?: string | null,"status"?: Database["public"]['Enums']["client_status"],"tags"?: (string)[] | null,"trainer_id": string,"updated_at"?: string
+                    "client_id"?: string | null,"created_at"?: string,"goals"?: string | null,"id"?: string,"injuries_notes"?: string | null,"invite_email"?: string | null,"invite_expires_at"?: string | null,"invite_token"?: string | null,"source"?: Database["public"]['Enums']["client_source"],"start_date"?: string | null,"status"?: Database["public"]['Enums']["client_status"],"tags"?: (string)[] | null,"trainer_id": string,"updated_at"?: string
                   }
                   Update: {
-                    "client_id"?: string | null,"created_at"?: string,"goals"?: string | null,"id"?: string,"injuries_notes"?: string | null,"invite_email"?: string | null,"invite_token"?: string | null,"source"?: Database["public"]['Enums']["client_source"],"start_date"?: string | null,"status"?: Database["public"]['Enums']["client_status"],"tags"?: (string)[] | null,"trainer_id"?: string,"updated_at"?: string
+                    "client_id"?: string | null,"created_at"?: string,"goals"?: string | null,"id"?: string,"injuries_notes"?: string | null,"invite_email"?: string | null,"invite_expires_at"?: string | null,"invite_token"?: string | null,"source"?: Database["public"]['Enums']["client_source"],"start_date"?: string | null,"status"?: Database["public"]['Enums']["client_status"],"tags"?: (string)[] | null,"trainer_id"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
