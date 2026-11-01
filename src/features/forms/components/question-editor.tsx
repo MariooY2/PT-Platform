@@ -76,7 +76,7 @@ export function QuestionEditor({
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             aria-label={`Move question ${index + 1} up`}
             disabled={index === 0}
             onClick={() => onMove(-1)}
@@ -86,7 +86,7 @@ export function QuestionEditor({
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             aria-label={`Move question ${index + 1} down`}
             disabled={index === total - 1}
             onClick={() => onMove(1)}
@@ -97,7 +97,7 @@ export function QuestionEditor({
         <Button
           type="button"
           variant="ghost"
-          size="icon-sm"
+          size="icon"
           aria-label={`Remove question ${index + 1}`}
           onClick={onRemove}
           className="mt-5 text-muted-foreground hover:text-destructive"
@@ -154,7 +154,7 @@ export function QuestionEditor({
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon"
                   aria-label={`Remove choice ${i + 1}`}
                   disabled={(question.options ?? []).length <= 2}
                   onClick={() => removeOption(i)}
@@ -164,7 +164,7 @@ export function QuestionEditor({
               </li>
             ))}
           </ul>
-          <Button type="button" variant="outline" size="sm" onClick={addOption}>
+          <Button type="button" variant="outline" size="default" onClick={addOption}>
             <Plus className="size-4" aria-hidden />
             Add choice
           </Button>

@@ -125,7 +125,7 @@ export function ProgramBuilder({
           <Button
             key={w}
             type="button"
-            size="sm"
+            size="default"
             variant={w === week ? 'secondary' : 'ghost'}
             aria-pressed={w === week}
             onClick={() => setWeek(w)}
@@ -162,7 +162,7 @@ export function ProgramBuilder({
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="default"
                 className="mt-1 w-full justify-start"
                 disabled={pending}
                 onClick={() => run(() => addWorkoutAction(program.id, week, day))}
@@ -230,7 +230,7 @@ function WorkoutEditor({
         <Button
           type="button"
           variant="ghost"
-          size="sm"
+          size="default"
           disabled={pending}
           onClick={() => {
             run(() => deleteWorkoutAction(programId, workout.id), 'Workout deleted');
@@ -297,7 +297,7 @@ function ExerciseRow({
       />
       <Button
         type="button"
-        size="sm"
+        size="default"
         variant="outline"
         disabled={pending || !text.trim()}
         onClick={() => {
@@ -309,7 +309,7 @@ function ExerciseRow({
       </Button>
       <Button
         type="button"
-        size="sm"
+        size="default"
         variant="ghost"
         disabled={pending}
         onClick={() =>

@@ -104,3 +104,10 @@ notes: |
   using can_read_* (so the client reads their assigned copy); admin all. Seed one sample template.
   RLS test must prove: another trainer can't read/edit any nested row of a template; a client reads
   only their own copy's nested rows.
+
+  ## v1 deferrals (recorded so review judges against what was built)
+  The full keyboard-first editor from program-builder.md:42-51 (Tab across cells, Enter adds a row,
+  `/` opens the picker, ⌘D duplicates, per-set override rows, Columns ▾) and the phone Preview are
+  DEFERRED to a follow-up. v1 ships: a Select exercise picker, an Enter/Apply quick-entry input (the
+  parser is complete + unit-tested), superset group/ungroup, week grid, autosave via immediate server
+  actions, and the template/copy header. This is a reasoned reduction, not a silent drop.
