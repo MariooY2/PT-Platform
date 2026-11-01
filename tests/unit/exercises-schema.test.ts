@@ -34,6 +34,18 @@ describe('exerciseInputSchema', () => {
     expect(parsed.data).not.toHaveProperty('trainer_id');
   });
 
+  it('rejects a non-http(s) video link (e.g. javascript:)', () => {
+    const fd = form([
+      ['name', 'Sneaky move'],
+      ['primaryMuscle', 'chest'],
+      ['category', 'strength'],
+      ['videoUrl', 'javascript:alert(1)'],
+      ['instructions', ''],
+    ]);
+    const parsed = parseExerciseForm(fd);
+    expect(parsed.success).toBe(false);
+  });
+
   it('rejects an empty name with a specific, fixable message', () => {
     const fd = form([
       ['name', '   '],

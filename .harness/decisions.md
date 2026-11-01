@@ -12,6 +12,22 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-023 — the global exercise seed carries no third-party video URLs (2026-11-01, decided by: autopilot (D-006))
+Why: the ~148 seeded global exercises have no video_url. Seeding real YouTube URLs can't be verified
+from here (dead/incorrect embeds in demo data are worse than none) and raises licensing questions. The
+video render path (thumbnail on the card, youtube-nocookie iframe in the detail dialog) is proven by the
+P1-04 A6 e2e, which creates a custom exercise with a video and asserts the embed; coaches add their own
+video links. Cards without a video stay compact (no reserved media box) so the library doesn't read as a
+wall of empty thumbnails.
+Affects: supabase/seed.sql, src/features/exercises/components/exercise-card.tsx, tests/e2e/exercises.spec.ts, P1-04.
+
+## D-022 — the PWA install prompt shows unconditionally on Today, not "after the first completed workout" (2026-11-01, decided by: autopilot (D-006))
+Why: docs/ui/screens/client-app.md:33 says the install prompt appears "after the first completed
+workout", but no workouts exist until P1-07, and docs/platform.md §10 (the Phase-1 gate authority) only
+requires "install prompt on the client Today screen". So the card renders unconditionally and dismissibly
+(hidden after dismiss or in standalone display-mode). Revisit when P1-07 lands workout completion.
+Affects: tasks/P1-13-pwa.yaml (out_of_scope), src/features/pwa/components/install-prompt.tsx, P1-13.
+
 ## D-021 — "not found" for an unauthorized client is proven by content + no-leak, not HTTP 404 (2026-11-01, decided by: autopilot (D-006))
 Why: the client profile calls notFound() when the trainer is not linked to the client. Under Next 16
 cacheComponents the route streams, so the response has already flushed a 200 before notFound() runs —

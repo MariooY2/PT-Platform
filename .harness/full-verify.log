@@ -1,48 +1,13 @@
-PASS  architecture  (78 ms)
-PASS  format:check  (2426 ms)
-PASS  lint  (4677 ms)
-PASS  typecheck  (2357 ms)
-PASS  test  (2431 ms)
-PASS  test:rls  (3751 ms)
-PASS  build  (7612 ms)
-FAIL  test:e2e  (317159 ms)
+PASS  architecture  (100 ms)
+PASS  format:check  (2449 ms)
+PASS  lint  (5311 ms)
+PASS  typecheck  (2219 ms)
+PASS  test  (2497 ms)
+PASS  test:rls  (4432 ms)
+PASS  build  (10767 ms)
+PASS  test:e2e  (293149 ms)
 
-verify (full): FAIL at test:e2e. Details in .harness/last-verify.json
-
---- test:e2e output (tail) ---
-_@supabase_supabase-js_dist_index_mjs_1k2e_7jl2p54p._.js:24:12344)
-Stopped services: [supabase_imgproxy_pt-platform supabase_analytics_pt-platform supabase_vector_pt-platform supabase_pooler_pt-platform]
-WARN: INBUCKET_URL is deprecated and will be removed in v3, use MAILPIT_URL instead.
-(node:22060) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+verify (full): PASS · fingerprint c22d421d0cf41644
+(node:28308) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-Stopped services: [supabase_imgproxy_pt-platform supabase_analytics_pt-platform supabase_vector_pt-platform supabase_pooler_pt-platform]
-WARN: INBUCKET_URL is deprecated and will be removed in v3, use MAILPIT_URL instead.
-(node:7452) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-Stopped services: [supabase_imgproxy_pt-platform supabase_analytics_pt-platform supabase_vector_pt-platform supabase_pooler_pt-platform]
-WARN: INBUCKET_URL is deprecated and will be removed in v3, use MAILPIT_URL instead.
-(node:31796) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-Stopped services: [supabase_imgproxy_pt-platform supabase_analytics_pt-platform supabase_vector_pt-platform supabase_pooler_pt-platform]
-WARN: INBUCKET_URL is deprecated and will be removed in v3, use MAILPIT_URL instead.
-(node:33800) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-Stopped services: [supabase_imgproxy_pt-platform supabase_analytics_pt-platform supabase_vector_pt-platform supabase_pooler_pt-platform]
-WARN: INBUCKET_URL is deprecated and will be removed in v3, use MAILPIT_URL instead.
-(node:29476) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-Stopped services: [supabase_imgproxy_pt-platform supabase_analytics_pt-platform supabase_vector_pt-platform supabase_pooler_pt-platform]
-WARN: INBUCKET_URL is deprecated and will be removed in v3, use MAILPIT_URL instead.
-(node:16540) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-Stopped services: [supabase_imgproxy_pt-platform supabase_analytics_pt-platform supabase_vector_pt-platform supabase_pooler_pt-platform]
-WARN: INBUCKET_URL is deprecated and will be removed in v3, use MAILPIT_URL instead.
-(node:20552) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-Stopped services: [supabase_imgproxy_pt-platform supabase_analytics_pt-platform supabase_vector_pt-platform supabase_pooler_pt-platform]
-WARN: INBUCKET_URL is deprecated and will be removed in v3, use MAILPIT_URL instead.
-(node:31952) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-[ELIFECYCLE] Command failed with exit code 1.
-
-EXIT=1
+EXIT=0

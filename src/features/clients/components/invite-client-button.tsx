@@ -16,7 +16,13 @@ export function InviteClientButton({ className }: { className?: string }) {
           {/* A disabled <button> swallows pointer/focus events, so the focusable wrapper span is
               the trigger. Radix wires aria-describedby to the content only while the tooltip is open. */}
           <span tabIndex={0} className={className}>
-            <Button type="button" tabIndex={-1} disabled className="pointer-events-none w-full">
+            <Button
+              type="button"
+              variant="outline"
+              tabIndex={-1}
+              disabled
+              className="pointer-events-none w-full"
+            >
               <UserPlus />
               Invite client
             </Button>

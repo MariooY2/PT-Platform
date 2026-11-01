@@ -39,7 +39,6 @@ import {
 } from '../lib';
 import { ClientStatusChip } from './client-status-chip';
 import { ClientStatusMenu } from './client-status-menu';
-import { InviteClientButton } from './invite-client-button';
 
 function Since({ startDate }: { startDate: string | null }) {
   if (!startDate) return <span className="text-muted-foreground">—</span>;
@@ -106,7 +105,6 @@ export function ClientsList({
           icon={Users}
           title="No clients yet"
           description="Invite your first client to start tracking their training."
-          action={<InviteClientButton className="inline-block" />}
         />
         <Toaster />
       </>

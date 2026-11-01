@@ -23,7 +23,7 @@ import { ExerciseDetailDialog } from './exercise-detail-dialog';
 import { NewExerciseDialog } from './new-exercise-dialog';
 
 const NO_MATCH = 'zzznomatchzzz';
-const DESCRIPTION = 'Your library and the built-in moves. Search, filter, or add your own.';
+const DESCRIPTION = 'Your exercises and the built-in library. Search, filter, or add your own.';
 
 function Grid({ children }: { children: React.ReactNode }) {
   return (
@@ -174,7 +174,7 @@ export function ExerciseLibrary({
               </Select>
 
               <Button
-                variant={mine ? 'default' : 'outline'}
+                variant={mine ? 'secondary' : 'outline'}
                 aria-pressed={mine}
                 onClick={() => setMine((v) => !v)}
               >
@@ -196,11 +196,19 @@ export function ExerciseLibrary({
           </div>
 
           {filtered.length === 0 ? (
-            <EmptyState
-              icon={Search}
-              title="No exercises match these filters"
-              description="Try a different muscle, equipment or search, or clear the filters above."
-            />
+            mine && !exercises.some(isCustom) ? (
+              <EmptyState
+                title="No exercises yet"
+                description="Exercises you create appear here. Add one to use it in your programs."
+                action={<NewExerciseDialog />}
+              />
+            ) : (
+              <EmptyState
+                icon={Search}
+                title="No exercises match these filters"
+                description="Try a different muscle, equipment or search, or clear the filters above."
+              />
+            )
           ) : (
             <Grid>
               {filtered.map((e) => (

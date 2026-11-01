@@ -98,7 +98,7 @@ export function InstallPrompt() {
   return (
     <section
       aria-labelledby="install-prompt-title"
-      className="relative rounded-xl border bg-card p-4 text-card-foreground shadow-sm"
+      className="relative rounded-xl border bg-card p-4 text-card-foreground"
     >
       <div className="flex items-start gap-3 pr-9">
         <span
@@ -108,7 +108,7 @@ export function InstallPrompt() {
           <Share className="size-5" />
         </span>
         <div className="space-y-1">
-          <h2 id="install-prompt-title" className="text-base font-semibold">
+          <h2 id="install-prompt-title" className="text-lg font-semibold">
             Install the app
           </h2>
           <p className="text-sm text-muted-foreground">

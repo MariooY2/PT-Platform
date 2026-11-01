@@ -17,6 +17,8 @@ export const exerciseInputSchema = z.object({
     .string()
     .trim()
     .url('Enter a valid video link, like https://youtube.com/watch?v=…')
+    // Only http(s) — URL() accepts javascript:/data:, which the detail view would render as an href.
+    .refine((u) => /^https?:\/\//i.test(u), 'Use a link that starts with http:// or https://.')
     .or(z.literal('')),
   instructions: z.string().trim().max(2000, 'Keep instructions under 2000 characters.'),
 });

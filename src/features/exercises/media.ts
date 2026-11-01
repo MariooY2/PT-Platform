@@ -22,3 +22,12 @@ export function youtubeEmbedUrl(url: string | null | undefined): string | null {
   if (!id || !/^[A-Za-z0-9_-]{6,}$/.test(id)) return null;
   return `https://www.youtube-nocookie.com/embed/${id}`;
 }
+
+// The YouTube thumbnail for a video URL, or null when it is not a YouTube link. Reuses the embed
+// parser so the same validation applies. Shown on exercise cards that have a video.
+export function youtubeThumbnailUrl(url: string | null | undefined): string | null {
+  const embed = youtubeEmbedUrl(url);
+  if (!embed) return null;
+  const id = embed.slice('https://www.youtube-nocookie.com/embed/'.length);
+  return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+}

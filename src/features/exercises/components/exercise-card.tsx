@@ -3,6 +3,7 @@
 import { ChevronRight, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { humanizeTaxonomy } from '../taxonomy';
+import { youtubeThumbnailUrl } from '../media';
 import type { Exercise } from '../types';
 
 export function ExerciseCard({
@@ -14,20 +15,28 @@ export function ExerciseCard({
   isCustom: boolean;
   onOpen: () => void;
 }) {
+  // Only exercises with a video get a media slot; the rest stay compact (name + taxonomy lead),
+  // so a library of mostly video-less moves doesn't read as a wall of identical empty boxes.
+  const thumb = youtubeThumbnailUrl(exercise.video_url);
   return (
     <li>
       <button
         type="button"
         data-testid="exercise-card"
         onClick={onOpen}
-        className="flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left transition-colors hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 lg:min-h-44 lg:flex-col lg:items-stretch lg:justify-between lg:p-4"
+        className="flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left transition-colors hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 lg:flex-col lg:items-stretch lg:justify-between lg:p-4"
       >
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground lg:h-24 lg:w-full">
-          <PlayCircle
-            className={exercise.video_url ? 'size-6 text-foreground' : 'size-6 opacity-40'}
-            aria-hidden
-          />
-        </div>
+        {thumb && (
+          <span className="relative block size-11 shrink-0 overflow-hidden rounded-lg bg-muted lg:h-24 lg:w-full">
+            {/* eslint-disable-next-line @next/next/no-img-element -- external YouTube thumbnail; next/image needs remotePatterns config (out of scope) */}
+            <img src={thumb} alt="" loading="lazy" className="size-full object-cover" />
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="flex size-8 items-center justify-center rounded-full bg-background/90 text-foreground">
+                <PlayCircle className="size-5" aria-hidden />
+              </span>
+            </span>
+          </span>
+        )}
 
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex items-start justify-between gap-2">
