@@ -85,10 +85,16 @@ export function ExerciseLibrary({
   const showError = hadError || forcedState === 'error';
   const showLoading = forcedState === 'loading';
   const isEmptyLibrary = forcedState === 'empty' || exercises.length === 0;
+  // When an empty state shows its own New exercise CTA, don't also render one in the header.
+  const emptyWithCta = isEmptyLibrary || (mine && !exercises.some(isCustom));
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-      <PageHeader title="Exercises" description={DESCRIPTION} action={<NewExerciseDialog />} />
+      <PageHeader
+        title="Exercises"
+        description={DESCRIPTION}
+        action={emptyWithCta ? undefined : <NewExerciseDialog />}
+      />
 
       {showError ? (
         <ErrorState
@@ -97,11 +103,18 @@ export function ExerciseLibrary({
           onRetry={() => router.refresh()}
         />
       ) : showLoading ? (
-        <div aria-hidden>
+        <div className="space-y-3" aria-hidden>
+          <Skeleton className="h-11 w-full rounded-md" />
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-11 w-28 rounded-md" />
+            ))}
+          </div>
+          <Skeleton className="h-4 w-24" />
           <Grid>
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: 9 }).map((_, i) => (
               <li key={i}>
-                <Skeleton className="h-20 w-full rounded-xl lg:h-44" />
+                <Skeleton className="h-20 w-full rounded-xl" />
               </li>
             ))}
           </Grid>
