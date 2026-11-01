@@ -14,9 +14,10 @@ parked (done locally; `(human)` lines wait in approvals.md) · blocked.
 | P1-01 | Clients list and profile | done | 3 | [receipt](receipts/P1-01.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); D-019/D-020/D-021; tabs+checkbox variant fix (L-004) |
 | P1-04 | Exercise library and global seed | done | 3 | [receipt](receipts/P1-04.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); ~148 seed; D-023/D-024; videoUrl http(s) refine |
 | P1-13 | PWA manifest and install prompt | done | 2 | [receipt](receipts/P1-13.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); D-022; manifest + install card + og icons |
-| P1-02 | Invite by email and link, CSV import | approved | 0 | — | Approved (D-006); no schema (trainer_clients); email via mock provider, real send (human). Wave with P1-03, P1-09 |
-| P1-03 | Form builder, intake, check-in review | approved | 0 | — | Approved (D-006); schema: forms/form_responses/checkin_schedules + default-forms trigger; intake gate in client layout. Wave with P1-02, P1-09 |
-| P1-09 | Habits (coach sets, client ticks) | approved | 0 | — | Approved (D-006); schema: habits/habit_logs (unique habit_id,log_date). Wave with P1-02, P1-03 |
+| P1-02 | Invite by email and link, CSV import | building | 0 | — | No schema; builder on app code from base e1f57407 |
+| P1-03 | Form builder, intake, check-in review | building | 0 | — | Schema lane done (e1f57407); builder on app code from base e1f57407 |
+| P1-09 | Habits (coach sets, client ticks) | building | 0 | — | Schema lane done (e1f57407); builder on app code from base e1f57407 |
+| P1-05 | Program builder (grid, editor, quick entry, supersets) | approved | 0 | — | Approved (D-006); runs as its own wave AFTER P1-02/03/09 (biggest P1 task); schema + parser + UI split |
 
 ## Blocked items needing the human
 

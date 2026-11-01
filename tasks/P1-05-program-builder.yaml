@@ -1,0 +1,91 @@
+id: P1-05
+title: Program builder — week grid, workout editor, quick entry, supersets
+phase: 1
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-01
+depends_on: [P1-04]
+
+objective: >
+  A coach builds a multi-week training program: a week × day grid of workouts, a workout editor whose
+  rows are exercises with a compact prescription (sets · reps · load · rest), coach-shorthand quick
+  entry that expands into prescribed sets, supersets, autosave, and a phone preview. Templates and
+  client copies are distinguished; assignment/deep-copy is P1-06. Per docs/ui/screens/program-builder.md
+  (Builder) and docs/features.md §7.4.
+
+context:
+  - docs/data-model.md             # §5 programs, program_workouts, workout_exercises, prescribed_sets
+  - docs/security.md               # §6 RLS
+  - docs/ui/screens/program-builder.md  # Programs list + Builder + quick entry + supersets
+  - docs/features.md               # §7.4
+  - docs/ui/patterns.md, docs/ui/copy.md
+
+scope:
+  - supabase/migrations/<new>_programs.sql     # programs, program_workouts, workout_exercises, prescribed_sets + RLS + grants + indexes
+  - supabase/seed.sql                          # one sample template program (program-builder.md empty-state references it)
+  - src/lib/supabase/types.ts                  # regenerated via pnpm db:types
+  - src/features/programs/quick-entry.ts       # PURE parser: "4x5 @80%" / "3x8-10 RPE8" / "5x5 100kg" / "3x30s" → prescribed sets
+  - src/features/programs/**                    # schemas, server actions, builder components
+  - src/app/coach/(app)/programs/**            # replace the P0-05 placeholder: list + builder + preview
+  - tests/rls/programs.ts, tests/unit/quick-entry.test.ts, tests/e2e/ (programs spec)
+
+constraints:
+  - New tables → new migration, enable RLS, policies per §6, `pnpm db:types`, RLS tests. Never edit a committed migration.
+  - RLS: a trainer owns their programs and all nested rows (program_workouts/workout_exercises/prescribed_sets) via the program's trainer_id; a client reads only their own assigned copy (client_id). Nested-row policies check ownership through the parent program (security-definer helper if needed to avoid recursion). Admin per §6.
+  - The quick-entry parser is a single pure, exhaustively unit-tested function; invalid input is kept and flagged, never silently dropped (program-builder.md acceptance).
+  - Editing a client copy never mutates the template (deep-copy is P1-06; this task builds templates + the editor; a client copy is edited in place without touching source_program_id's rows). The header states template vs copy.
+  - Server actions validate with Zod; trainer_id from the session. Autosave writes through a server action; no prices/ids from the browser.
+  - Tokens only; keyboard-first editor (Tab across cells, Enter adds a row, `/` opens the picker); every view has loading/empty/no-results/error states; 360 px usable; copy per docs/ui/copy.md.
+  - A Server Component reading the Supabase session must `await connection()` first or wrap the read in Suspense (L-002). Browser Supabase config via a server action, not process.env (L-003).
+
+acceptance:
+  - id: A1
+    claim: The four program tables exist with RLS; a trainer owns their programs + nested rows; a client reads only their own copy
+    evidence: migration; tests/rls/programs.ts
+  - id: A2
+    claim: RLS isolation across all four tables (another trainer and the client are denied on templates and others' copies)
+    evidence: step test:rls
+  - id: A3
+    claim: The quick-entry parser expands "4x5 @80%", "3x8-10 RPE8", "5x5 100kg" and "3x30s" correctly, and keeps+flags invalid input
+    evidence: tests/unit/quick-entry.test.ts (all four forms + invalid)
+  - id: A4
+    claim: A coach builds a 4-day week of exercises using the editor (add workout, add exercises, set prescriptions via quick entry), and it persists (autosave)
+    evidence: e2e as coach
+  - id: A5
+    claim: Supersets group/ungroup (A1/A2 labels) and the header states template vs client copy
+    evidence: e2e
+  - id: A6
+    claim: Editing a client copy does not change the template it came from
+    evidence: e2e or rls/integration test asserting the template rows are unchanged
+  - id: A7
+    claim: All views have loading/empty/no-results/error states; screenshots 360/1280 light+dark; zero axe; verify --full green with regenerated types
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A8
+    claim: The screens match the spec and the checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs: [docs/ui/screens/program-builder.md]
+  routes:
+    - { path: /coach/programs, as: coach, states: [default, empty] }
+  gallery_states: []
+
+approval_required:
+  - A new Postgres extension or a dependency not already pre-approved
+
+out_of_scope:
+  - Assignment to clients by deep copy + the assign dialog (P1-06)
+  - The workout player / logging (P1-07); progression rules (Phase 4)
+  - The exercise picker Command is reused from P1-04/P1-05 boundary — build the picker here if P1-04 didn't
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 55
+
+notes: |
+  ## Build split (advisor)
+  Run P1-05 as its own wave (biggest task in the phase). Orchestrator does the schema lane; then the
+  quick-entry parser lands as a standalone unit-tested module BEFORE the UI (so a parser failure can't
+  sink the whole task); then the builder/editor UI. Consider two builders if scope allows: one for the
+  parser + server actions, one for the grid/editor UI — but their scopes overlap src/features/programs,
+  so more likely a single builder or self-build.
