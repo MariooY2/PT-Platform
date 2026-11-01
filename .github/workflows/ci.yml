@@ -33,16 +33,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Set up Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
+      # Use the `supabase` CLI from devDependencies (via pnpm exec) so CI matches the version the
+      # repo uses locally and in playwright.config / tests/rls. Docker is preinstalled on ubuntu.
       - name: Start local Supabase stack
-        run: supabase start
+        run: pnpm exec supabase start
 
       - name: Apply migrations and seed
-        run: supabase db reset
+        run: pnpm exec supabase db reset
 
       - name: Install Playwright browser
         run: pnpm exec playwright install --with-deps chromium
