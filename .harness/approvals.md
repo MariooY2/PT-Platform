@@ -9,6 +9,8 @@ Format: `- [ ] <task-id> · <what is needed> · <why> · <exact step for you>`
 
 (none)
 
+- [ ] P0-02 · FYI: confirm the `pgcrypto` extension is acceptable · the base migration runs `create extension if not exists pgcrypto` (for the seed's password hashing); it's pre-installed on Supabase local so it's a no-op, but the contract lists "adding a Postgres extension" as approval-required · no action needed unless you object; it's standard on Supabase.
+
 ## Done
 
 - [x] P0-03 · Confirm the "chalk and iron" visual direction (D-005) · **Approved by the human 2026-11-01.** Claude now drives P0-03 directly (autopilot turned off for the interactive design work; guard prompts on globals.css are approved by the human in-session).

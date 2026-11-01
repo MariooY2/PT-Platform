@@ -186,6 +186,25 @@ describe('trainers table isolation', () => {
     const check = await admin.from('trainers').select('business_name').eq('id', TRAINER_B).single();
     expect(check.data?.business_name).not.toBe('hijacked');
   });
+
+  it("Trainer A cannot delete Trainer B's trainers row (0 rows, still present)", async () => {
+    const res = await trainerA.from('trainers').delete().eq('id', TRAINER_B).select();
+    expect(res.error).toBeNull();
+    expect(res.data).toEqual([]);
+
+    const check = await admin.from('trainers').select('id').eq('id', TRAINER_B);
+    expect(check.data).toHaveLength(1);
+  });
+
+  it('a client cannot make itself a trainer by inserting a trainers row (denied)', async () => {
+    const res = await client1
+      .from('trainers')
+      .insert({ id: CLIENT_1, slug: 'sneaky-client', storefront_published: true });
+    expect(res.error).not.toBeNull();
+
+    const check = await admin.from('trainers').select('id').eq('id', CLIENT_1);
+    expect(check.data).toEqual([]);
+  });
 });
 
 describe('admin can read all', () => {

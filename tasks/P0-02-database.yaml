@@ -25,6 +25,7 @@ scope:
   - tests/rls/
   - package.json scripts test:rls and db:types (real commands)
   - playwright.config.ts (scope added: dedicated e2e port 3100 to avoid local collisions, D-009)
+  - README.md (scope added: document the seed accounts + test password, per constraint "Seed passwords ... documented in README")
 
 constraints:
   - Local stack only. No `supabase link`, no `supabase db push`.

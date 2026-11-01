@@ -93,8 +93,21 @@ Everyday scripts (full list in `docs/commands.md`):
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm test` | Unit tests (Vitest) |
 | `pnpm test:e2e` | End-to-end tests (Playwright) |
-| `pnpm test:rls` | RLS tests against the local Supabase stack (placeholder until P0-02) |
+| `pnpm test:rls` | RLS isolation tests against the local Supabase stack |
 | `pnpm db:types` | Regenerate Supabase types (needs the local stack running) |
+
+### Seed accounts (local only)
+
+`supabase db reset` seeds five accounts, all with the password **`Password123!`** (an obvious local
+test value — never a real credential):
+
+| Email | Role |
+| --- | --- |
+| `admin@ptplatform.test` | admin |
+| `trainer.a@ptplatform.test` | trainer (Alpha Strength) |
+| `trainer.b@ptplatform.test` | trainer (Beta Fitness) |
+| `client.one@ptplatform.test` | client (Trainer Alpha's client) |
+| `client.two@ptplatform.test` | client (Trainer Beta's client) |
 
 Verify before committing:
 
