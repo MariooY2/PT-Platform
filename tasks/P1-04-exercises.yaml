@@ -1,9 +1,11 @@
 id: P1-04
 title: Exercise library and global seed
 phase: 1
-status: approved
+status: done
 approved_by: autopilot (D-006)
 approved_at: 2026-11-01
+closed_at: 2026-11-01
+receipt: .harness/receipts/P1-04.md
 depends_on: [P0-05]
 
 objective: >

@@ -12,6 +12,15 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-024 — on /coach/exercises the empty-state primary is consolidated into the always-present header action (2026-11-01, decided by: autopilot (D-006))
+Why: patterns.md §States puts the one primary action inside the EmptyState, but the global library is
+never truly empty (only the "My exercises" view can be), and rendering a New exercise button both in the
+PageHeader and in the empty card gave two primaries and a layout reflow when toggling filters. So the
+header "New exercise" action is always present (the single primary in every state), the empty-state copy
+names it ("Use New exercise to add one"), and loading.tsx mirrors it with a same-size skeleton so the
+first paint doesn't shift. This keeps one primary per view with no reflow.
+Affects: src/features/exercises/components/exercise-library.tsx, src/app/coach/(app)/exercises/loading.tsx, P1-04.
+
 ## D-023 — the global exercise seed carries no third-party video URLs (2026-11-01, decided by: autopilot (D-006))
 Why: the ~148 seeded global exercises have no video_url. Seeding real YouTube URLs can't be verified
 from here (dead/incorrect embeds in demo data are worse than none) and raises licensing questions. The

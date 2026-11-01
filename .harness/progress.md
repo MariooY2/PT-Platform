@@ -11,9 +11,9 @@ parked (done locally; `(human)` lines wait in approvals.md) · blocked.
 | P0-04 | Auth, roles, onboarding, routing | done | 1 | [P0-04](receipts/P0-04.md) | verifier ACCEPT (A1-A5) + ui-reviewer ACCEPT (A6); verify --full green (fp 6579a889) |
 | P0-05 | Navigation and layout shells | done | 2 | [receipt](receipts/P0-05.md) | verify --full green (fp 5eee889c); verifier + ui-reviewer ACCEPT (HEAD 6cbb3ec); D-017/D-018 recorded |
 | P0-06 | CI and Vercel preview | parked | 1 | [receipt](receipts/P0-06.md) | verifier ACCEPT (A1-A4 local); A5-A7 (push, preview deploy, cloud Supabase) are (human) in approvals.md; verify --full green (fp 5eee889c) |
-| P1-01 | Clients list and profile | building | 0 | — | Schema lane done (4f2a437); builder on app code from base 56a83e3 |
-| P1-04 | Exercise library and global seed | building | 0 | — | Schema lane done (56a83e3); builder on app code from base 56a83e3 |
-| P1-13 | PWA manifest and install prompt | building | 0 | — | No DB; builder on app code from base 56a83e3 |
+| P1-01 | Clients list and profile | done | 3 | [receipt](receipts/P1-01.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); D-019/D-020/D-021; tabs+checkbox variant fix (L-004) |
+| P1-04 | Exercise library and global seed | done | 3 | [receipt](receipts/P1-04.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); ~148 seed; D-023/D-024; videoUrl http(s) refine |
+| P1-13 | PWA manifest and install prompt | done | 2 | [receipt](receipts/P1-13.md) | verifier + ui-reviewer ACCEPT; verify --full green (fp ff4ad8d6); D-022; manifest + install card + og icons |
 
 ## Blocked items needing the human
 
