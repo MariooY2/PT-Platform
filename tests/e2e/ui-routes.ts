@@ -35,7 +35,13 @@ export const uiRoutes: UiRoute[] = [
   },
   { path: '/coach/checkins', as: 'coach-empty', states: ['empty'] },
   { path: '/coach/messages', as: 'coach-empty', states: ['empty'] },
+  { path: '/coach/programs', as: 'coach', states: ['default'] },
   { path: '/coach/programs', as: 'coach-empty', states: ['empty'] },
+  {
+    path: '/coach/programs/bbbb0000-0000-0000-0000-000000000001',
+    as: 'coach',
+    states: ['default'],
+  },
   {
     path: '/coach/exercises',
     as: 'coach',
