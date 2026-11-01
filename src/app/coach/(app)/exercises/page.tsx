@@ -26,6 +26,7 @@ export default async function CoachExercisesPage({
 
   return (
     <ExerciseLibrary
+      key={state ?? 'default'}
       exercises={data ?? []}
       userId={user?.id ?? null}
       hadError={Boolean(error)}

@@ -31,7 +31,9 @@ export function NewExerciseDialog() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const errorId = useId();
+  const uid = useId();
+  const fid = (field: string) => `${uid}-${field}`;
+  const errorId = fid('error');
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -71,15 +73,15 @@ export function NewExerciseDialog() {
 
         <form onSubmit={onSubmit} className="mt-4 space-y-4" noValidate>
           <div className="grid gap-2">
-            <Label htmlFor="ex-name">Name</Label>
-            <Input id="ex-name" name="name" required placeholder="Paused front squat" />
+            <Label htmlFor={fid('name')}>Name</Label>
+            <Input id={fid('name')} name="name" required placeholder="Paused front squat" />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="ex-primary">Primary muscle</Label>
+              <Label htmlFor={fid('primary')}>Primary muscle</Label>
               <Select name="primaryMuscle" defaultValue="chest">
-                <SelectTrigger id="ex-primary" className="w-full">
+                <SelectTrigger id={fid('primary')} className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -93,9 +95,9 @@ export function NewExerciseDialog() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="ex-category">Category</Label>
+              <Label htmlFor={fid('category')}>Category</Label>
               <Select name="category" defaultValue="strength">
-                <SelectTrigger id="ex-category" className="w-full">
+                <SelectTrigger id={fid('category')} className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -110,9 +112,9 @@ export function NewExerciseDialog() {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="ex-equipment">Equipment (optional)</Label>
+            <Label htmlFor={fid('equipment')}>Equipment (optional)</Label>
             <Select name="equipment" defaultValue="none">
-              <SelectTrigger id="ex-equipment" className="w-full">
+              <SelectTrigger id={fid('equipment')} className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -132,10 +134,10 @@ export function NewExerciseDialog() {
               {MUSCLES.map((m) => (
                 <Label
                   key={m}
-                  htmlFor={`ex-sec-${m}`}
+                  htmlFor={fid(`sec-${m}`)}
                   className="group/field-label text-sm font-normal"
                 >
-                  <Checkbox id={`ex-sec-${m}`} name="secondaryMuscles" value={m} />
+                  <Checkbox id={fid(`sec-${m}`)} name="secondaryMuscles" value={m} />
                   {humanizeTaxonomy(m)}
                 </Label>
               ))}
@@ -143,9 +145,9 @@ export function NewExerciseDialog() {
           </fieldset>
 
           <div className="grid gap-2">
-            <Label htmlFor="ex-video">Video link (optional)</Label>
+            <Label htmlFor={fid('video')}>Video link (optional)</Label>
             <Input
-              id="ex-video"
+              id={fid('video')}
               name="videoUrl"
               type="url"
               inputMode="url"
@@ -154,9 +156,9 @@ export function NewExerciseDialog() {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="ex-instructions">Instructions (optional)</Label>
+            <Label htmlFor={fid('instructions')}>Instructions (optional)</Label>
             <Textarea
-              id="ex-instructions"
+              id={fid('instructions')}
               name="instructions"
               rows={3}
               placeholder="Cues, setup, tempo…"
