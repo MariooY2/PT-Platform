@@ -12,6 +12,18 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-011 — shadcn base is radix-nova, standardized toolchain (2026-11-01, decided by: human-approved P0-03)
+Why: shadcn CLI 4.23 only ships the new "radix-nova" styles (no classic preset). Kept it (its classes are
+semantic tokens + interaction details that match the spec once our tokens load), with three fixes:
+- `cn` standardized on clsx + tailwind-merge (`src/lib/utils.ts`); the non-pre-approved `cn` package and the
+  stray `shadcn` runtime dep were removed. After any `shadcn add`, rewrite `from "cn"` → `from "@/lib/utils"`.
+- `destructive` button restored to SOLID (`bg-destructive`/`-foreground`) per design-system (delete/refund/errors);
+  `-soft` tokens are for banners/chips only.
+- Button sizes set to the spec: `sm` 36px (h-9), `default` 44px (h-11), `lg` 48px (h-12), icons to match.
+- shadcn 4 has no `form` component; `src/components/ui/form.tsx` is the hand-authored RHF wrapper (react-hook-form + zod, pre-approved).
+Alternatives considered: re-init with a classic preset (none exists in shadcn 4); hand-author all 18 components (a week of work for the same result).
+Affects: src/components/ui/**, src/lib/utils.ts, package.json, P0-04/P0-05 (builders must run the cn-import fixup after `shadcn add`).
+
 ## D-010 — Privileged columns are service-role-only (column privileges) (2026-11-01, decided by: autopilot (D-006))
 Why: the P0-02 verifier found two self-escalation paths — a client could `update profiles set role='admin'`
 on itself (then `is_admin()` opens everything), and a trainer could insert a `trainer_clients` row linking
