@@ -1,0 +1,72 @@
+id: P0-06
+title: CI and Vercel preview
+phase: 0
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-01
+depends_on: [P0-05]
+
+objective: >
+  The same checks the agent runs locally also run in CI on every push and pull request, independent
+  of the agent: the full verify gate (architecture, format, lint, typecheck, unit, RLS, build, e2e +
+  axe) against a fresh local Supabase stack. The Vercel preview deployment and the cloud Supabase
+  project it needs are the human's to set up (deploys and remote Supabase are human-only per
+  .harness/autopilot.json), so those lines are marked (human) and the task parks on them.
+
+context:
+  - docs/commands.md            # the exact scripts CI must run
+  - docs/phases.md              # §13 Phase 0 gate (last line: lint/typecheck/tests pass; deploys to a Vercel preview)
+  - .harness/autopilot.json     # human_only: deploys, remote Supabase, push
+  - README.md                   # fresh-clone setup to document
+
+scope:
+  - .github/workflows/ci.yml    # guard-sanctioned under autopilot because this path is in scope
+  - README.md                   # document the CI job alongside the existing setup steps
+  - "note: no GitHub secrets are needed for the verify job — the local Supabase stack uses demo keys from `supabase status`, the build reads no Supabase env (dynamic pages defer to request time, placeholders are static), and test:rls / e2e read `supabase status` themselves"
+
+constraints:
+  - CI runs the full gate via `node scripts/verify.mjs --full` — no hand-picked subset, no step skipped or weakened.
+  - No new npm dependencies; CI composes existing pnpm scripts with maintained marketplace actions.
+  - The agent never pushes, deploys, links or writes to the remote Supabase project, or sets a secret — those are the (human) lines.
+  - Node and pnpm in CI match package.json (`engines.node >= 24`, `packageManager: pnpm@12.6.0`).
+
+acceptance:
+  - id: A1
+    claim: .github/workflows/ci.yml runs `node scripts/verify.mjs --full` on push and pull_request, after checkout, pnpm + Node 24, `pnpm install --frozen-lockfile`, Supabase CLI + `supabase start` + `supabase db reset`, and `playwright install --with-deps chromium`
+    evidence: the workflow file; verifier reads it against docs/commands.md
+  - id: A2
+    claim: CI runs the whole verify gate unchanged — no step skips, weakens or replaces a check with a subset
+    evidence: verifier diff of ci.yml against docs/commands.md and scripts/verify.mjs
+  - id: A3
+    claim: The workflow is valid YAML and uses only maintained actions pinned to a major version (.github is prettier-ignored, so format:check does not cover it)
+    evidence: verifier reads and parses the workflow; a local YAML parse check
+  - id: A4
+    claim: README documents the fresh-clone setup and the CI job
+    evidence: README.md
+  - id: A5
+    claim: (human) Pushing a branch to the remote runs the workflow and it goes green
+    evidence: GitHub Actions run (human, after they create the remote and push)
+  - id: A6
+    claim: (human) A Vercel project is linked to the repo, required env vars are set in Vercel, and the preview URL renders /login
+    evidence: Vercel preview URL (human)
+  - id: A7
+    claim: (human) A cloud Supabase project is created and linked (link + db push) so the preview has a database; email confirmation is enabled there
+    evidence: Supabase dashboard + preview sign-in (human; see the P0-04 email-confirmation approvals line)
+
+ui:
+  specs: []
+  routes: []
+  gallery_states: []
+
+approval_required:
+  - Pushing the workflow (or anything) to a remote
+  - Creating or linking a Vercel project, setting Vercel env vars, deploying a preview
+  - Creating or linking a cloud Supabase project, db push, setting secrets
+
+out_of_scope:
+  - The actual Vercel deployment and cloud Supabase provisioning (human; the Phase 0 gate's deploy line)
+  - Caching tuning / matrix builds / status badges (not needed for the gate)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 5

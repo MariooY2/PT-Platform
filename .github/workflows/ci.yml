@@ -1,57 +1,51 @@
-# Runs the same checks Claude runs locally, independent of the agent: if Claude skips a check, CI won't.
-# Template — task P0-06 makes it green and adjusts anything the real scaffold needs.
 name: CI
 
+# The same gate the agent runs locally (docs/commands.md: node scripts/verify.mjs --full),
+# independent of the agent. No GitHub secrets are needed: the job spins up a fresh local Supabase
+# stack and uses its demo keys via `supabase status`.
 on:
   push:
-    branches: [main]
   pull_request:
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
+    name: verify --full
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      PAYMENTS_PROVIDER: mock
-      NEXT_PUBLIC_SITE_URL: http://localhost:3000
-      CRON_SECRET: ci-only-not-a-secret
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4   # reads the "packageManager" field in package.json
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - uses: supabase/setup-cli@v1
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
         with:
           version: latest
 
-      - name: Start local Supabase
+      - name: Start local Supabase stack
         run: supabase start
 
-      - name: Export local Supabase URL and keys
-        run: |
-          eval "$(supabase status -o env)"
-          echo "NEXT_PUBLIC_SUPABASE_URL=${API_URL}" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY:-$PUBLISHABLE_KEY}" >> "$GITHUB_ENV"
-          echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY:-$SECRET_KEY}" >> "$GITHUB_ENV"
+      - name: Apply migrations and seed
+        run: supabase db reset
 
-      - run: pnpm exec playwright install --with-deps chromium
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
 
-      - name: Full verify
+      - name: Run the full verify gate
         run: node scripts/verify.mjs --full
-
-      - name: Upload evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: verify-report
-          path: |
-            .harness/last-verify.json
-            playwright-report/
-          if-no-files-found: ignore

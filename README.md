@@ -116,6 +116,16 @@ node scripts/verify.mjs          # fast: architecture, format, lint, typecheck, 
 node scripts/verify.mjs --full   # also RLS tests, production build, e2e tests
 ```
 
+### Continuous integration
+
+`.github/workflows/ci.yml` runs the **same full gate** (`node scripts/verify.mjs --full`) on every
+push and pull request, independent of the agent. The job checks out the code, installs with pnpm on
+Node 24, spins up a fresh local Supabase stack (`supabase start` + `supabase db reset`), installs the
+Playwright browser, then runs architecture → format → lint → typecheck → unit → RLS → build → e2e +
+axe. No GitHub secrets are required: the stack uses its own local demo keys. Deploying a Vercel
+preview (and the cloud Supabase project it needs) is set up separately by a maintainer — see
+`.harness/approvals.md`.
+
 ## What's where
 
 | Path | Purpose |
