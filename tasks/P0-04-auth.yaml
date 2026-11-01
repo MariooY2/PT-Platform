@@ -27,6 +27,11 @@ scope:
   - src/features/auth/, src/features/onboarding/
   - supabase/migrations/ (new files only, e.g. invite token expiry, signup trigger)
   - tests/unit/, tests/e2e/auth.spec.ts, tests/rls/
+  - tests/e2e/ui-routes.ts (scope added: signInAs + auth routes)
+  - src/app/coach/page.tsx (scope added: setup checklist landing)
+  - src/app/client/page.tsx, src/app/admin/page.tsx (scope added: minimal redirect-target landings; full shells are P0-05)
+  - src/components/ui/textarea.tsx (scope added: shadcn component for onboarding bio)
+  - playwright.config.ts (scope added: inject local Supabase env for the e2e server; .env* is guard-blocked)
 
 constraints:
   - Role is set server-side (trigger or server action), never from a client-supplied field.

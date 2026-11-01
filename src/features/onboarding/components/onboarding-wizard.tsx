@@ -105,14 +105,14 @@ export function OnboardingWizard({ initialStep = 1 }: { initialStep?: number }) 
       <div className={cn('space-y-4', step !== 2 && 'hidden')}>
         <h2 className="text-lg font-semibold">Your look</h2>
         <div className="grid gap-2">
-          <Label>Brand colour</Label>
+          <Label>Brand color</Label>
           <input type="hidden" name="brandColor" value={brandColor} />
           <div className="flex flex-wrap gap-2">
-            {BRAND_COLORS.map((c) => (
+            {BRAND_COLORS.map((c, i) => (
               <button
                 key={c}
                 type="button"
-                aria-label={`Brand colour ${c}`}
+                aria-label={`Brand color option ${i + 1}`}
                 aria-pressed={brandColor === c}
                 onClick={() => setBrandColor(c)}
                 style={{ backgroundColor: c }}
@@ -156,38 +156,46 @@ export function OnboardingWizard({ initialStep = 1 }: { initialStep?: number }) 
         </p>
       )}
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         {step > 1 ? (
-          <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={() => setStep((s) => s - 1)}
+          >
             Back
           </Button>
         ) : (
-          <span />
+          <span className="hidden sm:block" />
         )}
         {step < 3 ? (
           <Button
             key="continue"
             type="button"
+            className="w-full sm:w-auto"
             onClick={() => setStep((s) => s + 1)}
-            disabled={!slug && step === 1}
+            disabled={step === 1 && (!slug || slugState.available === false)}
           >
             Continue
           </Button>
         ) : (
-          <Button key="finish" type="submit" size="lg" disabled={pending}>
+          <Button
+            key="finish"
+            type="submit"
+            size="lg"
+            className="w-full sm:w-auto"
+            disabled={pending}
+          >
             {pending && <Loader2 className="animate-spin" />}
             {pending ? 'Finishing…' : 'Finish setup'}
           </Button>
         )}
       </div>
       {step === 2 && (
-        <button
-          type="button"
-          onClick={() => setStep(3)}
-          className="mx-auto block text-sm text-muted-foreground"
-        >
+        <Button type="button" variant="ghost" className="mx-auto w-full" onClick={() => setStep(3)}>
           Skip for now
-        </button>
+        </Button>
       )}
     </form>
   );

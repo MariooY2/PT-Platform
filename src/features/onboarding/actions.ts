@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { roleOf } from '@/lib/supabase/middleware';
 import { slugSchema } from '@/features/auth/schemas';
 
 const onboardingSchema = z.object({
@@ -35,6 +36,7 @@ export async function completeOnboardingAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+  if (roleOf(user) !== 'trainer') redirect('/login'); // only trainers onboard (defense in depth)
 
   const parsed = onboardingSchema.safeParse({
     businessName: formData.get('businessName'),

@@ -53,7 +53,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
         <h1 className="text-2xl font-bold">{coachName} invited you to train with them</h1>
         <p className="text-sm text-muted-foreground">Create your account to get started.</p>
       </div>
-      <InviteForm token={token} email={invite.invite_email!} />
+      <InviteForm token={token} email={invite.invite_email!} coachName={coachName} />
     </div>
   );
 }

@@ -53,7 +53,7 @@ export function SetupChecklist({
           </p>
         </div>
         {doneCount >= 3 && (
-          <Button variant="ghost" size="sm" onClick={() => setDismissed(true)}>
+          <Button variant="ghost" onClick={() => setDismissed(true)}>
             Dismiss
           </Button>
         )}
@@ -72,7 +72,7 @@ export function SetupChecklist({
               {item.label}
             </span>
             {!item.done && (
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline">
                 <a href={item.href}>{item.action}</a>
               </Button>
             )}

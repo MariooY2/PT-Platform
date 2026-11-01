@@ -21,6 +21,7 @@ export const uiRoutes: UiRoute[] = [
   { path: '/dev/ui', as: 'anon', states: ['default'] },
   { path: '/login', as: 'anon', states: ['default'] },
   { path: '/signup', as: 'anon', states: ['default'] },
+  { path: '/reset', as: 'anon', states: ['default'] },
   { path: '/invite/seed-invite-token-alpha', as: 'anon', states: ['valid'] },
   { path: '/coach/onboarding', as: 'coach-empty', states: ['step-1'] },
   { path: '/coach', as: 'coach-empty', states: ['setup-checklist'] },

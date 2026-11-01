@@ -1,6 +1,8 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +25,39 @@ function FormError({ message }: { message?: string }) {
   );
 }
 
+// Live password hint: neutral before the first blur, then valid/invalid.
+function PasswordField({ id = 'password' }: { id?: string }) {
+  const [value, setValue] = useState('');
+  const [touched, setTouched] = useState(false);
+  const ok = value.length >= 8;
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id}>Password</Label>
+      <PasswordInput
+        id={id}
+        name="password"
+        autoComplete="new-password"
+        required
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={() => setTouched(true)}
+      />
+      <p
+        className={cn(
+          'flex items-center gap-1 text-xs',
+          touched
+            ? ok
+              ? 'text-success-soft-foreground'
+              : 'text-muted-foreground'
+            : 'text-muted-foreground',
+        )}
+      >
+        {touched && ok && <Check className="size-3.5" aria-hidden />}
+        At least 8 characters.
+      </p>
+    </div>
+  );
+}
+
 export function LoginForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState<FormState, FormData>(signInAction, undefined);
   return (
@@ -30,7 +65,14 @@ export function LoginForm({ next }: { next?: string }) {
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <div className="grid gap-2">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          defaultValue={state?.values?.email}
+          required
+        />
       </div>
       <div className="grid gap-2">
         <div className="flex items-center justify-between">
@@ -67,12 +109,88 @@ export function MagicLinkForm() {
   return (
     <form action={action} className="space-y-3">
       <div className="grid gap-2">
-        <Label htmlFor="ml-email">Email</Label>
+        <Label htmlFor="ml-email">Email for a sign-in link</Label>
         <Input id="ml-email" name="email" type="email" autoComplete="email" required />
       </div>
       <FormError message={state?.error} />
       <Button type="submit" variant="outline" size="lg" className="w-full" disabled={pending}>
         {pending ? 'Sending…' : 'Email me a sign-in link'}
+      </Button>
+    </form>
+  );
+}
+
+export function SignupForm() {
+  const [state, action, pending] = useActionState<FormState, FormData>(
+    signUpCoachAction,
+    undefined,
+  );
+  return (
+    <form action={action} className="space-y-4" noValidate>
+      <div className="grid gap-2">
+        <Label htmlFor="fullName">Your name</Label>
+        <Input
+          id="fullName"
+          name="fullName"
+          autoComplete="name"
+          defaultValue={state?.values?.fullName}
+          required
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          defaultValue={state?.values?.email}
+          required
+        />
+      </div>
+      <PasswordField />
+      <FormError message={state?.error} />
+      <Button type="submit" size="lg" className="w-full" disabled={pending}>
+        {pending ? 'Creating account…' : 'Create coach account'}
+      </Button>
+      <p className="text-center text-sm text-muted-foreground">
+        Joining a coach? Use the link they sent you.
+      </p>
+    </form>
+  );
+}
+
+export function InviteForm({
+  token,
+  email,
+  coachName,
+}: {
+  token: string;
+  email: string;
+  coachName: string;
+}) {
+  const bound = acceptInviteAction.bind(null, token);
+  const [state, action, pending] = useActionState<FormState, FormData>(bound, undefined);
+  return (
+    <form action={action} className="space-y-4" noValidate>
+      <div className="grid gap-2">
+        <Label htmlFor="inv-email">Email</Label>
+        <Input id="inv-email" value={email} readOnly />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="fullName">Your name</Label>
+        <Input
+          id="fullName"
+          name="fullName"
+          autoComplete="name"
+          defaultValue={state?.values?.fullName}
+          required
+        />
+      </div>
+      <PasswordField />
+      <FormError message={state?.error} />
+      <Button type="submit" size="lg" className="w-full" disabled={pending}>
+        {pending ? 'Joining…' : `Join ${coachName}`}
       </Button>
     </form>
   );
@@ -96,63 +214,6 @@ export function ResetForm() {
       <FormError message={state?.error} />
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending ? 'Sending…' : 'Email me a reset link'}
-      </Button>
-    </form>
-  );
-}
-
-export function SignupForm() {
-  const [state, action, pending] = useActionState<FormState, FormData>(
-    signUpCoachAction,
-    undefined,
-  );
-  return (
-    <form action={action} className="space-y-4" noValidate>
-      <div className="grid gap-2">
-        <Label htmlFor="fullName">Your name</Label>
-        <Input id="fullName" name="fullName" autoComplete="name" required />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="password">Password</Label>
-        <PasswordInput id="password" name="password" autoComplete="new-password" required />
-        <p className="text-xs text-muted-foreground">At least 8 characters.</p>
-      </div>
-      <FormError message={state?.error} />
-      <Button type="submit" size="lg" className="w-full" disabled={pending}>
-        {pending ? 'Creating account…' : 'Create coach account'}
-      </Button>
-      <p className="text-center text-sm text-muted-foreground">
-        Joining a coach? Use the link they sent you.
-      </p>
-    </form>
-  );
-}
-
-export function InviteForm({ token, email }: { token: string; email: string }) {
-  const bound = acceptInviteAction.bind(null, token);
-  const [state, action, pending] = useActionState<FormState, FormData>(bound, undefined);
-  return (
-    <form action={action} className="space-y-4" noValidate>
-      <div className="grid gap-2">
-        <Label htmlFor="inv-email">Email</Label>
-        <Input id="inv-email" value={email} readOnly disabled />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="fullName">Your name</Label>
-        <Input id="fullName" name="fullName" autoComplete="name" required />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="password">Create a password</Label>
-        <PasswordInput id="password" name="password" autoComplete="new-password" required />
-        <p className="text-xs text-muted-foreground">At least 8 characters.</p>
-      </div>
-      <FormError message={state?.error} />
-      <Button type="submit" size="lg" className="w-full" disabled={pending}>
-        {pending ? 'Joining…' : 'Join'}
       </Button>
     </form>
   );

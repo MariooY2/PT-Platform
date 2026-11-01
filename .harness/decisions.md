@@ -52,6 +52,18 @@ semantic tokens + interaction details that match the spec once our tokens load),
 Alternatives considered: re-init with a classic preset (none exists in shadcn 4); hand-author all 18 components (a week of work for the same result).
 Affects: src/components/ui/**, src/lib/utils.ts, package.json, P0-04/P0-05 (builders must run the cn-import fixup after `shadcn add`).
 
+## D-015 — Auth server-action input hardening (2026-11-01, decided by: autopilot (D-006))
+Why: the P0-04 verifier found an open redirect — `signInAction`'s `next` param (from `/login?next=`) was
+only checked with `.startsWith('/')`, which `//evil.com` passes (protocol-relative → external). Fixed with
+`safeNext()` (must start with a single `/`, no `//`, no `://`, no backslash) and magic-link/reset now validate
+email with Zod, not a hand-rolled regex. Role/trainer/slug were already server-side (D-010/D-014); this closes
+the remaining unvalidated client input. Also: `completeOnboardingAction` now checks `roleOf(user)==='trainer'`
+(defense in depth). Auth forms preserve typed values on error via `defaultValue` from the returned state
+(React 19 form reset otherwise clears them), never the password.
+Affects: src/features/auth/actions.ts, src/features/onboarding/actions.ts, src/features/auth/components/auth-forms.tsx.
+Follow-up for P1-02 (invite creation): `trainer_clients.invite_expires_at` has no DB default and isn't in the
+`authenticated` column grants, so trainer-created invites must set it server-side (or add a `now()+14d` default).
+
 ## D-014 — Becoming a trainer / pgcrypto / client link-read (2026-11-01, decided by: autopilot (D-006))
 - **Trainer creation is service-role-only.** The P0-02 verifier found that `trainers_insert_own` + the column
   INSERT grant let any authenticated user (incl. a client) insert their own `trainers` row. Migration
