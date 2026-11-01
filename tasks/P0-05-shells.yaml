@@ -1,9 +1,11 @@
 id: P0-05
 title: Navigation and layout shells for coach, client, storefront and admin
 phase: 0
-status: approved
+status: done
 approved_by: autopilot (D-006)
 approved_at: 2026-11-01
+closed_at: 2026-11-01
+receipt: .harness/receipts/P0-05.md
 depends_on: [P0-04]
 
 objective: >
