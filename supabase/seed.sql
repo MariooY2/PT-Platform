@@ -210,3 +210,21 @@ insert into public.workout_exercises (id, program_workout_id, exercise_id, posit
   ('bbbb0000-0000-0000-0000-000000000003', 'bbbb0000-0000-0000-0000-000000000002', (select id from public.exercises where trainer_id is null and name = 'Back squat' limit 1), 0);
 insert into public.prescribed_sets (workout_exercise_id, set_number, set_type, reps_min, reps_max, weight_kg) values
   ('bbbb0000-0000-0000-0000-000000000003', 1, 'working', 5, 5, 80);
+
+-- P1-03: Client One finished Alpha's intake (so the intake gate lets them through and existing
+-- /client* routes + nav/pwa specs keep working); plus one submitted, unreviewed weekly check-in so
+-- /coach/checkins has a populated default state. Client Two is left WITHOUT an intake on purpose so
+-- A4's e2e has a fresh, un-onboarded client that no existing ui-route depends on.
+insert into public.form_responses (form_id, trainer_id, client_id, answers, submitted_at, reviewed_at)
+select f.id, f.trainer_id, '33333333-0000-0000-0000-000000000001',
+  '{"goals":"Build strength","experience":"Intermediate","days":3}'::jsonb,
+  now() - interval '20 days', now() - interval '19 days'
+from public.forms f
+where f.trainer_id = '11111111-0000-0000-0000-000000000001' and f.kind = 'intake' and f.is_default;
+
+insert into public.form_responses (form_id, trainer_id, client_id, answers, submitted_at)
+select f.id, f.trainer_id, '33333333-0000-0000-0000-000000000001',
+  '{"weight":71.4,"energy":6,"sleep":7,"adherence":"Good week"}'::jsonb,
+  now() - interval '2 days'
+from public.forms f
+where f.trainer_id = '11111111-0000-0000-0000-000000000001' and f.kind = 'checkin' and f.is_default;

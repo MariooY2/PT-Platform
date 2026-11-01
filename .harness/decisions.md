@@ -12,6 +12,23 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-027 — the intake gate is create-in-gate + fail-open; the client never sees the coach's name (2026-11-01, decided by: autopilot (D-006))
+Why: src/app/client/(app)/layout.tsx redirects a client with no submitted intake to /client/checkin/[id];
+resolveIntakeGate finds the client's trainer → default intake → creates the unsubmitted response if none
+exists, then redirects. Any error / no-link path returns null (renders Today) so a DB hiccup never locks a
+client out. The client has no RLS read on the coach's profile, so the check-in screen says "Sent to your
+coach." (spec wanted "Sent to Rami."); a trainer_public view can restore the name in a later task. The seed
+gives Client One a submitted intake so existing /client* routes keep working; Client Two is left un-onboarded
+for the A4 e2e.
+Affects: src/app/client/(app)/layout.tsx, src/features/forms/intake.ts, supabase/seed.sql, P1-03.
+
+## D-026 — email goes through a provider interface with a mock default (EMAIL_PROVIDER) (2026-11-01, decided by: autopilot (D-006))
+Why: invite emails use src/lib/email/ with a provider interface (mock logs; Resend behind a real key),
+selected by EMAIL_PROVIDER (mock|resend, default mock) — mirrors D-003's PAYMENTS_PROVIDER. The real Resend
+send needs RESEND_API_KEY + EMAIL_FROM + a verified domain (human). The invite react-email template uses
+literal hex in style objects (the email idiom; check-architecture only scans style={{…}} literals).
+Affects: src/lib/email/**, src/features/clients/invite-actions.ts, P1-02. See [[D-003]].
+
 ## D-025 — a habit tick toggles (tap again to untick) and "today" is server-derived from the client's timezone (2026-11-01, decided by: autopilot (D-006))
 Why: on the client Today screen, tapping a habit logs it for today (idempotent UPSERT on the unique
 (habit_id, log_date)); tapping a ticked habit unticks it (deletes the log), mirroring the workout
