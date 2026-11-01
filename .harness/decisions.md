@@ -12,6 +12,15 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-021 — "not found" for an unauthorized client is proven by content + no-leak, not HTTP 404 (2026-11-01, decided by: autopilot (D-006))
+Why: the client profile calls notFound() when the trainer is not linked to the client. Under Next 16
+cacheComponents the route streams, so the response has already flushed a 200 before notFound() runs —
+the HTTP status cannot change to 404. The security-meaningful properties still hold: the not-found
+boundary renders and no client data leaks. The P1-01 A6 e2e therefore asserts the not-found UI + that
+no client data appears (and no profile chrome), not `status === 404`. Contract A6 says "not-found /
+redirect", which this satisfies.
+Affects: tests/e2e/clients.spec.ts (A6), src/app/coach/(app)/clients/[id]/page.tsx, P1-01.
+
 ## D-020 — profiles_select_trainer_of uses has_client_link() (any status), not is_trainer_of() (2026-11-01, decided by: autopilot (D-006))
 Why: is_trainer_of() matches only active/paused links, so after a coach archives a client they could no
 longer read that client's profile (name/avatar), showing "Unnamed client" in the Clients list and

@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { clientIdSchema } from '@/features/clients/schemas';
@@ -14,6 +15,9 @@ export default async function CoachClientProfilePage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ state?: string }>;
 }) {
+  // Force dynamic rendering before the Supabase session read (Next 16 cacheComponents), so the
+  // prerender pass never runs the client's internal Date.now().
+  await connection();
   const [{ id }, { state }] = await Promise.all([params, searchParams]);
 
   // An unknown or malformed id, or a client this trainer is not linked to, is a 404 — no existence

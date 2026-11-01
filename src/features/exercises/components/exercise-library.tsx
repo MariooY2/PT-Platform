@@ -199,12 +199,7 @@ export function ExerciseLibrary({
             <EmptyState
               icon={Search}
               title="No exercises match these filters"
-              description="Try a different muscle, equipment or search."
-              action={
-                <Button variant="outline" onClick={clearFilters}>
-                  Clear filters
-                </Button>
-              }
+              description="Try a different muscle, equipment or search, or clear the filters above."
             />
           ) : (
             <Grid>

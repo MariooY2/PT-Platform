@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { ExerciseLibrary } from '@/features/exercises/components/exercise-library';
 
@@ -9,6 +10,9 @@ export default async function CoachExercisesPage({
 }: {
   searchParams: Promise<{ state?: string }>;
 }) {
+  // Force dynamic rendering before any Supabase session read, so the prerender pass never hits
+  // the client's internal Date.now() (Next 16 cacheComponents). Matches the other Supabase pages.
+  await connection();
   const { state } = await searchParams;
   const supabase = await createClient();
   const {

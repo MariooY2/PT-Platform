@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RelativeDate } from '@/components/format';
-import { createClient } from '@/lib/supabase/browser';
-import { registerClientFileAction } from '../actions';
+import { createBrowserClient } from '@supabase/ssr';
+import { publicSupabaseConfig, registerClientFileAction } from '../actions';
+import type { Database } from '@/lib/supabase/types';
 import type { ClientFile } from '../queries';
 
 const BUCKET = 'client-files';
@@ -48,7 +49,8 @@ export function FilesPanel({
     }
     // The bytes go straight to the private bucket (RLS enforces the trainer/client prefix); the
     // server action then re-derives the prefix from the session before recording the metadata.
-    const supabase = createClient();
+    const cfg = await publicSupabaseConfig();
+    const supabase = createBrowserClient<Database>(cfg.url, cfg.anonKey);
     const path = `${trainerId}/${clientId}/${crypto.randomUUID()}-${safeName(file.name)}`;
     setUploading(true);
     const up = await supabase.storage.from(BUCKET).upload(path, file);

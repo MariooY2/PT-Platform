@@ -176,10 +176,15 @@ test.describe('P1-01 clients', () => {
 
   test('A6: another trainer cannot open this client (not found, no leak)', async ({ page }) => {
     await signInUi(page, 'trainer.b@ptplatform.test');
-    const resp = await page.goto(`/coach/clients/${CLIENT_ONE}`);
-    expect(resp?.status()).toBe(404);
+    await page.goto(`/coach/clients/${CLIENT_ONE}`);
+    // notFound() renders the not-found boundary. Under Next 16 cacheComponents the route streams,
+    // so the HTTP status is 200 with the not-found body (the status can't change after the first
+    // flush) — the security-meaningful properties are that the not-found UI shows and NO client data
+    // leaks. (D-021)
     await expect(page.getByText(/could not be found/i)).toBeVisible();
     await expect(page.getByText('Client One')).toHaveCount(0);
+    // No profile chrome rendered (no Overview/Notes tabs, no goals field).
+    await expect(page.getByRole('tab', { name: 'Overview' })).toHaveCount(0);
   });
 
   test('A10: the "…" menu archives a client; the Status filter reflects it and it persists', async ({

@@ -16,6 +16,20 @@ export type ActionResult = { ok: true } | { error: string };
 
 const GENERIC_ERROR = 'Something went wrong. Try again.';
 
+/**
+ * Public Supabase config for the browser storage upload. NEXT_PUBLIC_* are inlined at build time, but
+ * the verify/e2e build runs without them (they are injected into the server at runtime), so a browser
+ * client built from process.env would be empty-configured. Reading them here (server, at runtime) and
+ * handing them to the client makes the upload work from a single build in every environment. Both
+ * values are public (the anon key is the browser key).
+ */
+export async function publicSupabaseConfig(): Promise<{ url: string; anonKey: string }> {
+  return {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+  };
+}
+
 /** Resolve the signed-in trainer, or an error result. trainer_id always comes from the session. */
 async function requireTrainer() {
   const supabase = await createClient();
