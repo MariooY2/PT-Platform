@@ -12,6 +12,18 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-029 — SUPERSEDES D-028: the app-shell overlap was fixed (inner-scroll shell) on the human's "keep going" (2026-11-02, decided by: human ("keep going") + autopilot)
+Why: D-028 had parked the fix as human-gated. The human replied "keep going", which authorizes the fix.
+The advisor's cheaper `fixed→sticky` idea was a no-op (the nav was already `sticky bottom-0`; sticky over a
+document-scrolled tall page still paints over fold content). The real fix: a fixed-height app frame
+(`h-dvh overflow-hidden`) with `#main` as the inner scroll region and the bottom nav a normal in-flow sibling
+below it (bottom-nav.tsx drops `sticky bottom-0 z-40`; side-nav.tsx gets `overflow-y-auto`). `tests/e2e/ui.spec.ts`
+grows the viewport to `#main.scrollHeight` for the full-page screenshot, then restores the real 360/1280 viewport
+before axe — full-page evidence preserved, axe scope unchanged (test logic, not a weakened check). Commit 86af58e;
+verify --full green fp 881566e6 across all 37 routes; `/coach/forms` + `/coach/programs/[id]` target-size clear.
+P1-03 unblocked; P1-02/P1-05/P1-09 cleared to close. The persistent thumb-reach bottom bar (patterns.md) is kept.
+Affects: src/components/shared/nav/{app-shell,bottom-nav,side-nav}.tsx, tests/e2e/ui.spec.ts; P1-02/03/05/09.
+
 ## D-028 — the fixed-nav target-size gap on dense mobile pages is a human-gated app-shell fix, not a per-task defect (2026-11-01, decided by: autopilot (D-006))
 Why: `src/components/shared/nav/app-shell.tsx` uses a `fixed bottom-0` nav over document-scrolled content, so
 at 360 scroll-top any interactive control in the nav's ~56px band fails axe `target-size` (partiallyObscured).
