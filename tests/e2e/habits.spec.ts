@@ -42,6 +42,22 @@ async function createActiveClient(fullName: string): Promise<{ id: string; email
     source: 'invite',
     start_date: new Date().toISOString().slice(0, 10),
   });
+  // Mark the intake submitted so the P1-03 intake gate lets this client reach /client (Today).
+  const { data: intake } = await admin
+    .from('forms')
+    .select('id')
+    .eq('trainer_id', TRAINER_A)
+    .eq('kind', 'intake')
+    .eq('is_default', true)
+    .single();
+  if (intake)
+    await admin.from('form_responses').insert({
+      form_id: intake.id,
+      trainer_id: TRAINER_A,
+      client_id: id,
+      answers: {},
+      submitted_at: new Date().toISOString(),
+    });
   return { id, email };
 }
 

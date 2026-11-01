@@ -24,7 +24,13 @@ export function AppShell({ variant, children }: { variant: NavVariant; children:
         <main
           id="main"
           tabIndex={-1}
-          className={cn('flex-1 outline-none', phoneShaped && 'mx-auto w-full max-w-[560px]')}
+          className={cn(
+            // Reserve space so the sticky bottom nav never overlaps the last interactive content
+            // (WCAG 2.2 target-size). The nav shows below lg for coach/admin, always for the client.
+            'flex-1 pb-16 outline-none',
+            !phoneShaped && 'lg:pb-0',
+            phoneShaped && 'mx-auto w-full max-w-[560px]',
+          )}
         >
           {children}
         </main>
