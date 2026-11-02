@@ -31,7 +31,7 @@ export function ClientProfile({
   notes: ClientNote[] | null;
   files: ClientFile[] | null;
   habits: TrainerHabit[] | null;
-  initialTab?: 'overview' | 'notes' | 'habits';
+  initialTab?: 'overview' | 'notes' | 'habits' | 'program' | 'checkin';
 }) {
   const name = clientDisplayName(profile);
 
@@ -67,7 +67,9 @@ export function ClientProfile({
         <div className="overflow-x-auto">
           <TabsList className="w-max">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="program">Program</TabsTrigger>
             <TabsTrigger value="habits">Habits</TabsTrigger>
+            <TabsTrigger value="checkin">Check-in</TabsTrigger>
             <TabsTrigger value="notes">Notes &amp; files</TabsTrigger>
           </TabsList>
         </div>
@@ -79,6 +81,16 @@ export function ClientProfile({
             injuries={profile.injuries}
             tags={profile.tags}
           />
+        </TabsContent>
+
+        {/* P1-06 fills this slot: the client's assigned program(s) + an Assign entry. */}
+        <TabsContent value="program" className="pt-4">
+          <p className="text-sm text-muted-foreground">Program assignment arrives with P1-06.</p>
+        </TabsContent>
+
+        {/* P1-10 fills this slot: the client's weekly check-in weekday. */}
+        <TabsContent value="checkin" className="pt-4">
+          <p className="text-sm text-muted-foreground">Check-in scheduling arrives with P1-10.</p>
         </TabsContent>
 
         <TabsContent value="habits" className="pt-4">
