@@ -1,9 +1,6 @@
-import { NextResponse } from 'next/server';
+import { connection, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { generateDueCheckins } from '@/features/checkins/due';
-
-// A cron endpoint: never prerender, always run on request.
-export const dynamic = 'force-dynamic';
 
 /**
  * Due-generation cron (docs/platform.md §11, features §7.7). Vercel Cron calls this on a schedule
@@ -20,6 +17,8 @@ function isAuthorized(request: Request): boolean {
 }
 
 async function handle(request: Request): Promise<NextResponse> {
+  // Opt out of prerendering before any request-dependent work (Next 16 cacheComponents, L-002).
+  await connection();
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
