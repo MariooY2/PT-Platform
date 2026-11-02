@@ -6,10 +6,16 @@ import { ProgramBuilder } from '@/features/programs/components/program-builder';
 
 export const instant = false;
 
-export default async function ProgramBuilderPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProgramBuilderPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ state?: string }>;
+}) {
   // Force dynamic before the Supabase session read (Next 16 cacheComponents, L-002).
   await connection();
-  const { id } = await params;
+  const [{ id }, { state }] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
   const {
     data: { user },
@@ -26,5 +32,7 @@ export default async function ProgramBuilderPage({ params }: { params: Promise<{
     .eq('is_archived', false)
     .order('name');
 
-  return <ProgramBuilder program={program} exercises={exercises ?? []} />;
+  return (
+    <ProgramBuilder program={program} exercises={exercises ?? []} initialAssignState={state} />
+  );
 }

@@ -7,9 +7,14 @@ import { ProgramsList } from '@/features/programs/components/programs-list';
 
 export const instant = false;
 
-export default async function CoachProgramsPage() {
+export default async function CoachProgramsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ state?: string }>;
+}) {
   // Reads the session; force dynamic before the Supabase read (Next 16 cacheComponents, L-002).
   await connection();
+  const { state } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,5 +38,5 @@ export default async function CoachProgramsPage() {
     );
   }
 
-  return <ProgramsList items={items} />;
+  return <ProgramsList items={items} initialState={state} />;
 }

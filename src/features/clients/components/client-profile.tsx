@@ -17,6 +17,8 @@ import { NotesPanel } from './notes-panel';
 import { FilesPanel } from './files-panel';
 import { HabitsManager } from '@/features/habits/components/habits-manager';
 import type { TrainerHabit } from '@/features/habits/queries';
+import { ClientPrograms } from './client-programs';
+import type { ClientProgramItem } from '@/features/programs/types';
 
 export function ClientProfile({
   profile,
@@ -24,6 +26,7 @@ export function ClientProfile({
   notes,
   files,
   habits,
+  programs,
   initialTab = 'overview',
 }: {
   profile: ClientProfileData;
@@ -31,6 +34,7 @@ export function ClientProfile({
   notes: ClientNote[] | null;
   files: ClientFile[] | null;
   habits: TrainerHabit[] | null;
+  programs: ClientProgramItem[] | null;
   initialTab?: 'overview' | 'notes' | 'habits' | 'program' | 'checkin';
 }) {
   const name = clientDisplayName(profile);
@@ -83,9 +87,13 @@ export function ClientProfile({
           />
         </TabsContent>
 
-        {/* P1-06 fills this slot: the client's assigned program(s) + an Assign entry. */}
+        {/* P1-06: the client's assigned program copies. Assigning happens from a template. */}
         <TabsContent value="program" className="pt-4">
-          <p className="text-sm text-muted-foreground">Program assignment arrives with P1-06.</p>
+          {programs === null ? (
+            <DataError description="We couldn’t load programs." />
+          ) : (
+            <ClientPrograms items={programs} />
+          )}
         </TabsContent>
 
         {/* P1-10 fills this slot: the client's weekly check-in weekday. */}

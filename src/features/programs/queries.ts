@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/types';
-import type { Program, ProgramListItem } from './types';
+import type { ClientProgramItem, Program, ProgramListItem } from './types';
+import { usedByCounts } from './lib';
 
 type DB = SupabaseClient<Database>;
 
@@ -72,11 +73,67 @@ export async function listPrograms(
     .eq('trainer_id', trainerId)
     .order('updated_at', { ascending: false });
   if (error) return { items: null, error: error.message };
-  const items = (data ?? []).map((row) => {
-    const { program_workouts, ...program } = row as typeof row & {
-      program_workouts: { count: number }[];
-    };
-    return { ...program, workout_count: program_workouts?.[0]?.count ?? 0 } as ProgramListItem;
+  const rows = (data ?? []) as Array<
+    Program & { program_workouts: { count: number }[]; source_program_id: string | null }
+  >;
+  // "Used by (n)" per template = count of client copies pointing at it. Computed from the trainer's
+  // own rows (a self-referential embed count isn't reliable; RLS already scopes these to the trainer).
+  const used = usedByCounts(rows);
+  const items = rows.map((row) => {
+    const { program_workouts, ...program } = row;
+    return {
+      ...program,
+      workout_count: program_workouts?.[0]?.count ?? 0,
+      used_by: used[row.id] ?? 0,
+    } as ProgramListItem;
   });
   return { items, error: null };
+}
+
+/** A client's assigned copies (the client-profile Program tab). RLS scopes rows to the trainer. */
+export async function listClientPrograms(
+  supabase: DB,
+  trainerId: string,
+  clientId: string,
+): Promise<{ items: ClientProgramItem[] | null; error: string | null }> {
+  const { data, error } = await supabase
+    .from('programs')
+    .select('id, title, weeks, status, start_date, program_workouts(count)')
+    .eq('trainer_id', trainerId)
+    .eq('client_id', clientId)
+    .eq('is_template', false)
+    .order('start_date', { ascending: false, nullsFirst: false });
+  if (error) return { items: null, error: error.message };
+  const items = (data ?? []).map((row) => {
+    const r = row as typeof row & { program_workouts: { count: number }[] };
+    return {
+      id: r.id,
+      title: r.title,
+      weeks: r.weeks,
+      status: r.status,
+      startDate: r.start_date,
+      workoutCount: r.program_workouts?.[0]?.count ?? 0,
+    } satisfies ClientProgramItem;
+  });
+  return { items, error: null };
+}
+
+// Week 1 of a template, for the read-only assign preview. Reuses the full program load and slices.
+export type WeekOnePreview = {
+  title: string;
+  weeks: number;
+  workouts: LoadedProgram['program_workouts'];
+};
+
+export async function loadWeekOne(
+  supabase: DB,
+  templateId: string,
+): Promise<WeekOnePreview | null> {
+  const program = await loadProgram(supabase, templateId);
+  if (!program) return null;
+  return {
+    title: program.title,
+    weeks: program.weeks,
+    workouts: program.program_workouts.filter((w) => w.week === 1),
+  };
 }

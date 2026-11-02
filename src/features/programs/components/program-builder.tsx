@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { humanizeTaxonomy } from '@/features/exercises/taxonomy';
+import { setSummary } from '../lib';
+import { AssignDialog } from './assign-dialog';
 import {
   addExerciseAction,
   addWorkoutAction,
@@ -34,25 +36,17 @@ import type { LoadedProgram } from '../queries';
 type WorkoutExercise = LoadedProgram['program_workouts'][number]['workout_exercises'][number];
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-function setSummary(wex: WorkoutExercise): string {
-  const s = wex.prescribed_sets.slice().sort((a, b) => a.set_number - b.set_number)[0];
-  if (!s) return 'No sets yet';
-  const count = wex.prescribed_sets.length;
-  if (s.duration_sec) return `${count} × ${s.duration_sec}s`;
-  const reps =
-    s.reps_max && s.reps_max !== s.reps_min ? `${s.reps_min}–${s.reps_max}` : `${s.reps_min}`;
-  const load = s.weight_kg ? ` · ${s.weight_kg}kg` : s.percent_1rm ? ` · ${s.percent_1rm}%` : '';
-  const rpe = s.rpe ? ` · RPE ${s.rpe}` : '';
-  return `${count} × ${reps}${load}${rpe}`;
-}
-
 export function ProgramBuilder({
   program,
   exercises,
+  initialAssignState,
 }: {
   program: LoadedProgram;
   exercises: Array<{ id: string; name: string; primary_muscle: string }>;
+  initialAssignState?: string;
 }) {
+  const autoOpenAssign =
+    initialAssignState === 'assign' ? 1 : initialAssignState === 'assign-preview' ? 2 : undefined;
   const router = useRouter();
   const [week, setWeek] = useState(1);
   const [openWorkout, setOpenWorkout] = useState<string | null>(null);
@@ -100,23 +94,37 @@ export function ProgramBuilder({
             <p className="text-sm text-muted-foreground">Changes apply to this client only.</p>
           )}
         </div>
-        <Button
-          type="button"
-          variant={program.status === 'published' ? 'outline' : 'default'}
-          disabled={pending}
-          onClick={() =>
-            run(
-              () =>
-                setProgramStatusAction(
-                  program.id,
-                  program.status === 'published' ? 'draft' : 'published',
-                ),
-              program.status === 'published' ? 'Unpublished' : 'Published',
-            )
-          }
-        >
-          {program.status === 'published' ? 'Unpublish' : 'Publish'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {program.is_template && (
+            <AssignDialog
+              templateId={program.id}
+              templateTitle={program.title}
+              autoOpenStep={autoOpenAssign}
+              trigger={
+                <Button type="button" variant="outline">
+                  Assign
+                </Button>
+              }
+            />
+          )}
+          <Button
+            type="button"
+            variant={program.status === 'published' ? 'outline' : 'default'}
+            disabled={pending}
+            onClick={() =>
+              run(
+                () =>
+                  setProgramStatusAction(
+                    program.id,
+                    program.status === 'published' ? 'draft' : 'published',
+                  ),
+                program.status === 'published' ? 'Unpublished' : 'Published',
+              )
+            }
+          >
+            {program.status === 'published' ? 'Unpublish' : 'Publish'}
+          </Button>
+        </div>
       </div>
 
       {/* Week tabs */}
@@ -293,7 +301,7 @@ function ExerciseRow({
       )}
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">{wex.exercises?.name ?? 'Exercise'}</span>
-        <span className="text-xs text-muted-foreground">{setSummary(wex)}</span>
+        <span className="text-xs text-muted-foreground">{setSummary(wex.prescribed_sets)}</span>
       </span>
       <Input
         value={text}

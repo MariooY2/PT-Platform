@@ -6,10 +6,22 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { roleOf } from '@/lib/supabase/middleware';
 import type { Database } from '@/lib/supabase/types';
-import { parseNewProgram } from './schemas';
+import { listClients } from '@/features/clients/queries';
+import { clientDisplayName } from '@/features/clients/lib';
+import { parseNewProgram, assignSchema, type AssignInput } from './schemas';
+import { loadWeekOne, type WeekOnePreview } from './queries';
 import { parseQuickEntry } from './quick-entry';
 
 export type ActionResult = { ok: true; id?: string } | { error: string };
+
+export type AssignableClient = { id: string; name: string; hasProgram: boolean };
+export type AssignResult =
+  | {
+      ok: true;
+      copies: Array<{ clientId: string; programId: string; name: string }>;
+      failed: string[];
+    }
+  | { error: string };
 
 const GENERIC = 'Something went wrong. Try again.';
 
@@ -260,6 +272,94 @@ export async function applyQuickEntryAction(
   if (error) return { error: GENERIC };
   bust(programId);
   return { ok: true };
+}
+
+/**
+ * The trainer's active clients for the Assign dialog, resolved from the session — never from the
+ * browser. `hasProgram` flags clients who already have an assigned copy (spec: "shows who already has
+ * an active program").
+ */
+export async function listAssignableClientsAction(): Promise<
+  { ok: true; clients: AssignableClient[] } | { error: string }
+> {
+  const auth = await requireTrainer();
+  if (!auth.ok) return { error: auth.error };
+
+  const { items, error } = await listClients(auth.supabase, auth.trainerId);
+  if (error || !items) return { error: 'We couldn’t load your clients.' };
+  const active = items.filter((c) => c.status === 'active');
+
+  const ids = active.map((c) => c.clientId);
+  const withProgram = new Set<string>();
+  if (ids.length) {
+    const { data } = await auth.supabase
+      .from('programs')
+      .select('client_id')
+      .eq('trainer_id', auth.trainerId)
+      .eq('is_template', false)
+      .in('client_id', ids);
+    for (const row of data ?? []) if (row.client_id) withProgram.add(row.client_id);
+  }
+
+  const clients = active.map((c) => ({
+    id: c.clientId,
+    name: clientDisplayName(c),
+    hasProgram: withProgram.has(c.clientId),
+  }));
+  return { ok: true, clients };
+}
+
+/** Week 1 of a template for the read-only assign preview. RLS scopes the read to the owner. */
+export async function loadWeekOnePreviewAction(
+  templateId: string,
+): Promise<{ ok: true; preview: WeekOnePreview } | { error: string }> {
+  if (!uuid.safeParse(templateId).success) return { error: GENERIC };
+  const auth = await requireTrainer();
+  if (!auth.ok) return { error: auth.error };
+  const preview = await loadWeekOne(auth.supabase, templateId);
+  if (!preview) return { error: 'We couldn’t load the program preview.' };
+  return { ok: true, preview };
+}
+
+/**
+ * Assign a template to one or many clients as independent deep copies. Each copy is one atomic
+ * Postgres call (`copy_program_for_client`) — never app-side inserts. The submitted client ids are
+ * intersected with the trainer's own active clients server-side before any copy runs, and RLS in the
+ * (security invoker) function enforces ownership again. Prices/ids are never trusted from the browser.
+ */
+export async function assignClientsAction(input: AssignInput): Promise<AssignResult> {
+  const parsed = assignSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? GENERIC };
+  const auth = await requireTrainer();
+  if (!auth.ok) return { error: auth.error };
+
+  // Resolve the client list from the session and drop any id that isn't one of this trainer's own
+  // active clients — the browser cannot assign to an arbitrary id.
+  const { items } = await listClients(auth.supabase, auth.trainerId);
+  const active = (items ?? []).filter((c) => c.status === 'active');
+  const nameById = new Map(active.map((c) => [c.clientId, clientDisplayName(c)]));
+  const targets = parsed.data.clientIds.filter((id) => nameById.has(id));
+  if (targets.length === 0) return { error: 'Pick at least one active client.' };
+
+  const copies: Array<{ clientId: string; programId: string; name: string }> = [];
+  const failed: string[] = [];
+  for (const clientId of targets) {
+    const { data, error } = await auth.supabase.rpc('copy_program_for_client', {
+      template_id: parsed.data.templateId,
+      target_client_id: clientId,
+      start_on: parsed.data.startDate,
+    });
+    const name = nameById.get(clientId) ?? 'Client';
+    if (error || !data) failed.push(name);
+    else copies.push({ clientId, programId: data as string, name });
+  }
+
+  revalidatePath('/coach/programs');
+  revalidatePath(`/coach/programs/${parsed.data.templateId}`);
+  for (const clientId of targets) revalidatePath(`/coach/clients/${clientId}`);
+
+  if (copies.length === 0) return { error: 'We couldn’t assign the program. Try again.' };
+  return { ok: true, copies, failed };
 }
 
 export async function setProgramStatusAction(
