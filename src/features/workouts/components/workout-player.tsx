@@ -339,7 +339,7 @@ export function WorkoutPlayer({ data }: { data: WorkoutPlayerData }) {
   return (
     <div className="mx-auto flex h-dvh w-full max-w-[560px] flex-col">
       <header className="flex shrink-0 items-center gap-3 border-b px-4 py-3">
-        <Button asChild variant="ghost" size="icon" aria-label="Back to Today">
+        <Button asChild variant="ghost" size="icon-lg" aria-label="Back to Today">
           <Link href="/client">
             <ChevronLeft aria-hidden />
           </Link>
@@ -441,7 +441,7 @@ export function WorkoutPlayer({ data }: { data: WorkoutPlayerData }) {
           <button
             type="button"
             onClick={() => addSet(current)}
-            className="min-h-11 w-full rounded-md border border-dashed text-sm text-muted-foreground hover:bg-muted"
+            className="min-h-12 w-full rounded-md border border-dashed text-sm text-muted-foreground hover:bg-muted"
           >
             + Add set
           </button>
@@ -569,7 +569,7 @@ function SetRow({
       </div>
       {draft.isPr && (
         <span className="col-span-full px-1 pb-0.5 text-xs font-semibold text-pr-soft-foreground">
-          New PR
+          New PR{draft.weight && draft.reps ? ` — ${draft.weight} kg × ${draft.reps}` : ''}
         </span>
       )}
     </div>
