@@ -8,7 +8,7 @@ import { roleOf } from '@/lib/supabase/middleware';
 import type { Database } from '@/lib/supabase/types';
 import { listClients } from '@/features/clients/queries';
 import { clientDisplayName } from '@/features/clients/lib';
-import { parseNewProgram, assignSchema, type AssignInput } from './schemas';
+import { parseNewProgram, assignSchema, uuidLike, type AssignInput } from './schemas';
 import { loadWeekOne, type WeekOnePreview } from './queries';
 import { parseQuickEntry } from './quick-entry';
 
@@ -313,7 +313,7 @@ export async function listAssignableClientsAction(): Promise<
 export async function loadWeekOnePreviewAction(
   templateId: string,
 ): Promise<{ ok: true; preview: WeekOnePreview } | { error: string }> {
-  if (!uuid.safeParse(templateId).success) return { error: GENERIC };
+  if (!uuidLike.safeParse(templateId).success) return { error: GENERIC };
   const auth = await requireTrainer();
   if (!auth.ok) return { error: auth.error };
   const preview = await loadWeekOne(auth.supabase, templateId);
