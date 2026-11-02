@@ -42,8 +42,15 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    // Enable the /dev/ui gallery and give the server the local Supabase connection.
-    env: { ENABLE_DEV_UI: '1', NEXT_PUBLIC_SITE_URL: BASE_URL, ...supabaseEnv() },
+    // Enable the /dev/ui gallery and give the server the local Supabase connection. CRON_SECRET lets
+    // the check-in due-generation route (P1-10) authenticate during e2e; the real production secret
+    // is provisioned by the human (parked in approvals.md).
+    env: {
+      ENABLE_DEV_UI: '1',
+      NEXT_PUBLIC_SITE_URL: BASE_URL,
+      CRON_SECRET: process.env.CRON_SECRET ?? 'e2e-cron-secret',
+      ...supabaseEnv(),
+    },
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 });
