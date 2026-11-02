@@ -17,6 +17,7 @@ import { NotesPanel } from './notes-panel';
 import { FilesPanel } from './files-panel';
 import { HabitsManager } from '@/features/habits/components/habits-manager';
 import type { TrainerHabit } from '@/features/habits/queries';
+import { CheckinScheduleForm } from '@/features/checkins/components/checkin-schedule-form';
 
 export function ClientProfile({
   profile,
@@ -24,6 +25,8 @@ export function ClientProfile({
   notes,
   files,
   habits,
+  checkinWeekday,
+  hasCheckinForm,
   initialTab = 'overview',
 }: {
   profile: ClientProfileData;
@@ -31,6 +34,8 @@ export function ClientProfile({
   notes: ClientNote[] | null;
   files: ClientFile[] | null;
   habits: TrainerHabit[] | null;
+  checkinWeekday: number | null;
+  hasCheckinForm: boolean;
   initialTab?: 'overview' | 'notes' | 'habits' | 'program' | 'checkin';
 }) {
   const name = clientDisplayName(profile);
@@ -89,8 +94,18 @@ export function ClientProfile({
         </TabsContent>
 
         {/* P1-10 fills this slot: the client's weekly check-in weekday. */}
-        <TabsContent value="checkin" className="pt-4">
-          <p className="text-sm text-muted-foreground">Check-in scheduling arrives with P1-10.</p>
+        <TabsContent value="checkin" className="space-y-4 pt-4">
+          <div className="space-y-1">
+            <h2 className="text-sm font-medium">Weekly check-in</h2>
+            <p className="text-sm text-muted-foreground">
+              Set the day each week this client’s check-in becomes due.
+            </p>
+          </div>
+          <CheckinScheduleForm
+            clientId={profile.clientId}
+            currentWeekday={checkinWeekday}
+            hasCheckinForm={hasCheckinForm}
+          />
         </TabsContent>
 
         <TabsContent value="habits" className="pt-4">
