@@ -231,6 +231,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"personal_records": {
+                  Row: {
+                    "achieved_at": string,"client_id": string,"exercise_id": string,"id": string,"set_log_id": string | null,"type": Database["public"]['Enums']["pr_type"],"value": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "achieved_at"?: string,"client_id": string,"exercise_id": string,"id"?: string,"set_log_id"?: string | null,"type": Database["public"]['Enums']["pr_type"],"value": number
+                  }
+                  Update: {
+                    "achieved_at"?: string,"client_id"?: string,"exercise_id"?: string,"id"?: string,"set_log_id"?: string | null,"type"?: Database["public"]['Enums']["pr_type"],"value"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "personal_records_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "personal_records_exercise_id_fkey"
+      columns: ["exercise_id"]
+isOneToOne: false
+      referencedRelation: "exercises"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "personal_records_set_log_id_fkey"
+      columns: ["set_log_id"]
+isOneToOne: false
+      referencedRelation: "set_logs"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"prescribed_sets": {
                   Row: {
                     "created_at": string,"distance_m": number | null,"duration_sec": number | null,"id": string,"percent_1rm": number | null,"reps_max": number | null,"reps_min": number | null,"rir": number | null,"rpe": number | null,"set_number": number,"set_type": Database["public"]['Enums']["prescribed_set_type"],"weight_kg": number | null,"workout_exercise_id": string
@@ -317,6 +349,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"set_logs": {
+                  Row: {
+                    "client_generated_id": string,"completed": boolean,"created_at": string,"distance_m": number | null,"duration_sec": number | null,"exercise_id": string,"id": string,"reps": number | null,"rpe": number | null,"set_number": number,"weight_kg": number | null,"workout_exercise_id": string | null,"workout_log_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_generated_id": string,"completed"?: boolean,"created_at"?: string,"distance_m"?: number | null,"duration_sec"?: number | null,"exercise_id": string,"id"?: string,"reps"?: number | null,"rpe"?: number | null,"set_number": number,"weight_kg"?: number | null,"workout_exercise_id"?: string | null,"workout_log_id": string
+                  }
+                  Update: {
+                    "client_generated_id"?: string,"completed"?: boolean,"created_at"?: string,"distance_m"?: number | null,"duration_sec"?: number | null,"exercise_id"?: string,"id"?: string,"reps"?: number | null,"rpe"?: number | null,"set_number"?: number,"weight_kg"?: number | null,"workout_exercise_id"?: string | null,"workout_log_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "set_logs_exercise_id_fkey"
+      columns: ["exercise_id"]
+isOneToOne: false
+      referencedRelation: "exercises"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "set_logs_workout_exercise_id_fkey"
+      columns: ["workout_exercise_id"]
+isOneToOne: false
+      referencedRelation: "workout_exercises"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "set_logs_workout_log_id_fkey"
+      columns: ["workout_log_id"]
+isOneToOne: false
+      referencedRelation: "workout_logs"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"trainer_clients": {
                   Row: {
                     "client_id": string | null,"created_at": string,"goals": string | null,"id": string,"injuries_notes": string | null,"invite_email": string | null,"invite_expires_at": string | null,"invite_token": string | null,"source": Database["public"]['Enums']["client_source"],"start_date": string | null,"status": Database["public"]['Enums']["client_status"],"tags": (string)[] | null,"trainer_id": string,"updated_at": string
@@ -389,6 +453,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"workout_logs": {
+                  Row: {
+                    "assignment_id": string | null,"client_generated_id": string,"client_id": string,"client_notes": string | null,"completed_at": string | null,"created_at": string,"id": string,"program_workout_id": string | null,"scheduled_date": string | null,"session_rpe": number | null,"started_at": string,"status": Database["public"]['Enums']["workout_log_status"],"trainer_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "assignment_id"?: string | null,"client_generated_id": string,"client_id": string,"client_notes"?: string | null,"completed_at"?: string | null,"created_at"?: string,"id"?: string,"program_workout_id"?: string | null,"scheduled_date"?: string | null,"session_rpe"?: number | null,"started_at"?: string,"status"?: Database["public"]['Enums']["workout_log_status"],"trainer_id": string
+                  }
+                  Update: {
+                    "assignment_id"?: string | null,"client_generated_id"?: string,"client_id"?: string,"client_notes"?: string | null,"completed_at"?: string | null,"created_at"?: string,"id"?: string,"program_workout_id"?: string | null,"scheduled_date"?: string | null,"session_rpe"?: number | null,"started_at"?: string,"status"?: Database["public"]['Enums']["workout_log_status"],"trainer_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "workout_logs_assignment_id_fkey"
+      columns: ["assignment_id"]
+isOneToOne: false
+      referencedRelation: "programs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workout_logs_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workout_logs_program_workout_id_fkey"
+      columns: ["program_workout_id"]
+isOneToOne: false
+      referencedRelation: "program_workouts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workout_logs_trainer_id_fkey"
+      columns: ["trainer_id"]
+isOneToOne: false
+      referencedRelation: "trainers"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -413,6 +515,9 @@ isOneToOne: false
 "can_read_workout":
 { Args: { "w": string }; Returns: boolean
                            },
+"can_read_workout_log":
+{ Args: { "wl": string }; Returns: boolean
+                           },
 "copy_program_for_client":
 { Args: { "start_on": string,"target_client_id": string,"template_id": string }; Returns: string
                            },
@@ -430,10 +535,13 @@ isOneToOne: false
                            },
 "owns_habit":
 { Args: { "habit": string }; Returns: boolean
+                           },
+"owns_workout_log":
+{ Args: { "wl": string }; Returns: boolean
                            }
           }
           Enums: {
-            "client_source": "invite"|"purchase"|"import","client_status": "lead"|"invited"|"active"|"paused"|"archived","exercise_category": "strength"|"cardio"|"mobility"|"plyometric"|"other","form_kind": "intake"|"checkin","prescribed_set_type": "warmup"|"working"|"drop"|"amrap","program_status": "draft"|"published","trainer_plan": "free"|"pro"|"elite","unit_system": "metric"|"imperial","user_role": "admin"|"trainer"|"client"
+            "client_source": "invite"|"purchase"|"import","client_status": "lead"|"invited"|"active"|"paused"|"archived","exercise_category": "strength"|"cardio"|"mobility"|"plyometric"|"other","form_kind": "intake"|"checkin","pr_type": "max_weight"|"e1rm"|"max_reps","prescribed_set_type": "warmup"|"working"|"drop"|"amrap","program_status": "draft"|"published","trainer_plan": "free"|"pro"|"elite","unit_system": "metric"|"imperial","user_role": "admin"|"trainer"|"client","workout_log_status": "in_progress"|"completed"|"partial"|"skipped"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -553,7 +661,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "client_source": ["invite", "purchase", "import"],"client_status": ["lead", "invited", "active", "paused", "archived"],"exercise_category": ["strength", "cardio", "mobility", "plyometric", "other"],"form_kind": ["intake", "checkin"],"prescribed_set_type": ["warmup", "working", "drop", "amrap"],"program_status": ["draft", "published"],"trainer_plan": ["free", "pro", "elite"],"unit_system": ["metric", "imperial"],"user_role": ["admin", "trainer", "client"]
+            "client_source": ["invite", "purchase", "import"],"client_status": ["lead", "invited", "active", "paused", "archived"],"exercise_category": ["strength", "cardio", "mobility", "plyometric", "other"],"form_kind": ["intake", "checkin"],"pr_type": ["max_weight", "e1rm", "max_reps"],"prescribed_set_type": ["warmup", "working", "drop", "amrap"],"program_status": ["draft", "published"],"trainer_plan": ["free", "pro", "elite"],"unit_system": ["metric", "imperial"],"user_role": ["admin", "trainer", "client"],"workout_log_status": ["in_progress", "completed", "partial", "skipped"]
           }
         }
 } as const

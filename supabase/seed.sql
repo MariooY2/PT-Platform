@@ -223,6 +223,20 @@ insert into public.workout_exercises (id, program_workout_id, exercise_id, posit
 insert into public.prescribed_sets (workout_exercise_id, set_number, set_type, reps_min, reps_max, weight_kg) values
   ('bbbb0000-0000-0000-0000-000000000013', 1, 'working', 5, 5, 80);
 
+-- P1-07: one completed Back-squat workout for Client One a week ago, so the player's "previous
+-- performance" and the Progress screen have real data. Today's assigned day-1 workout stays unlogged
+-- (start_date = current_date), so /client Today shows the scheduled workout ready to start.
+insert into public.workout_logs (id, trainer_id, client_id, assignment_id, program_workout_id, scheduled_date, started_at, completed_at, status, session_rpe, client_generated_id) values
+  ('dddd0000-0000-0000-0000-000000000001', '11111111-0000-0000-0000-000000000001', '33333333-0000-0000-0000-000000000001', 'bbbb0000-0000-0000-0000-000000000011', 'bbbb0000-0000-0000-0000-000000000012', current_date - 7, now() - interval '7 days', now() - interval '7 days' + interval '45 minutes', 'completed', 8, 'dddd0000-0000-0000-0000-000000000011');
+insert into public.set_logs (workout_log_id, workout_exercise_id, exercise_id, set_number, reps, weight_kg, completed, client_generated_id)
+select 'dddd0000-0000-0000-0000-000000000001', 'bbbb0000-0000-0000-0000-000000000013', e.id, v.set_number, v.reps, v.weight_kg, true, v.cgid
+from (values
+  (1, 5, 80.0, 'dddd0000-0000-0000-0000-000000000021'::uuid),
+  (2, 5, 80.0, 'dddd0000-0000-0000-0000-000000000022'::uuid),
+  (3, 5, 82.5, 'dddd0000-0000-0000-0000-000000000023'::uuid)
+) as v(set_number, reps, weight_kg, cgid)
+cross join (select id from public.exercises where trainer_id is null and name = 'Back squat' limit 1) e;
+
 -- P1-03: Client One finished Alpha's intake (so the intake gate lets them through and existing
 -- /client* routes + nav/pwa specs keep working); plus one submitted, unreviewed weekly check-in so
 -- /coach/checkins has a populated default state. Client Two is left WITHOUT an intake on purpose so
