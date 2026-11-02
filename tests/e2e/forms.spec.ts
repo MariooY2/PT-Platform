@@ -164,33 +164,46 @@ test.describe('P1-03 forms, intake, check-ins', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    const { id } = await createClientFor('Queue Client');
+    const older = await createClientFor('Queue Older');
+    const newer = await createClientFor('Queue Newer');
     const intakeId = await defaultIntakeId();
 
-    // A submitted, unreviewed response → it belongs in the queue.
-    const { data: resp } = await admin
+    // Two submitted, unreviewed responses — an older one and a newer one; the queue is oldest-first.
+    const { data: olderResp } = await admin
       .from('form_responses')
       .insert({
         form_id: intakeId,
         trainer_id: TRAINER_A,
-        client_id: id,
+        client_id: older.id,
         answers: { goals: 'Lose fat', days: 4 },
-        submitted_at: new Date().toISOString(),
+        submitted_at: new Date(Date.now() - 6 * 86_400_000).toISOString(),
       })
       .select('id')
       .single();
-    const responseId = resp!.id as string;
+    const responseId = olderResp!.id as string;
+    await admin.from('form_responses').insert({
+      form_id: intakeId,
+      trainer_id: TRAINER_A,
+      client_id: newer.id,
+      answers: { goals: 'Gain muscle' },
+      submitted_at: new Date().toISOString(),
+    });
 
     await signInUi(page, 'trainer.a@ptplatform.test');
     await page.goto('/coach/checkins');
 
-    await page.getByRole('button', { name: /Queue Client/ }).click();
+    // Oldest-unreviewed first: the 6-days-old card precedes the just-now card.
+    const queueCards = page.getByRole('button', { name: /Queue (Older|Newer)/ });
+    await expect(queueCards.first()).toContainText('Queue Older');
+
+    await page.getByRole('button', { name: /Queue Older/ }).click();
     await page.getByLabel('Your reply').fill('Great start — keep it up this week.');
     await page.getByRole('button', { name: 'Send reply' }).click();
     await expect(page.getByText('Reply sent.')).toBeVisible();
 
-    // It left the queue in the UI.
-    await expect(page.getByRole('button', { name: /Queue Client/ })).toHaveCount(0);
+    // The replied item left the queue; the newer one is still waiting.
+    await expect(page.getByRole('button', { name: /Queue Older/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Queue Newer/ })).toBeVisible();
 
     // The write landed: coach_reply + reviewed_at set.
     const { data: after } = await admin

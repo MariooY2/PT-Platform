@@ -26,9 +26,12 @@ async function signIn(email: string): Promise<DB> {
   return c;
 }
 
+const TRAINER_B = '22222222-0000-0000-0000-000000000001';
+
 let trainerA: DB, trainerB: DB, client1: DB, client2: DB;
 let intakeFormId: string;
 const responseIds: string[] = [];
+const scheduleIds: string[] = [];
 
 beforeAll(async () => {
   trainerA = await signIn('trainer.a@ptplatform.test');
@@ -46,6 +49,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   if (responseIds.length) await admin.from('form_responses').delete().in('id', responseIds);
+  if (scheduleIds.length) await admin.from('checkin_schedules').delete().in('id', scheduleIds);
 });
 
 describe('default forms', () => {
@@ -152,5 +156,69 @@ describe('form_responses — client fills, submit locks, coach fields guarded', 
     const other = await trainerB.from('form_responses').select('id').eq('id', responseIds[0]);
     expect(other.error).toBeNull();
     expect(other.data).toEqual([]);
+  });
+});
+
+describe('form_responses — tenant guard: a client cannot move their response to another trainer', () => {
+  let rid: string;
+
+  it('setup: client1 creates a fresh unsubmitted response', async () => {
+    const res = await client1
+      .from('form_responses')
+      .insert({ form_id: intakeFormId, trainer_id: TRAINER_A, client_id: CLIENT_1, answers: {} })
+      .select()
+      .single();
+    expect(res.error).toBeNull();
+    rid = res.data!.id;
+    responseIds.push(rid);
+  });
+
+  it('a client UPDATE that tries to set trainer_id to another trainer is pinned back by the guard', async () => {
+    const res = await client1
+      .from('form_responses')
+      .update({ trainer_id: TRAINER_B, answers: { sneaky: true } })
+      .eq('id', rid)
+      .select();
+    expect(res.error).toBeNull(); // still client1's row, so the update applies + returns it
+
+    const check = await admin
+      .from('form_responses')
+      .select('trainer_id, answers')
+      .eq('id', rid)
+      .single();
+    expect(check.data!.trainer_id).toBe(TRAINER_A); // guard preserved the owning trainer
+    expect((check.data!.answers as Record<string, unknown>).sneaky).toBe(true); // answers still wrote
+
+    // Trainer B never gains access to the row.
+    expect((await trainerB.from('form_responses').select('id').eq('id', rid)).data).toEqual([]);
+  });
+});
+
+describe('checkin_schedules — trainer-only isolation', () => {
+  it('a trainer manages their own schedule; another trainer and a client cannot read it', async () => {
+    const ins = await trainerA
+      .from('checkin_schedules')
+      .insert({ trainer_id: TRAINER_A, client_id: CLIENT_1, form_id: intakeFormId, weekday: 1 })
+      .select()
+      .single();
+    expect(ins.error).toBeNull();
+    scheduleIds.push(ins.data!.id);
+
+    expect(
+      (await trainerA.from('checkin_schedules').select('id').eq('id', ins.data!.id)).data,
+    ).toHaveLength(1);
+    expect(
+      (await trainerB.from('checkin_schedules').select('id').eq('id', ins.data!.id)).data,
+    ).toEqual([]);
+    expect(
+      (await client1.from('checkin_schedules').select('id').eq('id', ins.data!.id)).data,
+    ).toEqual([]);
+  });
+
+  it('a client cannot create a checkin_schedule (trainer-only → 42501)', async () => {
+    const res = await client1
+      .from('checkin_schedules')
+      .insert({ trainer_id: TRAINER_A, client_id: CLIENT_1, form_id: intakeFormId, weekday: 2 });
+    expect(res.error?.code).toBe('42501');
   });
 });

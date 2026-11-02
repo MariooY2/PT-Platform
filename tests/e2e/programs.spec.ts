@@ -54,19 +54,27 @@ test.describe('P1-05 program builder (as coach)', () => {
       .first()
       .click();
 
-    // Add an exercise via the picker.
+    // Add two exercises via the picker (a superset needs a pair).
     await page.getByRole('combobox', { name: 'Add exercise' }).click();
     await page.getByRole('option', { name: /Back squat/ }).click();
+    await page.getByRole('combobox', { name: 'Add exercise' }).click();
+    await page.getByRole('option', { name: /Overhead press/ }).click();
 
-    // Quick entry → prescribed sets (A3 integration).
-    const presc = page.getByRole('textbox', { name: /Prescription for/ });
+    // Quick entry → prescribed sets (A3 integration) on the first exercise.
+    const presc = page.getByRole('textbox', { name: /Prescription for/ }).first();
     await presc.fill('3x8-10 RPE8');
     await presc.press('Enter');
     await expect(page.getByText(/3 × 8–10/)).toBeVisible();
 
-    // Superset group (A5).
-    await page.getByRole('button', { name: 'Superset' }).click();
+    // Superset group (A5): grouping the first exercise with the next pairs them as A1 / A2.
+    await page.getByRole('button', { name: 'Superset' }).first().click();
     await expect(page.getByText('A1', { exact: true })).toBeVisible();
+    await expect(page.getByText('A2', { exact: true })).toBeVisible();
+
+    // Ungroup clears the whole group (both labels disappear).
+    await page.getByRole('button', { name: 'Ungroup' }).first().click();
+    await expect(page.getByText('A1', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('A2', { exact: true })).toHaveCount(0);
 
     // Publish.
     await page.getByRole('button', { name: 'Publish' }).click();

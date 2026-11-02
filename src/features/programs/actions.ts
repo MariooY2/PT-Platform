@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
@@ -11,6 +12,18 @@ import { parseQuickEntry } from './quick-entry';
 export type ActionResult = { ok: true; id?: string } | { error: string };
 
 const GENERIC = 'Something went wrong. Try again.';
+
+// Shared field validators — every server action validates its inputs; ids/bounds never trusted from
+// the browser (RLS still enforces ownership, this stops malformed rows, e.g. week 999 or day 0).
+const uuid = z.string().uuid();
+const week = z.number().int().min(1).max(52);
+const day = z.number().int().min(1).max(7);
+const position = z.number().int().min(0).max(999);
+const status = z.enum(['draft', 'published']);
+const workoutPatch = z.object({
+  title: z.string().trim().max(120).optional(),
+  notes: z.string().trim().max(2000).optional(),
+});
 
 type TrainerCtx =
   | { ok: false; error: string }
@@ -56,14 +69,20 @@ const bust = (programId: string) => revalidatePath(`/coach/programs/${programId}
 
 export async function addWorkoutAction(
   programId: string,
-  week: number,
-  day: number,
+  weekNo: number,
+  dayNo: number,
 ): Promise<ActionResult> {
+  const v = z.object({ programId: uuid, weekNo: week, dayNo: day }).safeParse({
+    programId,
+    weekNo,
+    dayNo,
+  });
+  if (!v.success) return { error: GENERIC };
   const auth = await requireTrainer();
   if (!auth.ok) return { error: auth.error };
   const { error } = await auth.supabase
     .from('program_workouts')
-    .insert({ program_id: programId, week, day, title: 'New workout' });
+    .insert({ program_id: programId, week: weekNo, day: dayNo, title: 'New workout' });
   if (error) return { error: GENERIC };
   bust(programId);
   return { ok: true };
@@ -74,9 +93,16 @@ export async function updateWorkoutAction(
   workoutId: string,
   patch: { title?: string; notes?: string },
 ): Promise<ActionResult> {
+  const v = z
+    .object({ programId: uuid, workoutId: uuid, patch: workoutPatch })
+    .safeParse({ programId, workoutId, patch });
+  if (!v.success) return { error: GENERIC };
   const auth = await requireTrainer();
   if (!auth.ok) return { error: auth.error };
-  const { error } = await auth.supabase.from('program_workouts').update(patch).eq('id', workoutId);
+  const { error } = await auth.supabase
+    .from('program_workouts')
+    .update(v.data.patch)
+    .eq('id', workoutId);
   if (error) return { error: GENERIC };
   bust(programId);
   return { ok: true };
@@ -86,6 +112,8 @@ export async function deleteWorkoutAction(
   programId: string,
   workoutId: string,
 ): Promise<ActionResult> {
+  const v = z.object({ programId: uuid, workoutId: uuid }).safeParse({ programId, workoutId });
+  if (!v.success) return { error: GENERIC };
   const auth = await requireTrainer();
   if (!auth.ok) return { error: auth.error };
   const { error } = await auth.supabase.from('program_workouts').delete().eq('id', workoutId);
@@ -98,13 +126,17 @@ export async function addExerciseAction(
   programId: string,
   workoutId: string,
   exerciseId: string,
-  position: number,
+  pos: number,
 ): Promise<ActionResult> {
+  const v = z
+    .object({ programId: uuid, workoutId: uuid, exerciseId: uuid, pos: position })
+    .safeParse({ programId, workoutId, exerciseId, pos });
+  if (!v.success) return { error: GENERIC };
   const auth = await requireTrainer();
   if (!auth.ok) return { error: auth.error };
   const { error } = await auth.supabase
     .from('workout_exercises')
-    .insert({ program_workout_id: workoutId, exercise_id: exerciseId, position });
+    .insert({ program_workout_id: workoutId, exercise_id: exerciseId, position: pos });
   if (error) return { error: GENERIC };
   bust(programId);
   return { ok: true };
@@ -114,6 +146,10 @@ export async function deleteExerciseAction(
   programId: string,
   workoutExerciseId: string,
 ): Promise<ActionResult> {
+  const v = z
+    .object({ programId: uuid, workoutExerciseId: uuid })
+    .safeParse({ programId, workoutExerciseId });
+  if (!v.success) return { error: GENERIC };
   const auth = await requireTrainer();
   if (!auth.ok) return { error: auth.error };
   const { error } = await auth.supabase
@@ -125,18 +161,63 @@ export async function deleteExerciseAction(
   return { ok: true };
 }
 
+/**
+ * Superset grouping. With a `partnerExerciseId`, group this exercise with its neighbour under the next
+ * free letter (A1/A2, then B1/B2…). With `null`, ungroup — clear the whole letter group this exercise
+ * belongs to. Labels are assigned server-side from the workout's existing labels, never by the browser.
+ */
 export async function setSupersetAction(
   programId: string,
   workoutExerciseId: string,
-  groupLabel: string | null,
+  partnerExerciseId: string | null,
 ): Promise<ActionResult> {
+  const v = z
+    .object({ programId: uuid, workoutExerciseId: uuid, partnerExerciseId: uuid.nullable() })
+    .safeParse({ programId, workoutExerciseId, partnerExerciseId });
+  if (!v.success) return { error: GENERIC };
   const auth = await requireTrainer();
   if (!auth.ok) return { error: auth.error };
-  const { error } = await auth.supabase
+
+  const { data: self, error: selfErr } = await auth.supabase
     .from('workout_exercises')
-    .update({ group_label: groupLabel })
-    .eq('id', workoutExerciseId);
-  if (error) return { error: GENERIC };
+    .select('program_workout_id, group_label')
+    .eq('id', workoutExerciseId)
+    .single();
+  if (selfErr || !self) return { error: GENERIC };
+
+  const { data: siblings, error: sibErr } = await auth.supabase
+    .from('workout_exercises')
+    .select('id, group_label')
+    .eq('program_workout_id', self.program_workout_id);
+  if (sibErr || !siblings) return { error: GENERIC };
+
+  if (partnerExerciseId === null) {
+    // Ungroup the whole letter group (A1 + A2 both clear).
+    const letter = self.group_label?.[0];
+    const targetIds = letter
+      ? siblings.filter((s) => s.group_label?.[0] === letter).map((s) => s.id)
+      : [workoutExerciseId];
+    const { error } = await auth.supabase
+      .from('workout_exercises')
+      .update({ group_label: null })
+      .in('id', targetIds);
+    if (error) return { error: GENERIC };
+  } else {
+    // Pick the next free letter among the workout's existing groups.
+    const used = new Set(siblings.map((s) => s.group_label?.[0]).filter((c): c is string => !!c));
+    let letter = 'A';
+    while (used.has(letter)) letter = String.fromCharCode(letter.charCodeAt(0) + 1);
+    if (letter > 'Z') return { error: GENERIC };
+    const { error: e1 } = await auth.supabase
+      .from('workout_exercises')
+      .update({ group_label: `${letter}1` })
+      .eq('id', workoutExerciseId);
+    const { error: e2 } = await auth.supabase
+      .from('workout_exercises')
+      .update({ group_label: `${letter}2` })
+      .eq('id', partnerExerciseId);
+    if (e1 || e2) return { error: GENERIC };
+  }
   bust(programId);
   return { ok: true };
 }
@@ -147,12 +228,22 @@ export async function applyQuickEntryAction(
   workoutExerciseId: string,
   text: string,
 ): Promise<ActionResult> {
+  const v = z.object({ programId: uuid, workoutExerciseId: uuid }).safeParse({
+    programId,
+    workoutExerciseId,
+  });
+  if (!v.success) return { error: GENERIC };
   const parsed = parseQuickEntry(text);
   if (!parsed.ok) return { error: parsed.error };
   const auth = await requireTrainer();
   if (!auth.ok) return { error: auth.error };
 
-  await auth.supabase.from('prescribed_sets').delete().eq('workout_exercise_id', workoutExerciseId);
+  // Fail before deleting if the delete can't run, so a parse's sets are never dropped on a half-apply.
+  const { error: delError } = await auth.supabase
+    .from('prescribed_sets')
+    .delete()
+    .eq('workout_exercise_id', workoutExerciseId);
+  if (delError) return { error: GENERIC };
   const rows = parsed.sets.map((s, i) => ({
     workout_exercise_id: workoutExerciseId,
     set_number: i + 1,
@@ -173,11 +264,16 @@ export async function applyQuickEntryAction(
 
 export async function setProgramStatusAction(
   programId: string,
-  status: 'draft' | 'published',
+  nextStatus: 'draft' | 'published',
 ): Promise<ActionResult> {
+  const v = z.object({ programId: uuid, nextStatus: status }).safeParse({ programId, nextStatus });
+  if (!v.success) return { error: GENERIC };
   const auth = await requireTrainer();
   if (!auth.ok) return { error: auth.error };
-  const { error } = await auth.supabase.from('programs').update({ status }).eq('id', programId);
+  const { error } = await auth.supabase
+    .from('programs')
+    .update({ status: nextStatus })
+    .eq('id', programId);
   if (error) return { error: GENERIC };
   bust(programId);
   return { ok: true };

@@ -139,3 +139,137 @@ describe('programs — a client reads only their own assigned copy', () => {
     expect(res.data).toEqual([]); // can_edit_* requires trainer ownership
   });
 });
+
+describe('programs — nested-row isolation on workout_exercises + prescribed_sets (A2)', () => {
+  const SAMPLE_WEX = 'bbbb0000-0000-0000-0000-000000000003'; // seeded wex under Trainer A's template
+
+  it("Trainer B cannot READ Trainer A's prescribed_sets (→ [])", async () => {
+    expect(
+      (await trainerB.from('prescribed_sets').select('*').eq('workout_exercise_id', SAMPLE_WEX))
+        .data,
+    ).toEqual([]);
+  });
+
+  it('a foreign client cannot read the template’s nested rows (→ [])', async () => {
+    expect((await client1.from('workout_exercises').select('*').eq('id', SAMPLE_WEX)).data).toEqual(
+      [],
+    );
+    expect(
+      (await client1.from('prescribed_sets').select('*').eq('workout_exercise_id', SAMPLE_WEX))
+        .data,
+    ).toEqual([]);
+  });
+
+  it('Trainer B cannot INSERT a workout_exercise into Trainer A’s workout (→ 42501)', async () => {
+    const ex = await admin.from('exercises').select('id').is('trainer_id', null).limit(1).single();
+    const res = await trainerB
+      .from('workout_exercises')
+      .insert({ program_workout_id: SAMPLE_WORKOUT, exercise_id: ex.data!.id, position: 9 });
+    expect(res.error?.code).toBe('42501');
+  });
+
+  it('Trainer B cannot INSERT a prescribed_set onto Trainer A’s exercise (→ 42501)', async () => {
+    const res = await trainerB
+      .from('prescribed_sets')
+      .insert({ workout_exercise_id: SAMPLE_WEX, set_number: 9, set_type: 'working', reps_min: 5 });
+    expect(res.error?.code).toBe('42501');
+  });
+
+  it('Trainer B cannot UPDATE or DELETE Trainer A’s nested rows (RLS → no rows affected)', async () => {
+    const upd = await trainerB
+      .from('workout_exercises')
+      .update({ position: 99 })
+      .eq('id', SAMPLE_WEX)
+      .select();
+    expect(upd.error).toBeNull();
+    expect(upd.data).toEqual([]);
+    const del = await trainerB
+      .from('prescribed_sets')
+      .delete()
+      .eq('workout_exercise_id', SAMPLE_WEX)
+      .select();
+    expect(del.error).toBeNull();
+    expect(del.data).toEqual([]);
+    // The seeded set is still there (deletion was a no-op under RLS).
+    expect(
+      (await trainerA.from('prescribed_sets').select('id').eq('workout_exercise_id', SAMPLE_WEX))
+        .data?.length ?? 0,
+    ).toBeGreaterThan(0);
+  });
+});
+
+describe('programs — editing a client copy never changes the template it came from (A6)', () => {
+  let templateId: string, templateSetId: string, copySetId: string;
+
+  it('setup: a template and a client copy, each with its own nested set', async () => {
+    const ex = await admin.from('exercises').select('id').is('trainer_id', null).limit(1).single();
+    const exerciseId = ex.data!.id;
+
+    async function buildProgram(fields: Record<string, unknown>) {
+      const p = await trainerA
+        .from('programs')
+        .insert({ trainer_id: TRAINER_A, title: 'A6 ' + Math.random(), weeks: 1, ...fields })
+        .select()
+        .single();
+      expect(p.error).toBeNull();
+      programIds.push(p.data!.id);
+      const w = await trainerA
+        .from('program_workouts')
+        .insert({ program_id: p.data!.id, week: 1, day: 1, title: 'D1' })
+        .select()
+        .single();
+      const x = await trainerA
+        .from('workout_exercises')
+        .insert({ program_workout_id: w.data!.id, exercise_id: exerciseId, position: 0 })
+        .select()
+        .single();
+      const s = await trainerA
+        .from('prescribed_sets')
+        .insert({
+          workout_exercise_id: x.data!.id,
+          set_number: 1,
+          set_type: 'working',
+          reps_min: 5,
+        })
+        .select()
+        .single();
+      expect(s.error).toBeNull();
+      return { programId: p.data!.id, setId: s.data!.id };
+    }
+
+    const template = await buildProgram({ is_template: true });
+    templateId = template.programId;
+    templateSetId = template.setId;
+    const copy = await buildProgram({
+      is_template: false,
+      client_id: CLIENT_1,
+      source_program_id: templateId,
+    });
+    copySetId = copy.setId;
+  });
+
+  it('editing the copy’s prescribed set leaves the template’s set byte-for-byte unchanged', async () => {
+    const before = await trainerA
+      .from('prescribed_sets')
+      .select('*')
+      .eq('id', templateSetId)
+      .single();
+    expect(before.data!.reps_min).toBe(5);
+
+    const edit = await trainerA
+      .from('prescribed_sets')
+      .update({ reps_min: 12, reps_max: 15 })
+      .eq('id', copySetId)
+      .select()
+      .single();
+    expect(edit.error).toBeNull();
+    expect(edit.data!.reps_min).toBe(12);
+
+    const after = await trainerA
+      .from('prescribed_sets')
+      .select('*')
+      .eq('id', templateSetId)
+      .single();
+    expect(after.data).toEqual(before.data); // the template row did not move
+  });
+});

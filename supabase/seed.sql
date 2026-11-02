@@ -222,9 +222,19 @@ select f.id, f.trainer_id, '33333333-0000-0000-0000-000000000001',
 from public.forms f
 where f.trainer_id = '11111111-0000-0000-0000-000000000001' and f.kind = 'intake' and f.is_default;
 
-insert into public.form_responses (form_id, trainer_id, client_id, answers, submitted_at)
-select f.id, f.trainer_id, '33333333-0000-0000-0000-000000000001',
+insert into public.form_responses (id, form_id, trainer_id, client_id, answers, submitted_at)
+select 'cccc0000-0000-0000-0000-000000000002', f.id, f.trainer_id, '33333333-0000-0000-0000-000000000001',
   '{"weight":71.4,"energy":6,"sleep":7,"adherence":"Good week"}'::jsonb,
   now() - interval '2 days'
+from public.forms f
+where f.trainer_id = '11111111-0000-0000-0000-000000000001' and f.kind = 'checkin' and f.is_default;
+
+-- One UNSUBMITTED weekly check-in for Client One with a fixed id, so the mobile check-in fill screen
+-- (/client/checkin/[id], one question per screen) has a capturable ui-route for screenshots + axe (A6).
+-- This route sits outside the (app) intake gate, so it renders without the bottom-nav shell; Client One's
+-- intake stays submitted so /client itself still renders. cccc…0002 above is the submitted reply view.
+insert into public.form_responses (id, form_id, trainer_id, client_id, answers)
+select 'cccc0000-0000-0000-0000-000000000001', f.id, f.trainer_id, '33333333-0000-0000-0000-000000000001',
+  '{}'::jsonb
 from public.forms f
 where f.trainer_id = '11111111-0000-0000-0000-000000000001' and f.kind = 'checkin' and f.is_default;

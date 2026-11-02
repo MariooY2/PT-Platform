@@ -165,7 +165,8 @@ export function ProgramBuilder({
                     >
                       <span className="block font-medium">{w.title ?? 'Workout'}</span>
                       <span className="text-xs text-muted-foreground">
-                        {w.workout_exercises.length} exercises
+                        {w.workout_exercises.length}{' '}
+                        {w.workout_exercises.length === 1 ? 'exercise' : 'exercises'}
                       </span>
                     </button>
                   </li>
@@ -244,8 +245,15 @@ function WorkoutEditor({
       </div>
 
       <ul className="space-y-2">
-        {rows.map((wex) => (
-          <ExerciseRow key={wex.id} programId={programId} wex={wex} pending={pending} run={run} />
+        {rows.map((wex, i) => (
+          <ExerciseRow
+            key={wex.id}
+            programId={programId}
+            wex={wex}
+            nextId={rows[i + 1]?.id ?? null}
+            pending={pending}
+            run={run}
+          />
         ))}
       </ul>
 
@@ -264,14 +272,17 @@ function WorkoutEditor({
 function ExerciseRow({
   programId,
   wex,
+  nextId,
   pending,
   run,
 }: {
   programId: string;
   wex: WorkoutExercise;
+  nextId: string | null;
   pending: boolean;
   run: (fn: () => Promise<ActionResult>, ok?: string) => void;
 }) {
+  const grouped = Boolean(wex.group_label);
   const [text, setText] = useState('');
   return (
     <li className="flex flex-wrap items-center gap-2 rounded-md border p-2">
@@ -313,12 +324,11 @@ function ExerciseRow({
         type="button"
         size="default"
         variant="ghost"
-        disabled={pending}
-        onClick={() =>
-          run(() => setSupersetAction(programId, wex.id, wex.group_label ? null : 'A1'))
-        }
+        disabled={pending || (!grouped && !nextId)}
+        title={!grouped && !nextId ? 'Add another exercise below to superset' : undefined}
+        onClick={() => run(() => setSupersetAction(programId, wex.id, grouped ? null : nextId))}
       >
-        {wex.group_label ? 'Ungroup' : 'Superset'}
+        {grouped ? 'Ungroup' : 'Superset'}
       </Button>
       <Button
         type="button"

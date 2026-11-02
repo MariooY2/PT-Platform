@@ -19,7 +19,7 @@ function Grid({ items, kind }: { items: ProgramListItem[]; kind: 'template' | 'c
         title={kind === 'template' ? 'No templates yet' : 'No client programs yet'}
         description={
           kind === 'template'
-            ? 'Use New program to start a blank program, or duplicate the sample.'
+            ? 'Use New program to start building your first template.'
             : 'Programs you assign to clients appear here.'
         }
       />
@@ -36,7 +36,7 @@ function Grid({ items, kind }: { items: ProgramListItem[]; kind: 'template' | 'c
             <div className="flex items-start justify-between gap-2">
               <span className="font-medium">{p.title}</span>
               <StatusChip tone={p.status === 'published' ? 'success' : 'neutral'}>
-                {p.status}
+                {p.status === 'published' ? 'Published' : 'Draft'}
               </StatusChip>
             </div>
             <span className="text-sm text-muted-foreground">
