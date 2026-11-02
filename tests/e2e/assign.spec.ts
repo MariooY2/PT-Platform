@@ -47,16 +47,17 @@ test.describe('P1-06 assign a template by deep copy (as coach)', () => {
 
     await expect(page.getByText('Program assigned to Client One.')).toBeVisible();
 
-    // The copy exists and is an independent client copy of the template.
+    // The copy exists and is an independent client copy of the template. (Retry-safe: a re-run may
+    // have created more than one row with this start date; assert on the first.)
     const copy = await admin
       .from('programs')
       .select('is_template, client_id, source_program_id, start_date')
       .eq('start_date', ASSIGN_DATE)
-      .eq('client_id', CLIENT_ONE)
-      .single();
+      .eq('client_id', CLIENT_ONE);
     expect(copy.error).toBeNull();
-    expect(copy.data!.is_template).toBe(false);
-    expect(copy.data!.source_program_id).toBe(SAMPLE_TEMPLATE);
+    expect((copy.data ?? []).length).toBeGreaterThan(0);
+    expect(copy.data![0].is_template).toBe(false);
+    expect(copy.data![0].source_program_id).toBe(SAMPLE_TEMPLATE);
   });
 
   test('A4 used-by count', async ({ page }) => {

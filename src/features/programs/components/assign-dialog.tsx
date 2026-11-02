@@ -151,7 +151,7 @@ export function AssignDialog({
       }
       toast.success(assignedToLabel(res.copies.map((c) => c.name)));
       if (res.failed.length > 0) {
-        toast.error(`Couldn't assign to ${res.failed.join(', ')}. Try again.`);
+        toast.error(`We couldn’t assign to ${res.failed.join(', ')}. Try again.`);
       }
       onOpenChange(false);
       router.refresh();
@@ -166,7 +166,7 @@ export function AssignDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Assign {templateTitle}</DialogTitle>
           <DialogDescription>

@@ -27,7 +27,10 @@ const GENERIC = 'Something went wrong. Try again.';
 
 // Shared field validators — every server action validates its inputs; ids/bounds never trusted from
 // the browser (RLS still enforces ownership, this stops malformed rows, e.g. week 999 or day 0).
-const uuid = z.string().uuid();
+// Format-only (not RFC-variant strict): Zod 4's `z.uuid()` rejects the project's deterministic seed
+// ids (zero version/variant nibbles), which would make the seeded builder route's actions fail. The
+// real authorization guard is RLS + the session trainer, not the id shape (see clients/schemas.ts).
+const uuid = uuidLike;
 const week = z.number().int().min(1).max(52);
 const day = z.number().int().min(1).max(7);
 const position = z.number().int().min(0).max(999);
