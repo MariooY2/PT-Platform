@@ -12,6 +12,19 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-031 — P1-06 / P1-10 wave conventions (2026-11-02, decided by: autopilot (D-006))
+- Check-in weekday convention: 0 = Sunday … 6 = Saturday (JS Date.getDay(); data-model said "0–6" with no
+  mapping). In src/features/checkins/schemas.ts + week.ts.
+- The trainer "default check-in form" is the forms row with kind='checkin' AND is_default (auto-created by
+  the P1-03 trigger); the cron and the per-client action pin form_id to it.
+- Due generation is keyed on form_responses.due_date within the Asia/Beirut ISO week (Mon–Sun) per
+  docs/platform.md §9; the endpoint fails closed (401) without CRON_SECRET.
+- P1-06 assign is modeled template→clients (opened from the builder + programs list); the client-profile
+  Program tab lists the client's assigned copies. Assigning over an existing active program just creates
+  another copy — replace-or-queue is deferred (P1-06 out_of_scope).
+- P1-06 deep copy is the atomic plpgsql `copy_program_for_client` (security invoker); never app-side inserts.
+Affects: src/features/checkins/**, src/features/programs/**, P1-06/P1-10; approvals.md (cron + CRON_SECRET human).
+
 ## D-030 — recorded spec deviations surfaced by the review panel (mobile/v1 adaptations, not drops) (2026-11-02, decided by: autopilot (D-006))
 Why: ui-reviewers correctly noted these deviations from the screen sketches were not recorded. They are
 intentional adaptations, kept:

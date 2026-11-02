@@ -12,6 +12,18 @@ Failure class: contract | context | tool | precondition | verification | policy 
 Harness change: <file and rule added, or "proposed, awaiting approval">
 ```
 
+## L-008 — Zod 4 `z.string().uuid()` rejects the project's deterministic seed ids (2026-11-02, task P1-06/P1-05)
+What happened: P1-05's actions.ts gated every id with `const uuid = z.string().uuid()`. Zod 4's uuid check
+enforces RFC-4122 version/variant nibbles, which the deterministic seed ids (e.g.
+bbbb0000-0000-0000-0000-000000000001) lack — so every server action on the seeded sample-template route
+(/coach/programs/bbbb…-0001: Add workout / Publish / quick-entry / superset) would have returned the
+generic error. The P1-05 e2e missed it because it operated on a freshly created program (a real v4 uuid).
+The P1-06 builder caught it and switched to a format-only `uuidLike` regex (matching clients/schemas.ts).
+Failure class: verification
+Harness change: proposed — a single shared `uuidLike` validator, and a review note that `z.string().uuid()`
+must not gate ids that can be seed ids. Reinforces L-007: exercise the real seeded route, not only a
+freshly created row.
+
 ## L-007 — the contract self-check verified "evidence named" on paper, not against the diff (2026-11-02, task P1-05/P1-03)
 What happened: P1-05 passed its autopilot self-check and a green verify --full, but the verifier later found
 A6 ("editing a client copy doesn't change the template") had ZERO test, Zod was missing on 7 of 8 server
