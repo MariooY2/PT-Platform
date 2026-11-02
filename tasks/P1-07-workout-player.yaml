@@ -1,0 +1,112 @@
+id: P1-07
+title: Client Today screen and workout player with set logging
+phase: 1
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-02
+depends_on: [P1-06]
+
+objective: >
+  A client opens Today, sees the workout scheduled by their active assignment (start_date + week/day),
+  and logs it in a focused player: one exercise at a time, demo video, the prescription, previous
+  performance for that exercise, reps/weight/RPE inputs prefilled from the prescription, a rest timer
+  that starts on set completion, and Finish with a session RPE that marks the session complete. Every
+  log write carries a client_generated_id so retries never duplicate. PRs are detected server-side.
+  Per docs/ui/screens/client-app.md (Today + Workout player) and docs/features.md §7.5.
+
+context:
+  - docs/data-model.md                 # §5 workout_logs, set_logs, personal_records
+  - docs/security.md                   # §6 RLS; client writes own logs, trainer reads clients' logs
+  - docs/ui/screens/client-app.md      # Today states + Workout player
+  - docs/features.md                   # §7.5
+  - docs/ui/patterns.md, docs/ui/copy.md
+
+scope:
+  - supabase/migrations/<new>_workout_logs.sql   # workout_logs, set_logs, personal_records + RLS (security-definer helpers through workout_logs) + the PR trigger (Epley) + grants + indexes; PLUS a client-read-exercises policy (global OR own trainer's) — the P1-06 follow-up
+  - supabase/seed.sql                            # one completed workout_log (yesterday) + 2–3 set_logs for Client One against the assigned copy's Back squat (so "previous performance" + Today have default states)
+  - src/lib/supabase/types.ts                    # regenerated via pnpm db:types
+  - src/features/workouts/**                      # schemas (Zod), server actions (start session, log set — on-conflict idempotent, finish session), queries (today's workout, previous performance), components (Today card, player, rest timer, finish summary)
+  - src/app/client/(app)/page.tsx                # Today: scheduled / in-progress (Resume) / completed-today / rest-day / no-program states
+  - src/app/client/workout/[logId]/**            # the player — OUTSIDE the (app) group (focused flow, no bottom nav, no intake-gate redirect mid-set)
+  - tests/rls/workout-logs.ts, tests/unit/ (e1rm + prefill helpers), tests/e2e/ (today + player spec)
+
+constraints:
+  - New tables → new migration, enable RLS, policies per §6, pnpm db:types, RLS tests. Never edit a committed migration.
+  - IDEMPOTENCY: set_logs and workout_logs each have `client_generated_id uuid unique`. The log-set write is `insert … on conflict (client_generated_id) do update` (or do nothing) — NEVER read-then-insert — so an offline/retry replay never duplicates. The id is generated client-side now; the IndexedDB offline queue is P3-05 (out of scope).
+  - RLS: a client inserts/reads their OWN workout_logs + set_logs (client_id = auth.uid()); the trainer READS their clients' logs (is_trainer_of). set_logs ownership is checked through workout_logs via a security-definer helper (like can_edit_wex). personal_records is written ONLY by a security-definer trigger on set_logs insert; client + trainer have select. Nobody edits another's rows. Admin per §6.
+  - PR: a trigger on set_logs insert where completed computes e1RM = weight × (1 + reps/30) (Epley) and upserts personal_records for (client_id, exercise_id, type) when the new value beats the record. Server-side only — never compute PRs in app code.
+  - Client-read exercises: add a select policy so a client reads exercises that are global (trainer_id is null) OR belong to their trainer (is_client_of(trainer_id)) — else the player 404s on a custom exercise. One policy + one RLS test.
+  - Scheduling convention: a workout's calendar date = start_date + (week-1)*7 + (day-1) days. Today's workout is the active client-copy workout whose date = today. (The seeded assigned copy has start_date = current_date, so week 1 day 1 is today.)
+  - The RestTimerBar may obscure fold content if sticky (same target-size trap as the nav): render it as an in-flow flex item at the bottom of the player, OR give the set list pb equal to the bar's height. Do NOT make it `sticky bottom-0` over the player's document scroll.
+  - Server actions validate with Zod; client_id/trainer_id from the session; prescriptions/ids never trusted raw from the browser (the set log validates reps/weight/rpe ranges). Vibration via navigator.vibrate guarded (no sound). Wake Lock is optional/best-effort.
+  - Tokens only; every view has loading/empty/no-results/error states; 360 px first (phone-shaped max 560); inputs 48px with num-xl; copy per docs/ui/copy.md. Server Components reading the session await connection() first (L-002).
+
+acceptance:
+  - id: A1
+    claim: workout_logs, set_logs, personal_records exist with RLS; a client owns their logs; a trainer reads their clients' logs; nobody reads another's
+    evidence: migration; tests/rls/workout-logs.ts — test `a client owns its logs; another client and trainer are denied`
+  - id: A2
+    claim: logging a set with a repeated client_generated_id creates exactly one row (idempotent on-conflict write)
+    evidence: tests/rls/workout-logs.ts — test `a repeated client_generated_id does not duplicate`
+  - id: A3
+    claim: Today shows the workout scheduled for today by the active assignment (start_date + week/day)
+    evidence: step test:e2e — test `A3 Today shows today's workout`
+  - id: A4
+    claim: the player logs sets prefilled from the prescription, and completing a set starts the rest timer
+    evidence: step test:e2e — test `A4 log a set, rest timer starts`
+  - id: A5
+    claim: the player shows previous performance for an exercise from the client's prior logs
+    evidence: step test:e2e — test `A5 previous performance` (against the seeded completed log)
+  - id: A6
+    claim: a set that beats the client's record creates a personal_record (Epley e1RM), server-side
+    evidence: tests/rls/workout-logs.ts — test `a heavier set records a PR`; tests/unit (e1rm formula)
+  - id: A7
+    claim: Finish with a session RPE marks the workout_log completed with the session_rpe
+    evidence: step test:e2e — test `A7 finish with session RPE`
+  - id: A8
+    claim: Today + player + finish views have loading/empty/error states; screenshots 360/1280 light+dark; zero axe; verify --full green with regenerated types
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A9
+    claim: the screens match the spec and the checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs: [docs/ui/screens/client-app.md]
+  routes:
+    - { path: /client, as: client, states: [default] }
+  gallery_states: []
+
+approval_required:
+  - A new Postgres extension or a dependency not already pre-approved
+
+out_of_scope:
+  - Offline logging with an IndexedDB queue (P3-05) — client_generated_id is generated, the queue is not
+  - Swap exercise, skip exercise, and logging an UNSCHEDULED workout (follow-ups; each needs its own entry point + data shape)
+  - Supersets grouped in the player (A1/A2 together), the SyncIndicator, and Screen Wake Lock — best-effort/deferred
+  - Progression rules (Phase 4); the Progress screen charts + PR history (P1-08)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 55
+
+notes: |
+  ## Schema lane (orchestrator, first)
+  Tables (§5): workout_logs(trainer_id, client_id, assignment_id=program id, program_workout_id,
+  scheduled_date, started_at, completed_at, status, session_rpe, client_notes, client_generated_id unique);
+  set_logs(workout_log_id, workout_exercise_id, exercise_id, set_number, reps, weight_kg, rpe, duration_sec,
+  distance_m, completed, client_generated_id unique); personal_records(client_id, exercise_id, type, value,
+  set_log_id, achieved_at). Helpers: can_log_workout(wl) through workout_logs.client_id = auth.uid();
+  can_read_workout(wl) allows the client and the trainer (is_trainer_of). PR trigger: security definer,
+  Epley, upsert when higher. Client-read-exercises policy added here. Seed one completed log + sets for
+  Client One. RLS tests FIRST: client-owns, cross-client deny, trainer-reads-own-client, idempotent
+  client_generated_id, PR-on-heavier-set.
+
+  ## v1 deferrals (recorded so review judges what shipped)
+  Swap/skip exercise, unscheduled workout, supersets-in-player, SyncIndicator, Wake Lock, and the offline
+  IndexedDB queue are deferred (see out_of_scope). v1 ships: Today (scheduled/in-progress/completed/rest/
+  no-program), the one-exercise-at-a-time player with prefill + previous performance + rest timer + PR
+  detection, and Finish with session RPE. Demo video = render exercise.video_url if present (no upload).
+
+  ## Build
+  Orchestrator does the schema lane; then ONE builder for the UI (src/features/workouts/** + Today +
+  the player route) from the orchestrator's HEAD. The player route lives OUTSIDE the (app) group.
