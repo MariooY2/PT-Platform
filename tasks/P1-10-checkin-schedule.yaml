@@ -1,0 +1,100 @@
+id: P1-10
+title: Weekly check-in scheduling and due generation
+phase: 1
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-02
+depends_on: [P1-03]
+
+objective: >
+  Weekly check-ins become DUE on a scheduled weekday. A coach sets each client's check-in weekday (with
+  a trainer default in Settings), wiring the checkin_schedules table P1-03 created. A due-generation
+  endpoint creates that week's unsubmitted check-in response for each active client whose weekday has
+  arrived (idempotent). The client sees due + past check-ins on /client/checkins. The form builder, the
+  fill screen (/client/checkin/[id]) and the coach review queue (/coach/checkins) are DONE in P1-03 and
+  reused unchanged. Per docs/features.md §7.7.
+
+context:
+  - docs/features.md                     # §7.7 (weekly check-in becomes due on the scheduled weekday)
+  - docs/security.md                     # §6 RLS; checkin_schedules is trainer-only (already in P1-03's migration)
+  - docs/ui/screens/program-builder.md   # (forms/check-in surfaces) + docs/ui/screens/client-app.md (Check-in)
+  - docs/platform.md                     # §11 cron jobs
+  - tasks/P1-03-forms.yaml               # the delta boundary — reuse, don't rebuild
+  - docs/ui/patterns.md, docs/ui/copy.md
+
+scope:
+  - src/features/checkins/**                        # schedule queries + Zod actions (set client weekday, trainer default), due-generation logic
+  - src/app/api/cron/checkins/route.ts              # due-generation endpoint (creates the week's unsubmitted responses), authenticated by CRON_SECRET
+  - src/app/client/(app)/checkins/**               # replace the PlaceholderScreen: due check-ins (link to fill) + history
+  - src/features/clients/components/client-profile.tsx  # per-client check-in weekday (tab trigger + slot PRE-WIRED by the orchestrator; builder fills content)
+  - src/app/coach/(app)/settings/**               # trainer default check-in weekday
+  - src/lib/supabase/types.ts                      # only if a migration proves necessary (confirm checkin_schedules suffices)
+  - tests/rls/ (checkin_schedules reuse), tests/e2e/ (schedule + due-generation spec)
+
+constraints:
+  - REUSE P1-03: do not rebuild the form builder, the fill screen (/client/checkin/[id]) or the review
+    queue (/coach/checkins). This task wires scheduling + due generation + the client checkins tab only.
+  - checkin_schedules already exists with trainer-only RLS (P1-03 migration). Confirm it needs no schema
+    change; if a column is genuinely required, add a NEW migration (never edit the committed one).
+  - Due generation is idempotent: at most one unsubmitted response per client per default-checkin-form
+    per ISO week; re-running the endpoint the same week creates nothing new. It creates an unsubmitted
+    form_response for the client's trainer's default check-in form.
+  - The cron endpoint authenticates with a CRON_SECRET header and refuses without it; it is e2e-tested
+    by calling it directly with the header. Registering the schedule (vercel.json) and provisioning
+    CRON_SECRET are (human) — the task PARKS on those, it does not block.
+  - Server actions validate with Zod; trainer_id/client_id from the session; weekday is 0..6.
+  - Tokens only; loading/empty/no-results/error states on the client checkins screen; 360 px first;
+    copy per docs/ui/copy.md. Server Components reading the session: await connection() or Suspense (L-002).
+
+acceptance:
+  - id: A1
+    claim: a coach sets a client's check-in weekday on the client profile, and a trainer default in Settings; both persist via Zod server actions (weekday 0..6, trainer_id from session)
+    evidence: step test:e2e — test `A1 set client check-in weekday`; tests/unit for the schedule schema
+  - id: A2
+    claim: the due-generation endpoint creates exactly one unsubmitted weekly check-in response per due client per ISO week (idempotent), and refuses without CRON_SECRET
+    evidence: step test:e2e — test `A2 due generation is idempotent and auth-gated`
+  - id: A3
+    claim: the client /client/checkins shows due check-ins (link to /client/checkin/[id]) and past submitted ones
+    evidence: step test:e2e — test `A3 client sees due + history`
+  - id: A4
+    claim: checkin_schedules stays trainer-only under RLS (a client cannot read/write another's schedule)
+    evidence: tests/rls/forms.ts checkin_schedules isolation (from P1-03) + any added case
+  - id: A5
+    claim: all views have loading/empty/no-results/error states; screenshots 360/1280 light+dark; zero axe; verify --full green
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A6
+    claim: the screens match the spec and the checklist
+    evidence: ui-reviewer ACCEPT
+  - id: A7
+    claim: (human) the weekly cron is registered and authenticated in production
+    evidence: (human) vercel.json schedule + CRON_SECRET set — parked in approvals.md
+
+ui:
+  specs: [docs/ui/screens/client-app.md]
+  routes:
+    - { path: /client/checkins, as: client, states: [default, empty] }
+  gallery_states: []
+
+approval_required:
+  - Setting CRON_SECRET / registering the vercel.json cron schedule (production, human)
+  - A dependency not already pre-approved
+
+out_of_scope:
+  - The form builder, the client fill screen (/client/checkin/[id]), and the coach review queue — DONE in P1-03, reused
+  - Messaging / notifications when a check-in becomes due (Phase 1 messaging P1-11 / later)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 35
+
+notes: |
+  ## Delta over P1-03
+  P1-03 shipped: forms + builder, the intake gate, the fill screen, the review queue, and the
+  checkin_schedules TABLE (unwired). P1-10 adds: per-client weekday (client profile) + trainer default
+  (settings) → writes checkin_schedules; a due-generation endpoint that materializes the week's
+  unsubmitted responses; and the client /client/checkins tab (due + history), replacing the
+  PlaceholderScreen the P1-03 verifier confirmed is still static.
+
+  ## Human-gated (park, don't block)
+  - vercel.json cron registration (fires only on deploy).
+  - CRON_SECRET (new secret). The endpoint is built + e2e-tested by direct call with the header now.

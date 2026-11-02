@@ -1,0 +1,100 @@
+id: P1-06
+title: Templates and assignment by deep copy, with preview
+phase: 1
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-02
+depends_on: [P1-05]
+
+objective: >
+  A coach assigns a template to one or many clients as an independent deep copy, with a start date, so
+  editing a client's copy never touches the template (P1-05 A6). The Programs list shows how many
+  clients use each template ("Used by (n)"), and assigning shows a read-only preview of week 1 in the
+  client phone frame. The deep copy is a single atomic Postgres function. Per docs/ui/screens/program-builder.md
+  (Assign) and docs/features.md §7.4.
+
+context:
+  - docs/data-model.md                   # §5 programs (source_program_id, client_id) + the new start_date
+  - docs/security.md                     # §6 RLS; the copy function runs as the trainer (security invoker)
+  - docs/ui/screens/program-builder.md   # Assign dialog (pick clients, start date, week-1 preview)
+  - docs/features.md                     # §7.4
+  - docs/ui/patterns.md, docs/ui/copy.md
+
+scope:
+  - supabase/migrations/<new>_program_assign.sql   # add programs.start_date (date, null); copy_program_for_client(template_id, client_id, start_date) plpgsql (security invoker) deep-copying all nested rows + grant execute
+  - supabase/seed.sql                              # seed ONE assigned copy for Client One (default-state screenshot + Used-by count)
+  - src/lib/supabase/types.ts                      # regenerated via pnpm db:types
+  - src/features/programs/**                        # assignClientsAction (Zod), assigned-copies + used-by queries, assign dialog, read-only week-1 preview component
+  - src/app/coach/(app)/programs/**                # wire the Assign action from the builder + list
+  - src/features/clients/components/client-profile.tsx  # the Program/Assign tab (tab trigger + slot PRE-WIRED by the orchestrator; builder fills the content)
+  - tests/rls/programs.ts, tests/e2e/ (assign spec), tests/unit (used-by/preview helpers if any)
+
+constraints:
+  - The deep copy is ONE plpgsql function `copy_program_for_client(template_id uuid, client_id uuid, start_date date)` — never four app-side inserts (atomicity; avoids the half-copy failure mode). It is `security invoker` so `can_edit_program`/RLS apply (the trainer must own the template and be the client's trainer); it inserts the program (is_template=false, client_id, source_program_id=template_id, start_date, status='draft') then program_workouts → workout_exercises → prescribed_sets preserving order/labels, and returns the new program id.
+  - Editing a client copy never mutates the template (P1-05 A6) — the copy is independent rows.
+  - The preview is READ-ONLY: week-1 workouts/exercises/set summaries rendered in the 560px client frame. NO set logging, NO rest timer, NO player interactions — that is P1-07. Assigning over a client's existing active program is deferred (v1 just creates the copy); record it as a deferral.
+  - Server actions validate with Zod; trainer_id and client ids resolved server-side; the client list is the trainer's own active clients only. No ids/prices from the browser.
+  - Tokens only; loading/empty/no-results/error states on the assign dialog and preview; 360 px first; copy per docs/ui/copy.md.
+  - A Server Component reading the session `await connection()` first or wraps in Suspense (L-002).
+
+acceptance:
+  - id: A1
+    claim: programs.start_date exists; copy_program_for_client deep-copies a template to a client as one atomic call, preserving nested-row counts, order and group labels
+    evidence: migration; tests/rls/programs.ts (count-equality after copy) — test `copy_program_for_client copies all nested rows`
+  - id: A2
+    claim: RLS/authorization — Trainer B calling the copy function on Trainer A's template is denied; a client cannot call it; the created copy belongs to the trainer with client_id set
+    evidence: tests/rls/programs.ts — test `copy_program_for_client denies a foreign trainer and a client`
+  - id: A3
+    claim: a coach assigns a template to one or many clients with a start date; each gets an independent copy (is_template=false, source_program_id, client_id, start_date)
+    evidence: step test:e2e — test `A3 assign a template to clients`
+  - id: A4
+    claim: the Programs list shows "Used by (n)" per template (count of its client copies)
+    evidence: step test:e2e — test `A4 used-by count`; seed-backed default screenshot
+  - id: A5
+    claim: assigning shows a read-only week-1 preview in the 560px client frame (no logging/player)
+    evidence: step test:e2e — test `A5 assign preview`; screenshots
+  - id: A6
+    claim: editing an assigned copy does not change the template it came from
+    evidence: tests/rls/programs.ts copy-integrity test (extends P1-05 A6)
+  - id: A7
+    claim: all views have loading/empty/no-results/error states; screenshots 360/1280 light+dark; zero axe; verify --full green with regenerated types
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A8
+    claim: the screens match the spec and the checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs: [docs/ui/screens/program-builder.md]
+  routes:
+    - { path: /coach/programs, as: coach, states: [default] }
+  gallery_states: []
+
+approval_required:
+  - A new Postgres extension or a dependency not already pre-approved
+
+out_of_scope:
+  - The workout player / logging and the client-facing active program on Today (P1-07)
+  - Progression rules (Phase 4)
+  - Assigning over an existing active program with a replace-or-queue choice (v1 just creates the copy; recorded as a deferral)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 40
+
+notes: |
+  ## Schema lane (orchestrator)
+  New migration: `alter table programs add column start_date date;` then
+  `create function copy_program_for_client(...) returns uuid language plpgsql security invoker` that
+  deep-copies programs → program_workouts → workout_exercises → prescribed_sets (preserving position,
+  group_label, set fields), and `grant execute` to authenticated. RLS test proves: Trainer B denied,
+  client denied, nested-row counts equal after a successful copy by Trainer A. Seed one assigned copy
+  for Client One from the Sample template so the Client-copies tab + Used-by count have a default state.
+  The "Used by (n clients)" column deferred in D-030 comes back IN SCOPE here.
+
+  ## Preview scope
+  Read-only render only. P1-07 builds the real player; do not build logging here.
+
+  ## Follow-up for P1-07 (flag in the receipt)
+  A client opening their copy needs to read the trainer's custom exercises; docs/security.md §6 allows
+  it but the exercises select policy currently does not (deferred in the P1-04 approvals line to
+  "P1-05/P1-07"). That client-read policy is P1-07's schema lane — do not lose it.
