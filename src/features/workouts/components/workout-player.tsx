@@ -332,6 +332,20 @@ export function WorkoutPlayer({ data }: { data: WorkoutPlayerData }) {
     );
   }
 
+  if (!current) {
+    // A scheduled workout with no exercises (e.g. the coach removed them mid-session) — fail to a
+    // calm empty state, not a crash.
+    return (
+      <div className="mx-auto flex h-dvh w-full max-w-[560px] flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="text-sm text-muted-foreground">This workout has no exercises yet.</p>
+        <Button asChild variant="outline" size="lg">
+          <Link href="/client">Back to Today</Link>
+        </Button>
+        <Toaster />
+      </div>
+    );
+  }
+
   const embed = youtubeEmbedUrl(current.videoUrl);
   const rpeShown = hasRpe(current);
   const rows = drafts[current.workoutExerciseId] ?? [];
@@ -519,9 +533,9 @@ function SetRow({
           onChange={(e) => onChange({ weight: e.target.value })}
           className="h-12 px-2 text-center num-xl"
         />
-        {previous && (
+        {previous && previous.weightKg != null && (
           <span className="block pt-0.5 text-center text-xs text-muted-foreground">
-            {previous.weightKg == null ? '—' : `${previous.weightKg} × ${previous.reps ?? '—'}`}
+            Last time: {previous.weightKg} kg × {previous.reps ?? '—'}
           </span>
         )}
       </div>

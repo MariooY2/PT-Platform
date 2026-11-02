@@ -31,7 +31,7 @@ export function RestTimerBar({
       role="timer"
       aria-live="off"
       className={cn(
-        'flex items-center gap-2 rounded-xl border px-3 py-2 shadow-lg',
+        'flex items-center gap-2 rounded-xl border px-3 py-2',
         done ? 'border-success bg-success-soft text-success-soft-foreground' : 'bg-card',
       )}
     >

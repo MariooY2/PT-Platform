@@ -12,6 +12,20 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-034 — P1-07 player: recorded spec deviations from the review (2026-11-02, decided by: autopilot (D-006))
+Resolving the ui-reviewer's findings — the "Last time" column major is FIXED (the per-row caption now
+reads "Last time: 80 kg × 5" with the label + kg unit per copy.md). These remain intentional deviations
+from client-app.md, recorded so the checklist's "record deviations" line is satisfied:
+- Today header is a plain "Today" (PageHeader), not the spec's personalized greeting + avatar
+  ("Good evening, Maya"). Simplification; the greeting/avatar can come in a later pass.
+- The PR moment shows pr-soft colour + a PR badge + a guarded vibration, but NOT the spec's 600 ms
+  row animation. Dropped for v1 (reduced-motion complexity); the colour + badge convey it.
+- Finish shows an inline "N sets aren't logged" warning banner in the summary instead of a confirm
+  dialog — a deliberate, calmer choice for a near-reversible action.
+- The RestTimerBar lost its shadow-lg (it is in-flow, not floating — checklist: shadows only on
+  floating elements). An empty-exercise workout now shows a calm empty state, not a crash (verifier).
+Affects: src/features/workouts/components/**; P1-07.
+
 ## D-033 — P1-07 workout player build decisions (2026-11-02, decided by: autopilot (D-006))
 - Session RPE is a 10-button row (no Slider component exists; matches the check-in scale pattern).
 - The PR trigger is AFTER INSERT only, so editing/undoing a set via the on-conflict UPDATE never

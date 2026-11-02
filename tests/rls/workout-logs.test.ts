@@ -84,6 +84,11 @@ describe('workout_logs / set_logs — ownership + trainer read (A1)', () => {
     expect(
       (await trainerB.from('set_logs').select('id').eq('workout_log_id', SEEDED_LOG)).data,
     ).toEqual([]);
+    // Trainer A (the client's coach) positively reads the client's set_logs.
+    expect(
+      (await trainerA.from('set_logs').select('id').eq('workout_log_id', SEEDED_LOG)).data
+        ?.length ?? 0,
+    ).toBeGreaterThan(0);
   });
 
   it('a client cannot create a log for a trainer who is not theirs (trainer_id pinned → 42501)', async () => {
