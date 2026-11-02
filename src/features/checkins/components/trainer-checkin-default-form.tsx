@@ -31,7 +31,7 @@ export function TrainerCheckinDefaultForm({ currentWeekday }: { currentWeekday: 
         return;
       }
       setSaved(true);
-      toast.success('Default check-in day saved');
+      toast.success('Default day saved');
     });
   }
 
@@ -56,7 +56,7 @@ export function TrainerCheckinDefaultForm({ currentWeekday }: { currentWeekday: 
           ))}
         </select>
         <p className="text-xs text-muted-foreground">
-          New clients use this day until you set a different one on their profile.
+          A new client’s Check-in tab starts on this day; confirm or change it on their profile.
         </p>
       </div>
 

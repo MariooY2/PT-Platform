@@ -56,7 +56,7 @@ export const uiRoutes: UiRoute[] = [
   { path: '/client', as: 'client', states: ['default', 'install-prompt'] },
   { path: '/client/progress', as: 'client', states: ['empty'] },
   { path: '/client/messages', as: 'client', states: ['empty'] },
-  { path: '/client/checkins', as: 'client', states: ['default', 'empty'] },
+  { path: '/client/checkins', as: 'client', states: ['default', 'empty', 'loading', 'error'] },
   // Mobile check-in fill screen (one question per screen) + the submitted reply view (seeded ids).
   {
     path: '/client/checkin/cccc0000-0000-0000-0000-000000000001',

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronRight, ClipboardCheck } from 'lucide-react';
 import { PageHeader } from '@/components/shared/page-header';
 import { EmptyState, ErrorState, ListSkeleton } from '@/components/shared/states';
-import { Badge } from '@/components/ui/badge';
+import { StatusChip } from '@/components/shared/status-chip';
 import { RelativeDate } from '@/components/format';
 import type { CheckinHistoryItem, DueCheckin } from '../queries';
 
@@ -100,9 +100,9 @@ export function ClientCheckins({
                         </p>
                       </div>
                       {item.reviewed ? (
-                        <Badge variant="secondary">Reply ready</Badge>
+                        <StatusChip tone="success">Reply ready</StatusChip>
                       ) : (
-                        <Badge variant="outline">Awaiting reply</Badge>
+                        <StatusChip tone="neutral">Awaiting reply</StatusChip>
                       )}
                       <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                     </Link>

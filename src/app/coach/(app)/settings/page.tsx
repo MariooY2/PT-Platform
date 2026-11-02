@@ -30,7 +30,8 @@ export default async function CoachSettingsPage() {
         <div>
           <p className="text-sm font-medium">Weekly check-ins</p>
           <p className="text-sm text-muted-foreground">
-            The default day a client’s weekly check-in becomes due.
+            The day a new client’s Check-in tab starts on. Set each client’s actual day on their
+            profile to schedule them.
           </p>
         </div>
         <TrainerCheckinDefaultForm currentWeekday={trainer?.default_checkin_weekday ?? null} />

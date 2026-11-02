@@ -27,7 +27,7 @@ export function setSummary(sets: PreviewSet[]): string {
       ? `${first.reps_min}–${first.reps_max}`
       : `${first.reps_min ?? '—'}`;
   const load = first.weight_kg
-    ? ` · ${first.weight_kg}kg`
+    ? ` · ${first.weight_kg} kg`
     : first.percent_1rm
       ? ` · ${first.percent_1rm}%`
       : '';

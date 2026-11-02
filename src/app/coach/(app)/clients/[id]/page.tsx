@@ -4,7 +4,11 @@ import { createClient } from '@/lib/supabase/server';
 import { clientIdSchema } from '@/features/clients/schemas';
 import { getClientForTrainer, listFiles, listNotes } from '@/features/clients/queries';
 import { listHabitsForTrainer } from '@/features/habits/queries';
-import { defaultCheckinFormId, getClientSchedule } from '@/features/checkins/queries';
+import {
+  defaultCheckinFormId,
+  getClientSchedule,
+  getTrainerDefaultCheckinWeekday,
+} from '@/features/checkins/queries';
 import { listClientPrograms } from '@/features/programs/queries';
 import { ClientProfile } from '@/features/clients/components/client-profile';
 
@@ -36,12 +40,21 @@ export default async function CoachClientProfilePage({
   const profile = await getClientForTrainer(supabase, user.id, id);
   if (!profile) notFound();
 
-  const [notesRes, filesRes, habitsRes, schedule, checkinFormId, programsRes] = await Promise.all([
+  const [
+    notesRes,
+    filesRes,
+    habitsRes,
+    schedule,
+    checkinFormId,
+    trainerDefaultWeekday,
+    programsRes,
+  ] = await Promise.all([
     listNotes(supabase, user.id, id),
     listFiles(supabase, user.id, id),
     listHabitsForTrainer(supabase, user.id, id),
     getClientSchedule(supabase, user.id, id),
     defaultCheckinFormId(supabase, user.id),
+    getTrainerDefaultCheckinWeekday(supabase, user.id),
     listClientPrograms(supabase, user.id, id),
   ]);
 
@@ -64,7 +77,7 @@ export default async function CoachClientProfilePage({
         notes={notesRes.notes}
         files={filesRes.files}
         habits={habitsRes.items}
-        checkinWeekday={schedule?.weekday ?? null}
+        checkinWeekday={schedule?.weekday ?? trainerDefaultWeekday}
         hasCheckinForm={checkinFormId !== null}
         programs={programsRes.items}
         initialTab={initialTab}

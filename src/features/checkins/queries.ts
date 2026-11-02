@@ -37,6 +37,20 @@ export async function defaultCheckinFormId(
   return data?.id ?? null;
 }
 
+/** The trainer's default weekly check-in weekday (Settings), or null when unset. Used to prefill a
+ * client's Check-in tab before the trainer sets a per-client day. */
+export async function getTrainerDefaultCheckinWeekday(
+  supabase: DB,
+  trainerId: string,
+): Promise<number | null> {
+  const { data } = await supabase
+    .from('trainers')
+    .select('default_checkin_weekday')
+    .eq('id', trainerId)
+    .maybeSingle();
+  return data?.default_checkin_weekday ?? null;
+}
+
 /** A client's current check-in schedule under this trainer, or null when none is set yet. */
 export async function getClientSchedule(
   supabase: DB,

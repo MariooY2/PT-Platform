@@ -12,6 +12,20 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-032 — review-driven fixes for P1-06/P1-10 (2026-11-02, decided by: autopilot (D-006))
+Resolving the review panel's findings:
+- P1-10: the trainer default check-in weekday is a PREFILL convenience, not an auto-scheduler. It now
+  prefills a client's Check-in tab select when no per-client schedule row exists (client profile
+  page passes `schedule?.weekday ?? trainerDefault`); due generation still fires only from explicit
+  checkin_schedules rows. Copy corrected to describe this (no false "becomes due" promise). Auto-
+  generating from the trainer default for unscheduled active clients is a deferral (would be a due.ts
+  fallback over active trainer_clients). Resolves both P1-10 reviewers' "write-only default" major.
+- P1-06: the Assign success toast now carries a link affordance ("View" → the copy for one client,
+  "View copies" → /coach/programs for many), per program-builder.md:58-59. client-programs.tsx +
+  clients/[id]/page.tsx (filling the pre-wired Program tab) are a defensible extension of the contract's
+  client-profile.tsx scope item. setSummary weight now renders "100 kg" (space) per copy.md.
+Affects: src/features/checkins/**, src/features/programs/**, src/app/coach/(app)/{settings,clients/[id]}/**.
+
 ## D-031 — P1-06 / P1-10 wave conventions (2026-11-02, decided by: autopilot (D-006))
 - Check-in weekday convention: 0 = Sunday … 6 = Saturday (JS Date.getDay(); data-model said "0–6" with no
   mapping). In src/features/checkins/schemas.ts + week.ts.

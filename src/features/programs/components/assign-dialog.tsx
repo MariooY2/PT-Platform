@@ -149,7 +149,17 @@ export function AssignDialog({
         toast.error(res.error);
         return;
       }
-      toast.success(assignedToLabel(res.copies.map((c) => c.name)));
+      const copies = res.copies;
+      toast.success(assignedToLabel(copies.map((c) => c.name)), {
+        // A link to the copy (one client) or the programs hub (many), per the Assign spec.
+        action:
+          copies.length === 1
+            ? {
+                label: 'View',
+                onClick: () => router.push(`/coach/programs/${copies[0].programId}`),
+              }
+            : { label: 'View copies', onClick: () => router.push('/coach/programs') },
+      });
       if (res.failed.length > 0) {
         toast.error(`We couldn’t assign to ${res.failed.join(', ')}. Try again.`);
       }

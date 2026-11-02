@@ -65,7 +65,7 @@ test.describe('P1-06 assign a template by deep copy (as coach)', () => {
     await page.goto('/coach/programs');
     const card = page.getByRole('listitem').filter({ hasText: 'Sample 3-Day Strength' });
     // The seed assigns the Sample template to Client One, so the count is at least one client.
-    await expect(card.getByText(/Used by\s*\d+\s*client/)).toBeVisible();
+    await expect(card.getByText(/Used by\s*[1-9]\d*\s*client/)).toBeVisible();
   });
 
   test('A5 assign preview', async ({ page }) => {

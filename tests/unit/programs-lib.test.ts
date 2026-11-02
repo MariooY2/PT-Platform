@@ -30,7 +30,7 @@ describe('setSummary', () => {
 
   it('renders a rep range, a weight and an RPE', () => {
     expect(setSummary([set({ reps_min: 5, weight_kg: 100, rpe: 8 })])).toBe(
-      '1 × 5 · 100kg · RPE 8',
+      '1 × 5 · 100 kg · RPE 8',
     );
   });
 
