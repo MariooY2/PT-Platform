@@ -6,4 +6,14 @@ export type WorkoutExercise = Database['public']['Tables']['workout_exercises'][
 export type PrescribedSet = Database['public']['Tables']['prescribed_sets']['Row'];
 
 // A program row plus a count of workouts and (for templates) how many client copies use it.
-export type ProgramListItem = Program & { workout_count: number };
+export type ProgramListItem = Program & { workout_count: number; used_by: number };
+
+// A client's assigned copy, as the client-profile Program tab lists it.
+export interface ClientProgramItem {
+  id: string;
+  title: string;
+  weeks: number;
+  status: Program['status'];
+  startDate: string | null;
+  workoutCount: number;
+}

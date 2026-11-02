@@ -31,16 +31,16 @@ export const uiRoutes: UiRoute[] = [
   {
     path: '/coach/clients/33333333-0000-0000-0000-000000000001',
     as: 'coach',
-    states: ['default', 'notes-files', 'habits'],
+    states: ['default', 'notes-files', 'habits', 'program', 'checkin'],
   },
   { path: '/coach/checkins', as: 'coach', states: ['default', 'empty', 'loading', 'error'] },
   { path: '/coach/messages', as: 'coach-empty', states: ['empty'] },
-  { path: '/coach/programs', as: 'coach', states: ['default'] },
+  { path: '/coach/programs', as: 'coach', states: ['default', 'assign', 'assign-preview'] },
   { path: '/coach/programs', as: 'coach-empty', states: ['empty'] },
   {
     path: '/coach/programs/bbbb0000-0000-0000-0000-000000000001',
     as: 'coach',
-    states: ['default'],
+    states: ['default', 'assign', 'assign-preview'],
   },
   {
     path: '/coach/exercises',
@@ -56,7 +56,7 @@ export const uiRoutes: UiRoute[] = [
   { path: '/client', as: 'client', states: ['default', 'install-prompt'] },
   { path: '/client/progress', as: 'client', states: ['empty'] },
   { path: '/client/messages', as: 'client', states: ['empty'] },
-  { path: '/client/checkins', as: 'client', states: ['empty'] },
+  { path: '/client/checkins', as: 'client', states: ['default', 'empty'] },
   // Mobile check-in fill screen (one question per screen) + the submitted reply view (seeded ids).
   {
     path: '/client/checkin/cccc0000-0000-0000-0000-000000000001',

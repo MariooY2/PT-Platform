@@ -18,6 +18,8 @@ import { FilesPanel } from './files-panel';
 import { HabitsManager } from '@/features/habits/components/habits-manager';
 import type { TrainerHabit } from '@/features/habits/queries';
 import { CheckinScheduleForm } from '@/features/checkins/components/checkin-schedule-form';
+import { ClientPrograms } from './client-programs';
+import type { ClientProgramItem } from '@/features/programs/types';
 
 export function ClientProfile({
   profile,
@@ -27,6 +29,7 @@ export function ClientProfile({
   habits,
   checkinWeekday,
   hasCheckinForm,
+  programs,
   initialTab = 'overview',
 }: {
   profile: ClientProfileData;
@@ -36,6 +39,7 @@ export function ClientProfile({
   habits: TrainerHabit[] | null;
   checkinWeekday: number | null;
   hasCheckinForm: boolean;
+  programs: ClientProgramItem[] | null;
   initialTab?: 'overview' | 'notes' | 'habits' | 'program' | 'checkin';
 }) {
   const name = clientDisplayName(profile);
@@ -88,9 +92,13 @@ export function ClientProfile({
           />
         </TabsContent>
 
-        {/* P1-06 fills this slot: the client's assigned program(s) + an Assign entry. */}
+        {/* P1-06: the client's assigned program copies. Assigning happens from a template. */}
         <TabsContent value="program" className="pt-4">
-          <p className="text-sm text-muted-foreground">Program assignment arrives with P1-06.</p>
+          {programs === null ? (
+            <DataError description="We couldn’t load programs." />
+          ) : (
+            <ClientPrograms items={programs} />
+          )}
         </TabsContent>
 
         {/* P1-10 fills this slot: the client's weekly check-in weekday. */}
@@ -130,7 +138,7 @@ export function ClientProfile({
         </TabsContent>
       </Tabs>
       <p className="text-xs text-muted-foreground">
-        Program, workout log, progress and check-ins arrive with their features.
+        Workout log and progress arrive with their features.
       </p>
       <Toaster />
     </div>

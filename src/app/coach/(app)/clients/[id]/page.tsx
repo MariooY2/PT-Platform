@@ -5,6 +5,7 @@ import { clientIdSchema } from '@/features/clients/schemas';
 import { getClientForTrainer, listFiles, listNotes } from '@/features/clients/queries';
 import { listHabitsForTrainer } from '@/features/habits/queries';
 import { defaultCheckinFormId, getClientSchedule } from '@/features/checkins/queries';
+import { listClientPrograms } from '@/features/programs/queries';
 import { ClientProfile } from '@/features/clients/components/client-profile';
 
 // Reads params/searchParams + the session (cookies): a blocking dynamic route, not prerendered.
@@ -35,12 +36,13 @@ export default async function CoachClientProfilePage({
   const profile = await getClientForTrainer(supabase, user.id, id);
   if (!profile) notFound();
 
-  const [notesRes, filesRes, habitsRes, schedule, checkinFormId] = await Promise.all([
+  const [notesRes, filesRes, habitsRes, schedule, checkinFormId, programsRes] = await Promise.all([
     listNotes(supabase, user.id, id),
     listFiles(supabase, user.id, id),
     listHabitsForTrainer(supabase, user.id, id),
     getClientSchedule(supabase, user.id, id),
     defaultCheckinFormId(supabase, user.id),
+    listClientPrograms(supabase, user.id, id),
   ]);
 
   const initialTab =
@@ -50,7 +52,9 @@ export default async function CoachClientProfilePage({
         ? 'habits'
         : state === 'checkin'
           ? 'checkin'
-          : 'overview';
+          : state === 'program'
+            ? 'program'
+            : 'overview';
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -62,6 +66,7 @@ export default async function CoachClientProfilePage({
         habits={habitsRes.items}
         checkinWeekday={schedule?.weekday ?? null}
         hasCheckinForm={checkinFormId !== null}
+        programs={programsRes.items}
         initialTab={initialTab}
       />
     </div>
