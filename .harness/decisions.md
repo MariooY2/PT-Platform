@@ -12,6 +12,21 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-030 — recorded spec deviations surfaced by the review panel (mobile/v1 adaptations, not drops) (2026-11-02, decided by: autopilot (D-006))
+Why: ui-reviewers correctly noted these deviations from the screen sketches were not recorded. They are
+intentional adaptations, kept:
+- P1-03 forms: the question editor uses a Type **select** dropdown, not per-question type icons
+  (program-builder.md:73). Clearer and keeps the row compact; all 8 types present with correct labels.
+- P1-09 habits: a dedicated **Habits tab** on the client profile (coach.md's tab table omits it) and a
+  **vertical full-width list** on /client (client-app.md sketches an inline one-row form). The contract
+  scope explicitly authorizes "a Habits manager on the client profile"; full-width is better for touch and
+  matches the Notes & files tab. The coach.md tab table is a living list (Program/Progress/etc. not built).
+- P1-05 programs list card: shows Name · Weeks · total workouts · Updated; the spec's "Used by (n clients)"
+  column is deferred until P1-06 assignment exists (always 0 until then), and workouts is a total not
+  per-week on the mobile card. The builder's add-week "[+]" and "Duplicate week ▾" (program-builder.md:38-41)
+  are deferred to a follow-up (weeks are fixed at creation, 1–52); recorded here so they are not silent drops.
+Affects: docs/ui/screens/program-builder.md + coach.md + client-app.md (sketches vs build), P1-03/P1-09/P1-05.
+
 ## D-029 — SUPERSEDES D-028: the app-shell overlap was fixed (inner-scroll shell) on the human's "keep going" (2026-11-02, decided by: human ("keep going") + autopilot)
 Why: D-028 had parked the fix as human-gated. The human replied "keep going", which authorizes the fix.
 The advisor's cheaper `fixed→sticky` idea was a no-op (the nav was already `sticky bottom-0`; sticky over a

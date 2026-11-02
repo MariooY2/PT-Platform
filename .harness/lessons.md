@@ -12,6 +12,20 @@ Failure class: contract | context | tool | precondition | verification | policy 
 Harness change: <file and rule added, or "proposed, awaiting approval">
 ```
 
+## L-007 — the contract self-check verified "evidence named" on paper, not against the diff (2026-11-02, task P1-05/P1-03)
+What happened: P1-05 passed its autopilot self-check and a green verify --full, but the verifier later found
+A6 ("editing a client copy doesn't change the template") had ZERO test, Zod was missing on 7 of 8 server
+actions (constraint line 37), and supersets were an A1-only toggle (A5 wants A1/A2). P1-03's A6 named
+screenshots for /client/checkin/[id] that never existed (route not in ui-routes; seed had only submitted
+responses). Each acceptance line *named* checkable evidence, so the self-check passed — but nothing confirmed
+the evidence was actually produced by the diff. Green --full only proves the tests that exist pass, not that
+the contract's required tests were written.
+Failure class: verification
+Harness change: proposed, awaiting approval — the contract self-check (and/or a close-time gate) should, for
+each acceptance line, grep the diff for the specific artifact it names (a test file/case, a ui-routes entry +
+screenshot, a Zod schema per server action) and fail if absent, rather than trusting the line's own wording.
+Target for the next /harness-upgrade.
+
 ## L-001 — a Server Component must not pass a component reference to a Client Component (2026-11-01, task P0-05)
 What happened: AppShell (server) passed nav arrays containing `icon` lucide components as props to the
 BottomNav/SideNav client islands. Fast verify (`verify.mjs`) passed, but `verify --full` failed at the
