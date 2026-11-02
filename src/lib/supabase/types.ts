@@ -345,14 +345,14 @@ isOneToOne: false
                   ]
                 },"trainers": {
                   Row: {
-                    "bio": string | null,"brand_color": string | null,"business_name": string | null,"certifications": (string)[] | null,"created_at": string,"default_currency": string,"id": string,"instagram_handle": string | null,"logo_path": string | null,"payout_whish_phone": string | null,"plan": Database["public"]['Enums']["trainer_plan"],"slug": string,"storefront_published": boolean,"updated_at": string
+                    "bio": string | null,"brand_color": string | null,"business_name": string | null,"certifications": (string)[] | null,"created_at": string,"default_checkin_weekday": number | null,"default_currency": string,"id": string,"instagram_handle": string | null,"logo_path": string | null,"payout_whish_phone": string | null,"plan": Database["public"]['Enums']["trainer_plan"],"slug": string,"storefront_published": boolean,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "bio"?: string | null,"brand_color"?: string | null,"business_name"?: string | null,"certifications"?: (string)[] | null,"created_at"?: string,"default_currency"?: string,"id": string,"instagram_handle"?: string | null,"logo_path"?: string | null,"payout_whish_phone"?: string | null,"plan"?: Database["public"]['Enums']["trainer_plan"],"slug": string,"storefront_published"?: boolean,"updated_at"?: string
+                    "bio"?: string | null,"brand_color"?: string | null,"business_name"?: string | null,"certifications"?: (string)[] | null,"created_at"?: string,"default_checkin_weekday"?: number | null,"default_currency"?: string,"id": string,"instagram_handle"?: string | null,"logo_path"?: string | null,"payout_whish_phone"?: string | null,"plan"?: Database["public"]['Enums']["trainer_plan"],"slug": string,"storefront_published"?: boolean,"updated_at"?: string
                   }
                   Update: {
-                    "bio"?: string | null,"brand_color"?: string | null,"business_name"?: string | null,"certifications"?: (string)[] | null,"created_at"?: string,"default_currency"?: string,"id"?: string,"instagram_handle"?: string | null,"logo_path"?: string | null,"payout_whish_phone"?: string | null,"plan"?: Database["public"]['Enums']["trainer_plan"],"slug"?: string,"storefront_published"?: boolean,"updated_at"?: string
+                    "bio"?: string | null,"brand_color"?: string | null,"business_name"?: string | null,"certifications"?: (string)[] | null,"created_at"?: string,"default_checkin_weekday"?: number | null,"default_currency"?: string,"id"?: string,"instagram_handle"?: string | null,"logo_path"?: string | null,"payout_whish_phone"?: string | null,"plan"?: Database["public"]['Enums']["trainer_plan"],"slug"?: string,"storefront_published"?: boolean,"updated_at"?: string
                   }
                   Relationships: [
                     {

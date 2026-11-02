@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { roleOf } from '@/lib/supabase/middleware';
-import { setClientCheckinSchema } from './schemas';
+import { setClientCheckinSchema, weekdaySchema } from './schemas';
 import { defaultCheckinFormId } from './queries';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -72,5 +72,35 @@ export async function setClientCheckinWeekdayAction(
   }
 
   revalidatePath(`/coach/clients/${parsed.data.clientId}`);
+  return { ok: true };
+}
+
+/**
+ * Set the trainer's DEFAULT weekly check-in weekday (Settings). Stored on `trainers`
+ * (default_checkin_weekday); the per-client schedule above can still override it. trainer_id is the
+ * session user; weekday validated 0..6.
+ */
+export async function setTrainerDefaultCheckinWeekdayAction(
+  weekday: number,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: SESSION_EXPIRED };
+  if (roleOf(user) !== 'trainer') return { ok: false, error: COACH_ONLY };
+
+  const parsed = weekdaySchema.safeParse(weekday);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Pick a day of the week.' };
+  }
+
+  const { error } = await supabase
+    .from('trainers')
+    .update({ default_checkin_weekday: parsed.data })
+    .eq('id', user.id);
+  if (error) return { ok: false, error: 'We couldn’t save the default. Try again.' };
+
+  revalidatePath('/coach/settings');
   return { ok: true };
 }
