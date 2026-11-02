@@ -273,3 +273,56 @@ describe('programs — editing a client copy never changes the template it came 
     expect(after.data).toEqual(before.data); // the template row did not move
   });
 });
+
+describe('programs — assign by atomic deep copy (P1-06)', () => {
+  async function nestedCounts(db: DB, programId: string) {
+    const w = await db.from('program_workouts').select('id').eq('program_id', programId);
+    const wids = (w.data ?? []).map((r) => r.id);
+    const x = wids.length
+      ? await db.from('workout_exercises').select('id').in('program_workout_id', wids)
+      : { data: [] as { id: string }[] };
+    const xids = (x.data ?? []).map((r) => r.id);
+    const s = xids.length
+      ? await db.from('prescribed_sets').select('id').in('workout_exercise_id', xids)
+      : { data: [] as { id: string }[] };
+    return { w: wids.length, x: xids.length, s: (s.data ?? []).length };
+  }
+
+  it('copy_program_for_client copies all nested rows as one atomic call (A1)', async () => {
+    const res = await trainerA.rpc('copy_program_for_client', {
+      template_id: SAMPLE_PROGRAM,
+      target_client_id: CLIENT_1,
+      start_on: '2026-12-07',
+    });
+    expect(res.error).toBeNull();
+    const copyId = res.data as string;
+    programIds.push(copyId);
+
+    const prog = await trainerA.from('programs').select('*').eq('id', copyId).single();
+    expect(prog.data!.is_template).toBe(false);
+    expect(prog.data!.client_id).toBe(CLIENT_1);
+    expect(prog.data!.source_program_id).toBe(SAMPLE_PROGRAM);
+    expect(prog.data!.start_date).toBe('2026-12-07');
+
+    const t = await nestedCounts(trainerA, SAMPLE_PROGRAM);
+    const c = await nestedCounts(trainerA, copyId);
+    expect(c).toEqual(t); // identical nested-row counts at every level
+    expect(c.w).toBeGreaterThan(0);
+  });
+
+  it('copy_program_for_client denies a foreign trainer and a client (A2)', async () => {
+    const b = await trainerB.rpc('copy_program_for_client', {
+      template_id: SAMPLE_PROGRAM,
+      target_client_id: CLIENT_1,
+      start_on: '2026-12-07',
+    });
+    expect(b.error).not.toBeNull(); // CLIENT_1 is not Trainer B's client / B can't read the template
+
+    const c = await client1.rpc('copy_program_for_client', {
+      template_id: SAMPLE_PROGRAM,
+      target_client_id: CLIENT_1,
+      start_on: '2026-12-07',
+    });
+    expect(c.error).not.toBeNull(); // a client cannot assign
+  });
+});

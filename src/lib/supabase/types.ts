@@ -287,14 +287,14 @@ isOneToOne: false
                   ]
                 },"programs": {
                   Row: {
-                    "client_id": string | null,"created_at": string,"description": string | null,"id": string,"is_template": boolean,"source_program_id": string | null,"status": Database["public"]['Enums']["program_status"],"title": string,"trainer_id": string,"updated_at": string,"weeks": number
+                    "client_id": string | null,"created_at": string,"description": string | null,"id": string,"is_template": boolean,"source_program_id": string | null,"start_date": string | null,"status": Database["public"]['Enums']["program_status"],"title": string,"trainer_id": string,"updated_at": string,"weeks": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "client_id"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_template"?: boolean,"source_program_id"?: string | null,"status"?: Database["public"]['Enums']["program_status"],"title": string,"trainer_id": string,"updated_at"?: string,"weeks"?: number
+                    "client_id"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_template"?: boolean,"source_program_id"?: string | null,"start_date"?: string | null,"status"?: Database["public"]['Enums']["program_status"],"title": string,"trainer_id": string,"updated_at"?: string,"weeks"?: number
                   }
                   Update: {
-                    "client_id"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_template"?: boolean,"source_program_id"?: string | null,"status"?: Database["public"]['Enums']["program_status"],"title"?: string,"trainer_id"?: string,"updated_at"?: string,"weeks"?: number
+                    "client_id"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_template"?: boolean,"source_program_id"?: string | null,"start_date"?: string | null,"status"?: Database["public"]['Enums']["program_status"],"title"?: string,"trainer_id"?: string,"updated_at"?: string,"weeks"?: number
                   }
                   Relationships: [
                     {
@@ -412,6 +412,9 @@ isOneToOne: false
                            },
 "can_read_workout":
 { Args: { "w": string }; Returns: boolean
+                           },
+"copy_program_for_client":
+{ Args: { "start_on": string,"target_client_id": string,"template_id": string }; Returns: string
                            },
 "has_client_link":
 { Args: { "client": string }; Returns: boolean

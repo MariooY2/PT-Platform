@@ -211,6 +211,18 @@ insert into public.workout_exercises (id, program_workout_id, exercise_id, posit
 insert into public.prescribed_sets (workout_exercise_id, set_number, set_type, reps_min, reps_max, weight_kg) values
   ('bbbb0000-0000-0000-0000-000000000003', 1, 'working', 5, 5, 80);
 
+-- P1-06: one assigned copy of the sample template for Client One, so the Programs "Client copies" tab
+-- and the "Used by (n)" count have a default-state screenshot. A direct deep copy (seed has no auth
+-- context to call copy_program_for_client); mirrors the template's one workout → exercise → set.
+insert into public.programs (id, trainer_id, title, description, weeks, is_template, client_id, source_program_id, start_date, status) values
+  ('bbbb0000-0000-0000-0000-000000000011', '11111111-0000-0000-0000-000000000001', 'Sample 3-Day Strength', 'A starter template you can duplicate.', 4, false, '33333333-0000-0000-0000-000000000001', 'bbbb0000-0000-0000-0000-000000000001', current_date, 'published');
+insert into public.program_workouts (id, program_id, week, day, title, position) values
+  ('bbbb0000-0000-0000-0000-000000000012', 'bbbb0000-0000-0000-0000-000000000011', 1, 1, 'Lower A', 0);
+insert into public.workout_exercises (id, program_workout_id, exercise_id, position) values
+  ('bbbb0000-0000-0000-0000-000000000013', 'bbbb0000-0000-0000-0000-000000000012', (select id from public.exercises where trainer_id is null and name = 'Back squat' limit 1), 0);
+insert into public.prescribed_sets (workout_exercise_id, set_number, set_type, reps_min, reps_max, weight_kg) values
+  ('bbbb0000-0000-0000-0000-000000000013', 1, 'working', 5, 5, 80);
+
 -- P1-03: Client One finished Alpha's intake (so the intake gate lets them through and existing
 -- /client* routes + nav/pwa specs keep working); plus one submitted, unreviewed weekly check-in so
 -- /coach/checkins has a populated default state. Client Two is left WITHOUT an intake on purpose so
