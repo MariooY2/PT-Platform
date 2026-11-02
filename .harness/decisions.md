@@ -12,6 +12,17 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-033 — P1-07 workout player build decisions (2026-11-02, decided by: autopilot (D-006))
+- Session RPE is a 10-button row (no Slider component exists; matches the check-in scale pattern).
+- The PR trigger is AFTER INSERT only, so editing/undoing a set via the on-conflict UPDATE never
+  (re)produces a PR. Accepted v1 behaviour (PRs are set on first completion of a set).
+- Scheduling: a workout's date = start_date + (week-1)*7 + (day-1); today's workout is the active
+  client-copy workout whose date = today. The in_progress seed log is dated yesterday so /client Today
+  still shows the scheduled day-1 workout while /client/workout/…0002 screenshots the active player.
+- v1 deferrals honoured (swap/skip exercise, unscheduled workout, supersets-in-player, SyncIndicator,
+  Wake Lock, offline IndexedDB queue — see P1-07 out_of_scope).
+Affects: src/features/workouts/**, src/app/client/**; P1-07.
+
 ## D-032 — review-driven fixes for P1-06/P1-10 (2026-11-02, decided by: autopilot (D-006))
 Resolving the review panel's findings:
 - P1-10: the trainer default check-in weekday is a PREFILL convenience, not an auto-scheduler. It now

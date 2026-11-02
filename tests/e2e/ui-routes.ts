@@ -54,6 +54,17 @@ export const uiRoutes: UiRoute[] = [
   { path: '/coach/more', as: 'coach-empty', states: ['default'] },
   { path: '/coach/settings', as: 'coach-empty', states: ['default'] },
   { path: '/client', as: 'client', states: ['default', 'install-prompt'] },
+  // Workout player (outside the (app) shell): the active logging screen + a completed summary (seeded ids).
+  {
+    path: '/client/workout/dddd0000-0000-0000-0000-000000000002',
+    as: 'client',
+    states: ['default'],
+  },
+  {
+    path: '/client/workout/dddd0000-0000-0000-0000-000000000001',
+    as: 'client',
+    states: ['default'],
+  },
   { path: '/client/progress', as: 'client', states: ['empty'] },
   { path: '/client/messages', as: 'client', states: ['empty'] },
   { path: '/client/checkins', as: 'client', states: ['default', 'empty', 'loading', 'error'] },

@@ -237,6 +237,12 @@ from (values
 ) as v(set_number, reps, weight_kg, cgid)
 cross join (select id from public.exercises where trainer_id is null and name = 'Back squat' limit 1) e;
 
+-- P1-07: one IN-PROGRESS workout for Client One (scheduled yesterday so /client Today still shows the
+-- scheduled day-1 workout) with no sets yet, so the player route has a clean "active logging" default
+-- state to screenshot + axe. Its own route is /client/workout/dddd…0002.
+insert into public.workout_logs (id, trainer_id, client_id, assignment_id, program_workout_id, scheduled_date, started_at, status, client_generated_id) values
+  ('dddd0000-0000-0000-0000-000000000002', '11111111-0000-0000-0000-000000000001', '33333333-0000-0000-0000-000000000001', 'bbbb0000-0000-0000-0000-000000000011', 'bbbb0000-0000-0000-0000-000000000012', current_date - 1, now() - interval '12 minutes', 'in_progress', 'dddd0000-0000-0000-0000-000000000012');
+
 -- P1-03: Client One finished Alpha's intake (so the intake gate lets them through and existing
 -- /client* routes + nav/pwa specs keep working); plus one submitted, unreviewed weekly check-in so
 -- /coach/checkins has a populated default state. Client Two is left WITHOUT an intake on purpose so

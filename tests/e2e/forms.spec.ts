@@ -157,7 +157,7 @@ test.describe('P1-03 forms, intake, check-ins', () => {
     await page.waitForURL((u) => u.pathname === '/client', { timeout: 15_000 });
     await page.goto('/client');
     await expect(page).toHaveURL(/\/client$/);
-    await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
   });
 
   test('A5: the review queue is oldest-first; replying marks it reviewed and drops it', async ({
