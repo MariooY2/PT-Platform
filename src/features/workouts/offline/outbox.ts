@@ -23,14 +23,19 @@ export interface FlushSummary {
  * overwrites its one row and bumps `seq`, so the outbox holds at most one pending write per set.
  */
 export async function enqueue(db: OutboxDb, input: LogSetInput): Promise<void> {
-  const existing = await db.setLogOutbox.get(input.clientGeneratedId);
-  await db.setLogOutbox.put({
-    clientGeneratedId: input.clientGeneratedId,
-    input,
-    status: 'pending',
-    attempts: 0,
-    seq: (existing?.seq ?? 0) + 1,
-    updatedAt: Date.now(),
+  // One transaction so a concurrent flush (markFailed / delete) can't interleave between the read and
+  // the write. `attempts` and `status` carry forward from any existing row, so re-logging a set that is
+  // already failing keeps the "Couldn't sync — will retry" state rather than resetting it to pending.
+  await db.transaction('rw', db.setLogOutbox, async () => {
+    const existing = await db.setLogOutbox.get(input.clientGeneratedId);
+    await db.setLogOutbox.put({
+      clientGeneratedId: input.clientGeneratedId,
+      input,
+      status: existing?.status ?? 'pending',
+      attempts: existing?.attempts ?? 0,
+      seq: (existing?.seq ?? 0) + 1,
+      updatedAt: Date.now(),
+    });
   });
 }
 

@@ -96,6 +96,26 @@ describe('set-log outbox', () => {
     expect(deriveSyncState(rows2)).toBe('failed');
   });
 
+  it('keeps the failed state when a failing set is re-logged (attempts carry forward)', async () => {
+    const cgid = 'dddddddd-0000-0000-0000-000000000001';
+    const post = async (): Promise<LogSetResult> => {
+      throw new Error('offline');
+    };
+
+    await enqueue(db, makeInput(cgid, true));
+    await flush(db, post); // attempts 1
+    await flush(db, post); // attempts 2 → failed
+    expect(deriveSyncState(await listPending(db))).toBe('failed');
+
+    // The user edits the same set while still offline — it must not drop back to "Saved on this phone".
+    await enqueue(db, makeInput(cgid, false));
+    const rows = await listPending(db);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.attempts).toBe(2);
+    expect(rows[0]!.input.completed).toBe(false); // the edit is captured
+    expect(deriveSyncState(rows)).toBe('failed');
+  });
+
   it('a set re-logged mid-flight is not dropped by the flush', async () => {
     const cgid = 'cccccccc-0000-0000-0000-000000000001';
     await enqueue(db, makeInput(cgid, true));
