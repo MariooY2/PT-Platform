@@ -12,6 +12,21 @@ Failure class: contract | context | tool | precondition | verification | policy 
 Harness change: <file and rule added, or "proposed, awaiting approval">
 ```
 
+## L-011 — a receipt must not pre-fill ANY verdict-dependent cell before the verdict exists (2026-11-06, task P1-08)
+What happened: the P1-08 receipt was staged ahead of the re-review with the header verdict set to "pending"
+but the A7 table cell still reading "ui-reviewer ACCEPT | pass". The re-run verifier (a92f711) REJECTED on
+exactly that — a "passed" written for a check nobody had recorded yet (CLAUDE.md: never write passed for a
+check you did not run) — even though A1–A6 were sound. Compounding it: the ui-reviewer and verifier ran in
+parallel, and the verifier searched .harness/ for a ui-reviewer ACCEPT, found none (it had just landed and
+wasn't persisted anywhere durable), and reported "no record exists." Second time this class was flagged
+(the first-round P1-08 verifier flagged the same pre-declared header).
+Failure class: verification
+Harness change: proposed (queued in approvals) — (1) a receipt-consistency check that fails if any row cites
+a reviewer verdict while the header says the review is pending; (2) persist every reviewer hand-back to
+`.harness/evidence/<ID>/review-<agent>.md` on arrival, so a concurrently-running reviewer/verifier can SEE a
+parallel verdict instead of reporting it absent. Behaviour until then: never fill a verdict cell (header, row
+or summary) until that verdict is in hand; stage receipts with every verdict-dependent cell left "pending".
+
 ## L-010 — the e2e suite outgrew verify.mjs's 600s test:e2e cap (2026-11-06, task P1-08/P1-12/P3-05)
 What happened: after the Phase-1 UI wave, `tests/e2e/ui.spec.ts` screenshots every route × state × theme ×
 viewport (and resizes the viewport per shot for the inner-scroll full-page capture), so `--full` began

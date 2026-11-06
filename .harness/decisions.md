@@ -12,6 +12,15 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-036 — human approved editing the two harness-owned files for the NEXT_PUBLIC build-env fix (2026-11-06, decided by: human)
+Asked whether to proceed with the NEXT_PUBLIC_* build-env fix, which requires editing two harness-owned
+files (scripts/verify.mjs and .github/workflows/ci.yml) that autopilot otherwise may not touch, the human
+replied "Everything is accepted continue". That authorizes this specific change only: export
+NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY from `supabase status` before the `pnpm build`
+step in both files (lessons L-003), which unblocks P1-11 (realtime messaging). It is NOT blanket approval
+for the other items in approvals.md (deploys, cloud Supabase, secrets, other harness changes). If a
+PreToolUse hook still blocks scripts/ or CI, stop and hand the human the exact diff — do not route around it.
+
 ## D-035 — P1-08/P1-12/P3-05 wave decisions (2026-11-06, decided by: autopilot (D-006))
 - "Active assigned program" = a `programs` copy (is_template=false, client_id set, start_date ≤ today,
   latest start_date wins). docs/data-model.md names a `program_assignments` table that does NOT exist in
@@ -25,6 +34,9 @@ Affects: <docs / tasks / code>
   revenue deferred.
 - P1-08 "PR history" = the current personal_records rows per lift (the PR trigger keeps only the max; no
   history table). progress-photos served via createSignedUrls (private), never getPublicUrl.
+- P1-08 Calendar renders a "partial" day as a FULL warning-soft fill (not the spec's "half" fill): done
+  vs partial differ by hue, and status is never colour-only (words Legend + per-cell aria-label, e.g.
+  "5 November — partial"). The half-fill was dropped for v1 simplicity; recorded per the ui-reviewer.
 - P3-05 offline: a failed set retries every 15s indefinitely (no retry cap) and shows "Couldn't sync —
   will retry"; PR badging is skipped for sets that sync on reconnect (optimistic completed stands). The
   service worker is gated on a NEXT_PUBLIC_ENABLE_SW build flag (off by default) so dev/e2e are unaffected.
