@@ -1,0 +1,96 @@
+id: P1-08
+title: Progress — strength, body metrics, photos, calendar
+phase: 1
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-06
+depends_on: [P1-07]
+
+objective: >
+  A client sees their progress at /client/progress across four tabs: Strength (main lifts' latest e1RM +
+  change + PR history, from personal_records/set_logs), Body (body-weight trend + a measurements table +
+  Log weight), Photos (front/side/back grid by date, upload to PRIVATE storage, compare two dates), and
+  Calendar (month view of completed/partial/missed days + compliance %). PR badges already exist from
+  P1-07. Per docs/ui/screens/client-app.md (Progress) and docs/features.md §7.6.
+
+context:
+  - docs/data-model.md                 # §5 body_metrics, progress_photos, personal_records (exists)
+  - docs/security.md                   # §6 RLS + §storage (private buckets)
+  - docs/ui/screens/client-app.md      # Progress (Strength/Body/Photos/Calendar)
+  - docs/features.md                   # §7.6
+  - supabase/migrations/20261101070000_client_notes_files.sql  # the client-files private bucket + storage RLS to mirror
+  - docs/ui/patterns.md, docs/ui/copy.md, docs/ui/design-system.md  # charts use num scale; inline SVG (no chart lib)
+
+scope:
+  - supabase/migrations/<new>_progress.sql   # body_metrics + progress_photos tables + RLS; a PRIVATE `progress-photos` storage bucket + storage.objects policies (client owns their folder; trainer reads their clients'); grants + indexes
+  - supabase/seed.sql                        # a few body_metrics rows for Client One (weight trend); no photo files (show the empty state)
+  - src/lib/supabase/types.ts                # regenerated via pnpm db:types
+  - src/features/progress/**                  # Zod schemas, server actions (log body metric, upload-photo signed path, delete), queries (e1RM series per lift + PR history; weight series + measurements; photos by date; calendar completion + compliance)
+  - src/app/client/(app)/progress/**         # replace the placeholder: the four tabs
+  - tests/rls/progress.ts, tests/unit/ (chart/series + compliance helpers), tests/e2e/ (progress spec)
+
+constraints:
+  - New tables → new migration, enable RLS, policies per §6, pnpm db:types, RLS tests. Never edit a committed migration.
+  - RLS: body_metrics + progress_photos — the client writes/reads their OWN (client_id = auth.uid()) and the trainer reads/writes their clients' (is_trainer_of); with-check pins trainer_id via is_client_of (the P1-03/P1-07 tenant-guard lesson). progress_photos storage is a PRIVATE bucket; storage.objects policies scope a client to their own `<client_id>/...` folder and let the trainer read their clients' folders. Admin per §6.
+  - Charts are inline SVG built from server-queried series — NO new chart dependency. Keep them simple:
+    a weight line (daily dots + a 7-day average line) and an e1RM-over-time line per lift; direct labels,
+    tokens only, num scale, reduced-motion-safe. Compliance % is computed from workout_logs over the month.
+  - Photo upload goes through a server action that returns a scoped path / signed upload; the file is
+    validated (image mime, size cap) server-side; private_consent defaults false with the lock note.
+  - Zod on every server action; client_id/trainer_id from the session; no ids from the browser.
+  - Tokens only; every tab has loading/empty/no-results/error states; 360 px first (phone-shaped max 560);
+    copy per docs/ui/copy.md; use the Weight/RelativeDate formatting components. await connection() (L-002).
+
+acceptance:
+  - id: A1
+    claim: body_metrics + progress_photos exist with RLS; a client writes/reads their own; a trainer reads their clients'; nobody reads another's; the progress-photos bucket is private with per-client folder policies
+    evidence: migration; tests/rls/progress.ts — test `body_metrics + progress_photos isolation` and `storage folder isolation`
+  - id: A2
+    claim: a client logs a body-weight/measurement entry (Zod, session client_id) and it appears in the Body tab trend + table
+    evidence: step test:e2e — test `A2 log weight shows on the Body trend`
+  - id: A3
+    claim: the Strength tab shows each main lift's latest e1RM + change and a PR history from personal_records
+    evidence: step test:e2e — test `A3 strength e1RM + PR history` (seeded Back squat PRs)
+  - id: A4
+    claim: the Photos tab uploads a front/side/back photo to the PRIVATE bucket and shows it in the date grid; it is not public
+    evidence: step test:e2e — test `A4 upload progress photo (private)`
+  - id: A5
+    claim: the Calendar tab shows completed/partial/missed days and a month compliance %
+    evidence: step test:e2e — test `A5 calendar compliance`; tests/unit (compliance helper)
+  - id: A6
+    claim: all tabs have loading/empty/no-results/error states; screenshots 360/1280 light+dark; zero axe; verify --full green with regenerated types
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A7
+    claim: the screens match the spec and the checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs: [docs/ui/screens/client-app.md]
+  routes:
+    - { path: /client/progress, as: client, states: [default, empty] }
+  gallery_states: []
+
+approval_required:
+  - A new Postgres extension or a dependency not already pre-approved (NO chart library — inline SVG)
+
+out_of_scope:
+  - Weekly volume per muscle group chart (a heavier aggregation) — defer to a follow-up; the Strength tab ships e1RM + PR history
+  - Trainer-side body-metrics entry on the coach client profile (client-side entry ships; coach entry is a follow-up)
+  - Public sharing of progress photos / consent workflow beyond the default-private lock note (Phase 2+)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 50
+
+notes: |
+  ## Schema lane (orchestrator, first)
+  body_metrics(trainer_id, client_id, measured_on, weight_kg, body_fat_pct, waist/hips/chest/arm/thigh_cm,
+  notes); progress_photos(trainer_id, client_id, taken_on, pose, storage_path, public_consent default false).
+  RLS: client writes/reads own, trainer reads/writes clients'; with-check pins trainer via is_client_of.
+  Private `progress-photos` storage bucket (public=false) + storage.objects policies mirroring
+  20261101070000's client-files pattern, scoping to a `<client_id>/` folder prefix. Seed a weight trend for
+  Client One. RLS tests FIRST: cross-client deny on both tables + the storage folder.
+
+  ## Build
+  Orchestrator does the schema lane; then ONE builder for the UI (src/features/progress/** + the four
+  tabs) from HEAD. Charts are inline SVG from server series — confirm no chart dep is added.
