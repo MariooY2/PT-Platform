@@ -12,6 +12,19 @@ Failure class: contract | context | tool | precondition | verification | policy 
 Harness change: <file and rule added, or "proposed, awaiting approval">
 ```
 
+## L-010 — the e2e suite outgrew verify.mjs's 600s test:e2e cap (2026-11-06, task P1-08/P1-12/P3-05)
+What happened: after the Phase-1 UI wave, `tests/e2e/ui.spec.ts` screenshots every route × state × theme ×
+viewport (and resizes the viewport per shot for the inner-scroll full-page capture), so `--full` began
+hitting the hard 600s `test:e2e` timeout in scripts/verify.mjs. Mitigations applied without touching the
+harness: a shared memoized `supabase status` (tests/e2e/supabase-admin.ts) instead of one spawn per spec;
+ui.spec skips the viewport resize when a page fits; Playwright local workers → 75%. Also learned: a run
+that TIMES OUT leaves its e2e-created users uncleaned (afterAll never runs), which then fails the next
+`test:rls` (isolation.test.ts asserts exact seeded counts) until a `supabase db reset`.
+Failure class: verification
+Harness change: proposed (human — scripts/ is human-owned) — raise the `test:e2e` step timeout in
+scripts/verify.mjs (e.g. 600s → 1200s) for headroom as the suite grows, and/or shard ui.spec. Queued in
+approvals.md.
+
 ## L-009 — two build-only traps that fast verify can't catch (2026-11-06, task P1-08)
 What happened: the P1-08 builder hit (and fixed) two errors that only `next build` surfaces, not
 `node scripts/verify.mjs` (fast, no build): (1) a `'use server'` file may export ONLY async functions —
