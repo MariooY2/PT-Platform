@@ -1,0 +1,92 @@
+id: P1-12
+title: Coach Today — needs attention, check-ins to review, today's training
+phase: 1
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-06
+depends_on: [P1-07, P1-10]
+
+objective: >
+  The coach Today dashboard at /coach: a prioritized to-do list, not KPI cards. Three sections —
+  Needs attention (clients with a missed workout or an overdue check-in, each stating the reason in
+  words + one action), Check-ins to review (oldest unreviewed first), Today's training (today's
+  completed workouts + PR count) — plus a numbers line (active clients, compliance %). Read-only
+  aggregation over existing tables; no new schema. Per docs/ui/screens/coach.md (Today) and
+  docs/features.md §7.15.
+
+context:
+  - docs/ui/screens/coach.md           # Today (dashboard)
+  - docs/features.md                   # §7.15 (Phase 1: at-risk clients, check-ins to review, today's completed)
+  - docs/security.md                   # §6 RLS (the coach reads only their own clients' data)
+  - docs/ui/patterns.md, docs/ui/copy.md
+
+scope:
+  - src/features/coach-today/**         # Zod (none needed beyond params), queries (needs-attention, review queue, today's training, numbers), components
+  - src/app/coach/(app)/page.tsx       # replace the P0-05 placeholder with the dashboard (await connection(); L-002)
+  - tests/unit/ (severity-sort + compliance helpers), tests/e2e/ (coach-today spec)
+  - NO migration, NO seed schema change. If the dashboard needs seed ROWS to show a state, REPORT them (the orchestrator adds them at integration).
+
+constraints:
+  - No new tables. Queries aggregate existing data under the coach's session (RLS already scopes to their
+    clients): workout_logs (missed workouts / today's completed / PRs), checkin_schedules + form_responses
+    (overdue check-in / review queue), trainer_clients (active clients), personal_records (today's PRs).
+  - Needs attention severities for v1 (sorted, highest first): missed workouts (≥5 days with an active
+    program) > check-in overdue (≥2 days past the scheduled weekday with no submitted response this week).
+    Each row states the reason + number in words and ONE action. Since messaging is P1-11, the action
+    links to the client's profile (not a message thread) for v1; the Mark-paid/renewal severity and Snooze
+    are deferred (see out_of_scope). Record these as deferrals.
+  - Check-ins to review reuses the P1-03 review-queue data (submitted + unreviewed, oldest first), linking
+    to /coach/checkins.
+  - The numbers line shows active-client count + 14-day compliance % in num; revenue is omitted until the
+    store exists (Phase 2).
+  - Empty (new coach with no clients): a simple setup/empty state, not a crash.
+  - Tokens only; loading/empty/no-results/error states; 360 px first; copy per docs/ui/copy.md; use the
+    formatting components (RelativeDate, etc.). Server Components read the session after await connection().
+
+acceptance:
+  - id: A1
+    claim: Needs attention lists the coach's clients with a missed-workout (≥5d) or overdue-check-in (≥2d) reason, each with the reason in words + a resolving link, sorted by severity
+    evidence: step test:e2e — test `A1 needs attention shows reasons sorted`; tests/unit (severity sort)
+  - id: A2
+    claim: Check-ins to review shows submitted-unreviewed responses oldest first, linking to the review
+    evidence: step test:e2e — test `A2 check-ins to review oldest first`
+  - id: A3
+    claim: Today's training shows today's completed workouts and a PR count, linking to the client's log
+    evidence: step test:e2e — test `A3 today's training`
+  - id: A4
+    claim: the numbers line shows active-client count and a compliance %
+    evidence: step test:e2e — test `A4 numbers line`; tests/unit (compliance)
+  - id: A5
+    claim: all sections have loading/empty/error states (incl. the new-coach empty); screenshots 360/1280 light+dark; zero axe; verify --full green
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A6
+    claim: the screen matches the spec and the checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs: [docs/ui/screens/coach.md]
+  routes:
+    - { path: /coach, as: coach, states: [default] }
+    - { path: /coach, as: coach-empty, states: [empty] }
+  gallery_states: []
+
+approval_required:
+  - A dependency not already pre-approved
+
+out_of_scope:
+  - The Message action opening a message thread with a suggested line (messaging is P1-11; v1 links to the client profile)
+  - Overdue-renewal severity + Mark-paid dialog (payments are Phase 2)
+  - "Not opened app in N days" severity (no last-activity tracking yet)
+  - Snooze a row for 3 days (needs persistence; a follow-up)
+  - Revenue / MRR numbers and the Phase-3 full dashboard
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 30
+
+notes: |
+  No schema lane. One builder (src/features/coach-today/** + /coach/page.tsx) from HEAD, in parallel with
+  P1-08 (different scope: /coach dashboard vs /client/progress). The dashboard reads existing seed:
+  Client One has a submitted-unreviewed check-in (review queue) and an in-progress workout. If a
+  "needs attention" or "today's completed" row needs seed data to be visible for the screenshot, the
+  builder REPORTS the rows and the orchestrator adds them at integration.
