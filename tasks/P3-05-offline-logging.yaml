@@ -1,0 +1,90 @@
+id: P3-05
+title: Offline workout logging with an IndexedDB queue
+phase: 3
+status: approved
+approved_by: autopilot (D-006)
+approved_at: 2026-11-06
+depends_on: [P1-07]
+
+objective: >
+  The workout player keeps working offline: set logs write to an IndexedDB queue (Dexie) and sync on
+  reconnect by upserting on client_generated_id (so a replay never duplicates — the idempotency P1-07
+  already built). A service worker caches the app shell and the current week's assigned workouts. A
+  SyncIndicator in the player header shows synced / saved-on-this-phone / couldn't-sync. Per
+  docs/platform.md §10 and docs/ui/patterns.md (Offline and sync).
+
+context:
+  - docs/platform.md                   # §10 PWA and offline (service worker, Dexie queue, sync on client_generated_id)
+  - docs/ui/patterns.md                # Offline and sync — SyncIndicator states
+  - src/features/workouts/**           # the P1-07 player + logSetAction (upsert on client_generated_id) to wrap
+  - docs/ui/copy.md
+
+scope:
+  - package.json                        # add pre-approved deps: dexie, @serwist/next + serwist, fake-indexeddb (dev)
+  - next.config.*                       # wire @serwist/next (service worker); keep the existing PWA manifest (P1-13)
+  - src/app/sw.ts (or public/sw)        # the service worker: precache the app shell; runtime-cache the current week's workout data
+  - src/features/workouts/offline/**    # a Dexie DB + a set-log outbox queue (enqueue, list-pending, flush); online/offline detection; a flush-on-reconnect hook
+  - src/features/workouts/components/** # SyncIndicator in the player header; the player's set write goes through the queue (enqueue, then flush when online)
+  - src/features/workouts/actions.ts    # logSetAction stays the idempotent upsert — the flush calls it per queued set
+  - tests/unit/ (the queue + flush with fake-indexeddb), tests/e2e/ (offline log → reconnect → synced)
+
+constraints:
+  - Offline writes go to the Dexie outbox keyed by client_generated_id; the flush calls the existing
+    logSetAction (upsert onConflict client_generated_id), so a double-flush or a server retry never
+    duplicates — do NOT add a second write path or weaken the idempotency.
+  - The service worker precaches the app shell and runtime-caches the current week's workout GET data only;
+    never cache authenticated POSTs or secrets. It must not break the existing e2e (guard registration to
+    production/client runtime so the Playwright dev build is unaffected unless a test opts in).
+  - The SyncIndicator reflects real queue state: nothing when the outbox is empty, "Saved on this phone"
+    while pending, "Couldn't sync — will retry" after repeated failures (patterns.md:74). No secrets client-side.
+  - Tokens only; the indicator has its states; 360 px first; copy per docs/ui/copy.md. No change to the
+    workout_logs/set_logs schema (client_generated_id already unique from P1-07).
+
+acceptance:
+  - id: A1
+    claim: the Dexie outbox enqueues a set log and flush() posts each pending item via the idempotent action, clearing it on success; a repeated flush does not double-write
+    evidence: tests/unit (fake-indexeddb) — test `outbox flush is idempotent on client_generated_id`
+  - id: A2
+    claim: logging a set while offline queues it (SyncIndicator shows "Saved on this phone"); on reconnect it syncs and the set_log exists exactly once
+    evidence: step test:e2e — test `A2 offline set syncs on reconnect` (Playwright context offline → log → online → one set_log)
+  - id: A3
+    claim: a service worker registers and precaches the app shell; the app loads shell-first
+    evidence: step test:e2e — test `A3 service worker registers` (or build artifact assertion); no regression to existing e2e
+  - id: A4
+    claim: the SyncIndicator shows synced / pending / failed states from the real outbox
+    evidence: tests/unit + step test:e2e — test `A4 sync indicator states`
+  - id: A5
+    claim: states present; screenshots 360/1280 light+dark (player header with the indicator); zero axe; verify --full green with the new deps installed
+    evidence: step test:e2e; .harness/last-verify.json (full)
+  - id: A6
+    claim: the screens match the spec and the checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs: [docs/ui/patterns.md]
+  routes:
+    - { path: /client/workout/dddd0000-0000-0000-0000-000000000002, as: client, states: [default] }
+  gallery_states: []
+
+approval_required:
+  - Any dependency NOT in the policy's preapproved list (dexie, @serwist/next, serwist, fake-indexeddb ARE pre-approved)
+
+out_of_scope:
+  - Offline for anything other than the workout set-log write (habits/check-ins stay online)
+  - Background Sync API / periodic sync (a reconnect flush covers v1)
+  - Conflict resolution beyond last-write-wins via the idempotent upsert
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 40
+
+notes: |
+  Pulled forward because Phase 2 (the storefront/payments core) is transitively blocked on the human
+  (P2-01 needs Phase 1 complete → P1-11 → the NEXT_PUBLIC build-env decision). P3-05 depends only on
+  P1-07 (done) and its deps are pre-approved, so it is the one remaining autopilot-workable task.
+
+  ## Build
+  Runs AFTER P1-08 + P1-12 integrate (it modifies the workout player). Add the deps, wire serwist, build
+  the Dexie outbox + SyncIndicator, route the player's set write through the queue. The service-worker
+  e2e must not destabilise the existing suite — gate SW registration so the normal dev/e2e build is
+  unaffected unless a test opts in. fake-indexeddb covers the queue unit tests.
