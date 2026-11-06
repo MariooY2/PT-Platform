@@ -1,8 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ChevronDown, Dumbbell } from 'lucide-react';
-import { EmptyState, ErrorState, ListSkeleton } from '@/components/shared/states';
+import { EmptyState, ErrorState } from '@/components/shared/states';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Weight, RelativeDate } from '@/components/format';
 import { formatWeightValue } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -10,10 +14,27 @@ import { LineChart } from './line-chart';
 import type { PrEntry, StrengthLift } from '../types';
 
 const PR_LABEL: Record<PrEntry['type'], string> = {
-  e1rm: 'Best e1RM',
+  e1rm: 'Estimated 1RM',
   max_weight: 'Heaviest set',
   max_reps: 'Most reps',
 };
+
+/** Skeleton shaped like the lift rows: name/change on the left, e1RM on the right. */
+function StrengthSkeleton() {
+  return (
+    <div className="space-y-2" aria-hidden>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between gap-3 rounded-xl border p-4">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+          <Skeleton className="h-6 w-16" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const kg = (v: number) => `${formatWeightValue(v).value} kg`;
 
@@ -109,12 +130,14 @@ export function StrengthTab({
   hadError?: boolean;
   forcedState?: string;
 }) {
-  if (forcedState === 'loading') return <ListSkeleton rows={3} />;
+  const router = useRouter();
+  if (forcedState === 'loading') return <StrengthSkeleton />;
   if (forcedState === 'error' || hadError)
     return (
       <ErrorState
         title="Couldn’t load your strength"
         description="Check your connection and try again."
+        onRetry={() => router.refresh()}
       />
     );
   if (forcedState === 'empty' || lifts.length === 0)
@@ -123,6 +146,11 @@ export function StrengthTab({
         icon={Dumbbell}
         title="No strength data yet"
         description="Log a few weighted sets in a workout and your main lifts show up here."
+        action={
+          <Button asChild variant="outline">
+            <Link href="/client">Go to Today</Link>
+          </Button>
+        }
       />
     );
 

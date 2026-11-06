@@ -136,9 +136,9 @@ test.describe('P1-08 progress', () => {
     await expect(page.getByRole('button', { name: /Back squat/ })).toBeVisible();
     await page.getByRole('button', { name: /Back squat/ }).click();
 
-    // The PR history (from personal_records) is shown, with the best e1RM (82.5 × (1+5/30) = 96.25 → 96.3).
+    // The PR history (from personal_records) is shown, with the estimated 1RM (82.5 × (1+5/30) = 96.25 → 96.3).
     await expect(page.getByText('Personal records')).toBeVisible();
-    await expect(page.getByText('Best e1RM')).toBeVisible();
+    await expect(page.getByText('Estimated 1RM')).toBeVisible();
     await expect(page.getByText('96.3', { exact: false }).first()).toBeVisible();
   });
 

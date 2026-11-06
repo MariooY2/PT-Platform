@@ -1,7 +1,9 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { Scale } from 'lucide-react';
-import { EmptyState, ErrorState, ListSkeleton } from '@/components/shared/states';
+import { EmptyState, ErrorState } from '@/components/shared/states';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Weight, RelativeDate } from '@/components/format';
 import { formatWeightValue } from '@/lib/format';
 import {
@@ -18,6 +20,21 @@ import type { BodyMeasurementRow, BodyProgress } from '../types';
 
 const kg = (v: number) => `${formatWeightValue(v).value} kg`;
 const cm = (v: number) => `${Math.round(v * 10) / 10} cm`;
+
+/** Skeleton shaped like the Body tab: latest-weight number, chart card, then a few table rows. */
+function BodySkeleton() {
+  return (
+    <div className="space-y-6" aria-hidden>
+      <Skeleton className="h-10 w-32" />
+      <Skeleton className="h-40 w-full rounded-xl" />
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-8 w-full" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 interface Column {
   key: keyof BodyMeasurementRow;
@@ -72,28 +89,26 @@ export function BodyTab({
   hadError?: boolean;
   forcedState?: string;
 }) {
-  if (forcedState === 'loading') return <ListSkeleton rows={4} />;
+  const router = useRouter();
+  if (forcedState === 'loading') return <BodySkeleton />;
   if (forcedState === 'error' || hadError)
     return (
       <ErrorState
         title="Couldn’t load your body data"
         description="Check your connection and try again."
+        onRetry={() => router.refresh()}
       />
     );
 
   const isEmpty = forcedState === 'empty' || body.rows.length === 0;
   if (isEmpty)
     return (
-      <div className="space-y-4">
-        <div className="flex justify-end">
-          <LogWeightDialog />
-        </div>
-        <EmptyState
-          icon={Scale}
-          title="No weigh-ins yet"
-          description="Log your weight to start a trend. Measurements are optional."
-        />
-      </div>
+      <EmptyState
+        icon={Scale}
+        title="No weigh-ins yet"
+        description="Log your weight to start a trend. Measurements are optional."
+        action={<LogWeightDialog />}
+      />
     );
 
   // Only show measurement columns that have at least one value, so the table stays narrow on a phone.
@@ -106,16 +121,13 @@ export function BodyTab({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs text-muted-foreground">Latest weight</p>
-          {body.latestWeight == null ? (
-            <p className="num-lg text-muted-foreground">—</p>
-          ) : (
-            <Weight kg={body.latestWeight} className="num-lg" />
-          )}
-        </div>
-        <LogWeightDialog />
+      <div>
+        <p className="text-xs text-muted-foreground">Latest weight</p>
+        {body.latestWeight == null ? (
+          <p className="num-lg text-muted-foreground">—</p>
+        ) : (
+          <Weight kg={body.latestWeight} className="num-lg" />
+        )}
       </div>
 
       {body.points.length >= 2 ? (
@@ -140,7 +152,9 @@ export function BodyTab({
             <TableRow>
               <TableHead>Date</TableHead>
               {columns.map((c) => (
-                <TableHead key={c.key}>{c.label}</TableHead>
+                <TableHead key={c.key} className="text-right">
+                  {c.label}
+                </TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -151,13 +165,19 @@ export function BodyTab({
                   <RelativeDate date={`${r.measuredOn}T12:00:00Z`} absolute />
                 </TableCell>
                 {columns.map((c) => (
-                  <TableCell key={c.key}>{c.render(r)}</TableCell>
+                  <TableCell key={c.key} className="text-right">
+                    {c.render(r)}
+                  </TableCell>
                 ))}
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </section>
+
+      <div className="flex justify-end">
+        <LogWeightDialog />
+      </div>
     </div>
   );
 }

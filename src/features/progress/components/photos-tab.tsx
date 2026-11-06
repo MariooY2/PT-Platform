@@ -1,11 +1,13 @@
 'use client';
 
 import { useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { parseISO } from 'date-fns';
 import { createBrowserClient } from '@supabase/ssr';
 import { toast } from 'sonner';
 import { Camera, ImageOff, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { EmptyState, ErrorState, ListSkeleton } from '@/components/shared/states';
+import { EmptyState, ErrorState } from '@/components/shared/states';
 import { RelativeDate } from '@/components/format';
 import { formatAbsoluteDate } from '@/lib/format';
 import type { Database } from '@/lib/supabase/types';
@@ -31,6 +33,20 @@ const POSE_LABEL: Record<PhotoPose, string> = { front: 'Front', side: 'Side', ba
 function ext(name: string): string {
   const m = /\.([a-zA-Z0-9]+)$/.exec(name);
   return (m?.[1] ?? 'jpg').toLowerCase();
+}
+
+/** Skeleton shaped like the photo grid: the lock note bar + a row of three portrait cells. */
+function PhotosSkeleton() {
+  return (
+    <div className="space-y-4" aria-hidden>
+      <Skeleton className="h-10 w-full rounded-md" />
+      <div className="grid grid-cols-3 gap-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="aspect-[3/4] rounded-md" />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function PhotoCell({ url, pose, date }: { url: string | null; pose: PhotoPose; date: string }) {
@@ -214,12 +230,14 @@ export function PhotosTab({
   hadError?: boolean;
   forcedState?: string;
 }) {
-  if (forcedState === 'loading') return <ListSkeleton rows={3} />;
+  const router = useRouter();
+  if (forcedState === 'loading') return <PhotosSkeleton />;
   if (forcedState === 'error' || hadError)
     return (
       <ErrorState
         title="Couldn’t load your photos"
         description="Check your connection and try again."
+        onRetry={() => router.refresh()}
       />
     );
 

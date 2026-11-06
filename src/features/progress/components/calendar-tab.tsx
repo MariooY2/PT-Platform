@@ -1,13 +1,32 @@
 'use client';
 
 import { format, parseISO } from 'date-fns';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { CalendarDays } from 'lucide-react';
-import { EmptyState, ErrorState, ListSkeleton } from '@/components/shared/states';
+import { EmptyState, ErrorState } from '@/components/shared/states';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { monthMatrix, type DayStatus } from '../lib';
 import type { CalendarProgress } from '../types';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/** Skeleton shaped like the month grid (6 weeks × 7 days of square cells). */
+function CalendarSkeleton() {
+  return (
+    <div className="space-y-1" aria-hidden>
+      {Array.from({ length: 6 }).map((_, wi) => (
+        <div key={wi} className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 7 }).map((_, di) => (
+            <Skeleton key={di} className="aspect-square rounded-md" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const STATUS_WORD: Record<DayStatus, string> = {
   done: 'done',
@@ -54,12 +73,14 @@ export function CalendarTab({
   hadError?: boolean;
   forcedState?: string;
 }) {
-  if (forcedState === 'loading') return <ListSkeleton rows={4} />;
+  const router = useRouter();
+  if (forcedState === 'loading') return <CalendarSkeleton />;
   if (forcedState === 'error' || hadError)
     return (
       <ErrorState
         title="Couldn’t load your calendar"
         description="Check your connection and try again."
+        onRetry={() => router.refresh()}
       />
     );
 
@@ -74,6 +95,11 @@ export function CalendarTab({
         icon={CalendarDays}
         title={`Nothing logged in ${monthLabel}`}
         description="When you complete or miss scheduled workouts, they show up on this calendar."
+        action={
+          <Button asChild variant="outline">
+            <Link href="/client">Go to Today</Link>
+          </Button>
+        }
       />
     );
 
