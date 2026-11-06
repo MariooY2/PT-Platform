@@ -1,13 +1,21 @@
 import { connection } from 'next/server';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { PageHeader } from '@/components/shared/page-header';
-import { SetupChecklist } from '@/features/onboarding/components/setup-checklist';
+import { zonedDateString } from '@/features/checkins/week';
+import { getCoachToday } from '@/features/coach-today/queries';
+import { CoachToday } from '@/features/coach-today/components/coach-today';
 
+// Reads the session (cookies) + searchParams, so the route renders dynamically (Next 16 cacheComponents).
 export const instant = false;
 
-export default async function CoachTodayPage() {
+export default async function CoachTodayPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ state?: string }>;
+}) {
+  // Force dynamic rendering before any Supabase session read (L-002).
   await connection();
+  const { state } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -21,18 +29,15 @@ export default async function CoachTodayPage() {
     .maybeSingle();
   if (!trainer) redirect('/coach/onboarding');
 
-  const { count } = await supabase
-    .from('trainer_clients')
-    .select('id', { count: 'exact', head: true })
-    .eq('trainer_id', user.id);
+  const today = zonedDateString(new Date());
+  const data = await getCoachToday(supabase, user.id, today);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-      <PageHeader title="Today" description="Your coaching at a glance." />
-      <SetupChecklist
-        hasClient={(count ?? 0) > 0}
-        storefrontPublished={trainer.storefront_published}
-      />
-    </div>
+    <CoachToday
+      key={state ?? 'default'}
+      data={data}
+      storefrontPublished={trainer.storefront_published}
+      forcedState={state}
+    />
   );
 }
