@@ -63,7 +63,7 @@ export async function getCoachToday(
 
   const [programs, completed, schedules, submitted, review] = await Promise.all([
     loadActivePrograms(supabase, trainerId, today),
-    loadCompletedLogs(supabase, trainerId),
+    loadCompletedLogs(supabase, trainerId, today),
     loadCheckinSchedules(supabase, trainerId),
     loadRecentCheckinSubmissions(supabase, trainerId, today),
     listReviewQueue(supabase, trainerId),
@@ -188,8 +188,11 @@ interface CompletedLogs {
 }
 
 /** Every completed workout for the trainer's clients, grouped for last-completed / window / today. */
-async function loadCompletedLogs(supabase: DB, trainerId: string): Promise<CompletedLogs> {
-  const today = zonedDateString(new Date());
+async function loadCompletedLogs(
+  supabase: DB,
+  trainerId: string,
+  today: string,
+): Promise<CompletedLogs> {
   const windowStart = addDays(today, -13);
   const { data, error } = await supabase
     .from('workout_logs')
