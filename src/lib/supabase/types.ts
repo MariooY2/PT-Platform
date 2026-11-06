@@ -23,7 +23,33 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "checkin_schedules": {
+            "body_metrics": {
+                  Row: {
+                    "arm_cm": number | null,"body_fat_pct": number | null,"chest_cm": number | null,"client_id": string,"created_at": string,"hips_cm": number | null,"id": string,"measured_on": string,"notes": string | null,"thigh_cm": number | null,"trainer_id": string,"waist_cm": number | null,"weight_kg": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "arm_cm"?: number | null,"body_fat_pct"?: number | null,"chest_cm"?: number | null,"client_id": string,"created_at"?: string,"hips_cm"?: number | null,"id"?: string,"measured_on"?: string,"notes"?: string | null,"thigh_cm"?: number | null,"trainer_id": string,"waist_cm"?: number | null,"weight_kg"?: number | null
+                  }
+                  Update: {
+                    "arm_cm"?: number | null,"body_fat_pct"?: number | null,"chest_cm"?: number | null,"client_id"?: string,"created_at"?: string,"hips_cm"?: number | null,"id"?: string,"measured_on"?: string,"notes"?: string | null,"thigh_cm"?: number | null,"trainer_id"?: string,"waist_cm"?: number | null,"weight_kg"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "body_metrics_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "body_metrics_trainer_id_fkey"
+      columns: ["trainer_id"]
+isOneToOne: false
+      referencedRelation: "trainers"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"checkin_schedules": {
                   Row: {
                     "active": boolean,"client_id": string,"created_at": string,"form_id": string,"id": string,"trainer_id": string,"updated_at": string,"weekday": number
                   }
@@ -349,6 +375,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"progress_photos": {
+                  Row: {
+                    "client_id": string,"created_at": string,"id": string,"pose": Database["public"]['Enums']["photo_pose"],"public_consent": boolean,"storage_path": string,"taken_on": string,"trainer_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_id": string,"created_at"?: string,"id"?: string,"pose": Database["public"]['Enums']["photo_pose"],"public_consent"?: boolean,"storage_path": string,"taken_on"?: string,"trainer_id": string
+                  }
+                  Update: {
+                    "client_id"?: string,"created_at"?: string,"id"?: string,"pose"?: Database["public"]['Enums']["photo_pose"],"public_consent"?: boolean,"storage_path"?: string,"taken_on"?: string,"trainer_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "progress_photos_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "progress_photos_trainer_id_fkey"
+      columns: ["trainer_id"]
+isOneToOne: false
+      referencedRelation: "trainers"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"set_logs": {
                   Row: {
                     "client_generated_id": string,"completed": boolean,"created_at": string,"distance_m": number | null,"duration_sec": number | null,"exercise_id": string,"id": string,"reps": number | null,"rpe": number | null,"set_number": number,"weight_kg": number | null,"workout_exercise_id": string | null,"workout_log_id": string
@@ -541,7 +593,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "client_source": "invite"|"purchase"|"import","client_status": "lead"|"invited"|"active"|"paused"|"archived","exercise_category": "strength"|"cardio"|"mobility"|"plyometric"|"other","form_kind": "intake"|"checkin","pr_type": "max_weight"|"e1rm"|"max_reps","prescribed_set_type": "warmup"|"working"|"drop"|"amrap","program_status": "draft"|"published","trainer_plan": "free"|"pro"|"elite","unit_system": "metric"|"imperial","user_role": "admin"|"trainer"|"client","workout_log_status": "in_progress"|"completed"|"partial"|"skipped"
+            "client_source": "invite"|"purchase"|"import","client_status": "lead"|"invited"|"active"|"paused"|"archived","exercise_category": "strength"|"cardio"|"mobility"|"plyometric"|"other","form_kind": "intake"|"checkin","photo_pose": "front"|"side"|"back","pr_type": "max_weight"|"e1rm"|"max_reps","prescribed_set_type": "warmup"|"working"|"drop"|"amrap","program_status": "draft"|"published","trainer_plan": "free"|"pro"|"elite","unit_system": "metric"|"imperial","user_role": "admin"|"trainer"|"client","workout_log_status": "in_progress"|"completed"|"partial"|"skipped"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -661,7 +713,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "client_source": ["invite", "purchase", "import"],"client_status": ["lead", "invited", "active", "paused", "archived"],"exercise_category": ["strength", "cardio", "mobility", "plyometric", "other"],"form_kind": ["intake", "checkin"],"pr_type": ["max_weight", "e1rm", "max_reps"],"prescribed_set_type": ["warmup", "working", "drop", "amrap"],"program_status": ["draft", "published"],"trainer_plan": ["free", "pro", "elite"],"unit_system": ["metric", "imperial"],"user_role": ["admin", "trainer", "client"],"workout_log_status": ["in_progress", "completed", "partial", "skipped"]
+            "client_source": ["invite", "purchase", "import"],"client_status": ["lead", "invited", "active", "paused", "archived"],"exercise_category": ["strength", "cardio", "mobility", "plyometric", "other"],"form_kind": ["intake", "checkin"],"photo_pose": ["front", "side", "back"],"pr_type": ["max_weight", "e1rm", "max_reps"],"prescribed_set_type": ["warmup", "working", "drop", "amrap"],"program_status": ["draft", "published"],"trainer_plan": ["free", "pro", "elite"],"unit_system": ["metric", "imperial"],"user_role": ["admin", "trainer", "client"],"workout_log_status": ["in_progress", "completed", "partial", "skipped"]
           }
         }
 } as const

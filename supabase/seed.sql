@@ -243,6 +243,14 @@ cross join (select id from public.exercises where trainer_id is null and name = 
 insert into public.workout_logs (id, trainer_id, client_id, assignment_id, program_workout_id, scheduled_date, started_at, status, client_generated_id) values
   ('dddd0000-0000-0000-0000-000000000002', '11111111-0000-0000-0000-000000000001', '33333333-0000-0000-0000-000000000001', 'bbbb0000-0000-0000-0000-000000000011', 'bbbb0000-0000-0000-0000-000000000012', current_date - 1, now() - interval '12 minutes', 'in_progress', 'dddd0000-0000-0000-0000-000000000012');
 
+-- P1-08: a body-weight trend for Client One over the last month (the Progress Body tab chart + table).
+insert into public.body_metrics (trainer_id, client_id, measured_on, weight_kg)
+select '11111111-0000-0000-0000-000000000001', '33333333-0000-0000-0000-000000000001', d, w
+from (values
+  (current_date - 28, 72.0), (current_date - 21, 71.6), (current_date - 14, 71.2),
+  (current_date - 7, 71.0), (current_date, 70.6)
+) as v(d, w);
+
 -- P1-03: Client One finished Alpha's intake (so the intake gate lets them through and existing
 -- /client* routes + nav/pwa specs keep working); plus one submitted, unreviewed weekly check-in so
 -- /coach/checkins has a populated default state. Client Two is left WITHOUT an intake on purpose so
