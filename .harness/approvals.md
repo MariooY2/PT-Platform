@@ -15,6 +15,28 @@ Format: `- [ ] <task-id> · <what is needed> · <why> · <exact step for you>`
 - [ ] P0-06 · (human) Set up the cloud Supabase project · the preview needs a hosted database · `supabase link --project-ref <ref>` then `supabase db push` (applies the migrations); then enable email confirmation in the project's Auth settings (and remove `email_confirm: true` from the signup action — see the P0-04 email-confirmation line in this file).
 - [ ] P0-06 · (human) Set up the Vercel preview · import the GitHub repo in the Vercel dashboard (Next.js preset, root = repo root); set env vars NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SITE_URL from the cloud Supabase project; confirm the preview URL renders /login. (Autopilot cannot run the deploy CLI or set these secrets.)
 - [ ] harness (P1-01) · inject NEXT_PUBLIC_* into the verify/CI build · the browser Supabase client reads build-time NEXT_PUBLIC_SUPABASE_URL/ANON_KEY, but `node scripts/verify.mjs --full`'s `pnpm build` and `.github/workflows/ci.yml` run the build with no such env, so any browser-side Supabase call (uploads now, realtime messaging in P1-11) is empty-configured in e2e. P1-01's upload now works around it by fetching the public config from a server action, but the durable fix is to export NEXT_PUBLIC_SUPABASE_URL/ANON_KEY from `supabase status` before the build · add that export to the build step in scripts/verify.mjs and the CI workflow (both are harness-owned). See lessons L-003.
+  · **APPROVED by the human 2026-11-06 (D-036), but the PreToolUse hook blocked autopilot from editing scripts/verify.mjs — ready-to-apply diff below; CI needs NO change (ci.yml's only build step is `node scripts/verify.mjs --full`, which inherits this).** In scripts/verify.mjs, right after the `if (mode === 'full') { steps.push(... test:e2e ...) }` block and before `const results = [];`, insert:
+```js
+// For `--full`, the production `build` bakes NEXT_PUBLIC_* into the browser bundle, but verify runs with
+// no such env, so browser-side Supabase clients (uploads now, realtime messaging in P1-11) are
+// empty-configured in e2e (lesson L-003). Resolve them once from the running local stack and inject into
+// every pnpm step's env. CI inherits this because its only build/test step is `node verify.mjs --full`.
+let publicEnv = {};
+if (mode === 'full') {
+  try {
+    const st = spawnSync('pnpm', ['exec', 'supabase', 'status', '-o', 'json'], {
+      cwd: projectDir, encoding: 'utf8', shell: isWin, timeout: 60_000,
+    });
+    if (st.status === 0 && st.stdout) {
+      const s = JSON.parse(st.stdout);
+      const url = s.API_URL ?? s.api_url;
+      const anon = s.ANON_KEY ?? s.anon_key ?? s.PUBLISHABLE_KEY ?? s.publishable_key;
+      if (url && anon) publicEnv = { NEXT_PUBLIC_SUPABASE_URL: url, NEXT_PUBLIC_SUPABASE_ANON_KEY: anon };
+    }
+  } catch { /* stack down / CLI shape changed: build behaves as before */ }
+}
+```
+  then change the pnpm step's env line from `env: { ...process.env, CI: '1', FORCE_COLOR: '0' },` to `env: { ...process.env, CI: '1', FORCE_COLOR: '0', ...publicEnv },`. After applying, run `node scripts/verify.mjs --full` to confirm green; then P1-11 (messaging) can be contracted and built. (Or run /harness-upgrade to apply it through the sanctioned path.)
 - [ ] harness (P1-01) · audit shadcn components for dead `data-<word>:` variants · `src/components/ui/tabs.tsx` used `data-active:` for its active state, but no `@custom-variant data-active` exists (globals.css defines only `dark`), so the active styling was dead and the active tab failed AA contrast — only caught because the clients profile is the first screen to use Tabs. Fixed Tabs to `data-[state=active]:` · audit the other `src/components/ui/*.tsx` for `data-active`/`data-checked`/similar shorthands that Radix emits as `data-state`, and either add the custom variants or switch to `data-[state=…]`.
 - [ ] P1-02 · (human) enable real invite emails · the invite email currently goes through a mock provider that logs (EMAIL_PROVIDER=mock). To send for real: set RESEND_API_KEY + EMAIL_FROM and verify a sending domain, then EMAIL_PROVIDER=resend · do this at deploy time; until then invites work by copy-link (no email needed).
 - [ ] P1-02/P1-03 · FYI: follow-ups recorded (not bugs) · pending/invited clients aren't shown in the Clients list yet (only the invite dialog confirms); CSV import parses name/phone but trainer_clients has no such columns so they're ignored; the client check-in screen says "Sent to your coach." because a client can't read the coach's name under RLS (a trainer_public view would restore it). Also add EMAIL_PROVIDER (mock|resend) to .env.example + docs/payments.md §8.4 · no action needed; fold into later client/storefront tasks.
