@@ -81,9 +81,11 @@ export async function getStrengthProgress(
   >();
   for (const r of rows) {
     if (r.weight_kg == null || r.reps == null) continue;
-    const date = r.workout_logs?.completed_at
-      ? dateOf(r.workout_logs.completed_at)
-      : (r.workout_logs?.scheduled_date ?? dateOf(r.created_at));
+    // Prefer the plain scheduled_date so the Strength and Calendar tabs agree on which day a session
+    // belongs to around midnight Beirut; fall back to completed_at's day, then the row's created day.
+    const date =
+      r.workout_logs?.scheduled_date ??
+      (r.workout_logs?.completed_at ? dateOf(r.workout_logs.completed_at) : dateOf(r.created_at));
     const entry = byExercise.get(r.exercise_id) ?? {
       name: r.exercises?.name ?? 'Exercise',
       sets: [],

@@ -19,8 +19,8 @@ export type ActionResult = { ok: true } | { error: string };
 const GENERIC_ERROR = 'Something went wrong. Try again.';
 const NO_COACH = 'You’re not connected to a coach yet.';
 const PROGRESS_PATH = '/client/progress';
-export const PROGRESS_BUCKET = 'progress-photos';
-export const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // 10 MB
+const PROGRESS_BUCKET = 'progress-photos';
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // 10 MB
 
 type DB = SupabaseClient<Database>;
 

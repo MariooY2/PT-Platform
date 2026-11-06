@@ -6,10 +6,13 @@ import { StrengthTab } from './strength-tab';
 import { BodyTab } from './body-tab';
 import { PhotosTab } from './photos-tab';
 import { CalendarTab } from './calendar-tab';
-import type { BodyProgress, CalendarProgress, PhotoDate, StrengthLift } from '../types';
-
-export const PROGRESS_TABS = ['strength', 'body', 'photos', 'calendar'] as const;
-export type ProgressTab = (typeof PROGRESS_TABS)[number];
+import type {
+  BodyProgress,
+  CalendarProgress,
+  PhotoDate,
+  ProgressTab,
+  StrengthLift,
+} from '../types';
 
 /**
  * The Progress screen: four tabs over the client's own data. `forcedState` (empty/loading/error) is a

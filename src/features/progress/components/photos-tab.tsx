@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useTransition } from 'react';
+import { parseISO } from 'date-fns';
 import { createBrowserClient } from '@supabase/ssr';
 import { toast } from 'sonner';
 import { Camera, ImageOff, Lock } from 'lucide-react';
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { EmptyState, ErrorState, ListSkeleton } from '@/components/shared/states';
 import { RelativeDate } from '@/components/format';
+import { formatAbsoluteDate } from '@/lib/format';
 import type { Database } from '@/lib/supabase/types';
 import { publicSupabaseConfig, registerProgressPhotoAction } from '../actions';
 import type { PhotoDate } from '../types';
@@ -185,7 +187,7 @@ function ComparePicker({ dates }: { dates: PhotoDate[] }) {
               <SelectContent>
                 {dates.map((d) => (
                   <SelectItem key={d.date} value={d.date}>
-                    {d.date}
+                    {formatAbsoluteDate(parseISO(d.date))}
                   </SelectItem>
                 ))}
               </SelectContent>

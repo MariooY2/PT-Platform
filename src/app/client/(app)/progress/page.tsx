@@ -8,11 +8,8 @@ import {
   getPhotoProgress,
   getStrengthProgress,
 } from '@/features/progress/queries';
-import {
-  PROGRESS_TABS,
-  ProgressScreen,
-  type ProgressTab,
-} from '@/features/progress/components/progress-screen';
+import { ProgressScreen } from '@/features/progress/components/progress-screen';
+import { PROGRESS_TABS, type ProgressTab } from '@/features/progress/types';
 
 // Under the client (app) intake gate (dynamic layout), so this route renders dynamically too (L-002).
 export const instant = false;

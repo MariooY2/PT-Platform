@@ -1,6 +1,11 @@
 import type { Compliance, DayStatus, SeriesPoint } from './lib';
 import type { PhotoPose } from './schemas';
 
+// The tab identifiers as a plain-module runtime value, so the server page can read them without
+// dotting into the 'use client' component module (which React forbids).
+export const PROGRESS_TABS = ['strength', 'body', 'photos', 'calendar'] as const;
+export type ProgressTab = (typeof PROGRESS_TABS)[number];
+
 // View models shared by the server queries and the client components (so components never import the
 // server-only query module). Every number stays in its base unit (kg, cm, %); formatting is the UI's job.
 
