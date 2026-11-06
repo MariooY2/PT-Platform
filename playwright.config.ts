@@ -31,7 +31,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // Local: use most cores (the screenshot-heavy ui.spec is the wall-clock bottleneck and the local
+  // Supabase/dev server handle the concurrency). CI stays single-worker for determinism.
+  workers: process.env.CI ? 1 : '75%',
   reporter: process.env.CI ? 'line' : 'list',
   use: {
     baseURL: BASE_URL,

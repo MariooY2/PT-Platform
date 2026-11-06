@@ -114,8 +114,13 @@ export function CalendarTab({
                   aria-label={label}
                   className={cn(
                     'flex aspect-square items-center justify-center rounded-md text-sm num',
-                    !inMonth && 'opacity-30',
-                    status ? STATUS_CELL[status] : 'text-foreground',
+                    // Adjacent-month filler days are de-emphasised with the muted token (AA-compliant),
+                    // not opacity-30 on text-foreground which composites below 4.5:1 on the dark bg.
+                    status
+                      ? STATUS_CELL[status]
+                      : inMonth
+                        ? 'text-foreground'
+                        : 'text-muted-foreground',
                   )}
                 >
                   {day}
