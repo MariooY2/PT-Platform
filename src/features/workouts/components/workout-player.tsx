@@ -14,7 +14,9 @@ import { youtubeEmbedUrl } from '@/features/exercises/media';
 import { finishWorkoutAction, logSetAction } from '../actions';
 import { prefillSet, restRemainingMs } from '../lib';
 import type { PlayerExercise, WorkoutPlayerData } from '../types';
+import { useSetLogOutbox } from '../offline/use-outbox';
 import { RestTimerBar } from './rest-timer-bar';
+import { SyncIndicator } from './sync-indicator';
 
 interface SetDraft {
   setNumber: number;
@@ -113,6 +115,10 @@ export function WorkoutPlayer({ data }: { data: WorkoutPlayerData }) {
   const [finishing, setFinishing] = useState(false);
   const vibratedRef = useRef(false);
 
+  // Set writes go through the IndexedDB outbox: enqueue, then flush when online. Offline writes are
+  // held and synced on reconnect via the idempotent logSetAction (upsert on client_generated_id).
+  const outbox = useSetLogOutbox(logSetAction);
+
   // One ticker drives both the elapsed clock and the rest countdown. `now` starts null so the server
   // and first client render match (no hydration mismatch); the effect starts the clock after mount.
   useEffect(() => {
@@ -178,7 +184,8 @@ export function WorkoutPlayer({ data }: { data: WorkoutPlayerData }) {
     });
     if (next) startRest(ex.restSeconds);
 
-    const res = await logSetAction({
+    // Enqueue + flush. Queued or failed writes stay saved locally and sync later — never revert here.
+    const outcome = await outbox.submit({
       workoutLogId: data.logId,
       workoutExerciseId: ex.workoutExerciseId,
       setNumber,
@@ -189,12 +196,7 @@ export function WorkoutPlayer({ data }: { data: WorkoutPlayerData }) {
       clientGeneratedId: cgid,
     });
 
-    if ('error' in res) {
-      updateDraft(ex.workoutExerciseId, setNumber, { completed: !next, pending: false });
-      toast.error(res.error);
-      return;
-    }
-    const isPr = next && res.prTypes.length > 0;
+    const isPr = next && outcome.kind === 'synced' && outcome.result.prTypes.length > 0;
     if (isPr && typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
       navigator.vibrate([0, 120, 60, 120]);
     }
@@ -361,6 +363,7 @@ export function WorkoutPlayer({ data }: { data: WorkoutPlayerData }) {
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{data.title}</p>
           <p className="text-xs num text-muted-foreground">{elapsed} elapsed</p>
+          <SyncIndicator state={outbox.state} />
         </div>
         <Button size="lg" variant="outline" onClick={() => setView('summary')}>
           Finish
