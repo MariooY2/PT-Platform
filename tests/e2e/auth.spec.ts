@@ -1,8 +1,7 @@
-import { execFileSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { makeAdmin } from './supabase-admin';
 import { expect, test, type Page } from '@playwright/test';
 import { SEED_PASSWORD } from './ui-routes';
 
@@ -13,18 +12,7 @@ async function axeClean(page: Page) {
 }
 
 // Service client from the live local stack (same pattern as tests/rls/global-setup.ts).
-const status = JSON.parse(
-  execFileSync('pnpm', ['exec', 'supabase', 'status', '-o', 'json'], {
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  }),
-) as Record<string, string>;
-const API_URL = status.API_URL ?? status.api_url;
-const SERVICE_KEY =
-  status.SERVICE_ROLE_KEY ?? status.service_role_key ?? status.SECRET_KEY ?? status.secret_key;
-const admin: SupabaseClient = createClient(API_URL, SERVICE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+const admin = makeAdmin();
 
 const TRAINER_A = '11111111-0000-0000-0000-000000000001';
 const EVIDENCE = join(process.cwd(), '.harness', 'evidence', 'ui');

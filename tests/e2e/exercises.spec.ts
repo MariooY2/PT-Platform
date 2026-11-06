@@ -1,22 +1,11 @@
-import { execFileSync } from 'node:child_process';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { makeAdmin } from './supabase-admin';
 import { expect, test } from '@playwright/test';
 import { signInAs } from './ui-routes';
 
 const CARD = '[data-testid="exercise-card"]';
 
 // Service client from the live local stack, to clean up exercises the tests create.
-const status = JSON.parse(
-  execFileSync('pnpm', ['exec', 'supabase', 'status', '-o', 'json'], {
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  }),
-) as Record<string, string>;
-const admin: SupabaseClient = createClient(
-  status.API_URL ?? status.api_url,
-  status.SERVICE_ROLE_KEY ?? status.service_role_key ?? status.SECRET_KEY ?? status.secret_key,
-  { auth: { persistSession: false, autoRefreshToken: false } },
-);
+const admin = makeAdmin();
 
 test.describe('P1-04 exercise library (as coach)', () => {
   test.beforeEach(async ({ page }) => {

@@ -1,19 +1,8 @@
-import { execFileSync } from 'node:child_process';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { makeAdmin } from './supabase-admin';
 import { expect, test } from '@playwright/test';
 import { signInAs } from './ui-routes';
 
-const status = JSON.parse(
-  execFileSync('pnpm', ['exec', 'supabase', 'status', '-o', 'json'], {
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  }),
-) as Record<string, string>;
-const admin: SupabaseClient = createClient(
-  status.API_URL ?? status.api_url,
-  status.SERVICE_ROLE_KEY ?? status.service_role_key ?? status.SECRET_KEY ?? status.secret_key,
-  { auth: { persistSession: false, autoRefreshToken: false } },
-);
+const admin = makeAdmin();
 
 const SAMPLE_TEMPLATE = 'bbbb0000-0000-0000-0000-000000000001'; // Trainer A's seeded template
 const CLIENT_ONE = '33333333-0000-0000-0000-000000000001';

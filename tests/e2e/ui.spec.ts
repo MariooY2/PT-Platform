@@ -45,15 +45,16 @@ for (const route of uiRoutes) {
                 document.getElementById('main')?.scrollHeight ??
                 document.documentElement.scrollHeight,
             );
-            await page.setViewportSize({
-              width: vp.width,
-              height: Math.max(vp.height, Math.ceil(contentHeight) + 64),
-            });
+            // Only resize when the content actually overflows the viewport (tall inner-scroll pages);
+            // short pages are captured as-is, saving two viewport resizes per screenshot.
+            const grown = Math.ceil(contentHeight) + 64;
+            const needsGrow = grown > vp.height;
+            if (needsGrow) await page.setViewportSize({ width: vp.width, height: grown });
             await page.screenshot({
               path: join(dir, `${state}-${vp.label}-${theme}.png`),
               fullPage: true,
             });
-            await page.setViewportSize({ width: vp.width, height: vp.height });
+            if (needsGrow) await page.setViewportSize({ width: vp.width, height: vp.height });
 
             const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
             expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
