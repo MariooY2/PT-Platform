@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, ChevronRight, TriangleAlert } from 'lucide-react';
 import { PageHeader } from '@/components/shared/page-header';
+import { Button } from '@/components/ui/button';
 import { ErrorState } from '@/components/shared/states';
 import { StatusChip } from '@/components/shared/status-chip';
 import { SetupChecklist } from '@/features/onboarding/components/setup-checklist';
@@ -47,13 +48,22 @@ export function CoachToday({
         <SetupChecklist hasClient={data.hasAnyClient} storefrontPublished={storefrontPublished} />
       ) : (
         <div className="space-y-6">
-          <NeedsAttention rows={data.attention.rows} hadError={data.attention.error} />
+          <NeedsAttention
+            rows={data.attention.rows}
+            hadError={data.attention.error}
+            onRetry={() => router.refresh()}
+          />
           <div className="grid gap-6 lg:grid-cols-2">
-            <CheckinsToReview rows={data.review.rows} hadError={data.review.error} />
+            <CheckinsToReview
+              rows={data.review.rows}
+              hadError={data.review.error}
+              onRetry={() => router.refresh()}
+            />
             <TodaysTraining
               rows={data.training.rows}
               prCount={data.training.prCount}
               hadError={data.training.error}
+              onRetry={() => router.refresh()}
             />
           </div>
           <NumbersLine numbers={data.numbers} />
@@ -85,12 +95,15 @@ function SectionCard({
   );
 }
 
-function SectionError() {
+function SectionError({ onRetry }: { onRetry: () => void }) {
   return (
-    <p className="flex items-center gap-2 text-sm text-muted-foreground">
-      <TriangleAlert className="size-4 text-warning" aria-hidden />
-      Couldn’t load this just now. Refresh to try again.
-    </p>
+    <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+      <TriangleAlert className="size-4 shrink-0 text-warning" aria-hidden />
+      <span>Couldn’t load this section.</span>
+      <Button variant="outline" size="sm" onClick={onRetry}>
+        Try again
+      </Button>
+    </div>
   );
 }
 
@@ -98,11 +111,19 @@ function CalmLine({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-muted-foreground">{children}</p>;
 }
 
-function NeedsAttention({ rows, hadError }: { rows: AttentionItem[]; hadError: boolean }) {
+function NeedsAttention({
+  rows,
+  hadError,
+  onRetry,
+}: {
+  rows: AttentionItem[];
+  hadError: boolean;
+  onRetry: () => void;
+}) {
   return (
     <SectionCard title="Needs attention" count={rows.length}>
       {hadError ? (
-        <SectionError />
+        <SectionError onRetry={onRetry} />
       ) : rows.length === 0 ? (
         <CalmLine>Everyone’s on track — no one needs attention right now.</CalmLine>
       ) : (
@@ -131,11 +152,19 @@ function NeedsAttention({ rows, hadError }: { rows: AttentionItem[]; hadError: b
   );
 }
 
-function CheckinsToReview({ rows, hadError }: { rows: ReviewRow[]; hadError: boolean }) {
+function CheckinsToReview({
+  rows,
+  hadError,
+  onRetry,
+}: {
+  rows: ReviewRow[];
+  hadError: boolean;
+  onRetry: () => void;
+}) {
   return (
     <SectionCard title="Check-ins to review" count={rows.length}>
       {hadError ? (
-        <SectionError />
+        <SectionError onRetry={onRetry} />
       ) : rows.length === 0 ? (
         <CalmLine>No check-ins waiting. New ones appear here, oldest first.</CalmLine>
       ) : (
@@ -150,7 +179,9 @@ function CheckinsToReview({ rows, hadError }: { rows: ReviewRow[]; hadError: boo
                   <span className="block truncate text-sm font-medium">{row.clientName}</span>
                   <span className="block truncate text-xs text-muted-foreground">
                     {row.preview ? (
-                      row.preview
+                      <>
+                        {row.preview} · <RelativeDate date={row.submittedAt} />
+                      </>
                     ) : (
                       <>
                         Submitted <RelativeDate date={row.submittedAt} />
@@ -172,15 +203,17 @@ function TodaysTraining({
   rows,
   prCount,
   hadError,
+  onRetry,
 }: {
   rows: TrainingRow[];
   prCount: number;
   hadError: boolean;
+  onRetry: () => void;
 }) {
   return (
     <SectionCard title="Today’s training">
       {hadError ? (
-        <SectionError />
+        <SectionError onRetry={onRetry} />
       ) : (
         <>
           <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
