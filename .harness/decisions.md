@@ -12,6 +12,24 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-035 — P1-08/P1-12/P3-05 wave decisions (2026-11-06, decided by: autopilot (D-006))
+- "Active assigned program" = a `programs` copy (is_template=false, client_id set, start_date ≤ today,
+  latest start_date wins). docs/data-model.md names a `program_assignments` table that does NOT exist in
+  the schema — the programs copy row is the assignment. Doc/schema mismatch (see facts.md); the copy-row
+  reading is authoritative until the docs are reconciled.
+- P1-12 check-in "overdue" uses the most recent scheduled weekday occurrence on/before today with no
+  check-in submitted since, not strictly "this ISO week" (the ISO-week wording has a Mon/Tue blind spot).
+  Compliance = completed ÷ scheduled program-workouts in the 14-day window; null → "—"; capped 100.
+- P1-12 Needs-attention: one row per client (highest severity wins: missed_workout > checkin_overdue);
+  the action links to the client profile (messaging is P1-11). Renewal/Mark-paid, not-opened, Snooze,
+  revenue deferred.
+- P1-08 "PR history" = the current personal_records rows per lift (the PR trigger keeps only the max; no
+  history table). progress-photos served via createSignedUrls (private), never getPublicUrl.
+- P3-05 offline: a failed set retries every 15s indefinitely (no retry cap) and shows "Couldn't sync —
+  will retry"; PR badging is skipped for sets that sync on reconnect (optimistic completed stands). The
+  service worker is gated on a NEXT_PUBLIC_ENABLE_SW build flag (off by default) so dev/e2e are unaffected.
+Affects: src/features/{coach-today,progress,workouts}/**; P1-08/P1-12/P3-05.
+
 ## D-034 — P1-07 player: recorded spec deviations from the review (2026-11-02, decided by: autopilot (D-006))
 Resolving the ui-reviewer's findings — the "Last time" column major is FIXED (the per-row caption now
 reads "Last time: 80 kg × 5" with the label + kg unit per copy.md). These remain intentional deviations

@@ -12,6 +12,16 @@ Failure class: contract | context | tool | precondition | verification | policy 
 Harness change: <file and rule added, or "proposed, awaiting approval">
 ```
 
+## L-009 — two build-only traps that fast verify can't catch (2026-11-06, task P1-08)
+What happened: the P1-08 builder hit (and fixed) two errors that only `next build` surfaces, not
+`node scripts/verify.mjs` (fast, no build): (1) a `'use server'` file may export ONLY async functions —
+a non-async const export (e.g. PROGRESS_BUCKET) breaks the build; (2) a Server Component must not read a
+runtime value dotted off a module that is `'use client'` (e.g. importing PROGRESS_TABS from a client
+module) — it must live in a plain module. Fast verify passes; `--full`'s build fails.
+Failure class: verification
+Harness change: proposed — add a cheap static check (grep/lint) for a non-async export in a 'use server'
+file and a Server→'use client' runtime-value import, so these surface in fast verify, not only at --full.
+
 ## L-008 — Zod 4 `z.string().uuid()` rejects the project's deterministic seed ids (2026-11-02, task P1-06/P1-05)
 What happened: P1-05's actions.ts gated every id with `const uuid = z.string().uuid()`. Zod 4's uuid check
 enforces RFC-4122 version/variant nibbles, which the deterministic seed ids (e.g.

@@ -242,7 +242,10 @@ export async function getCalendarProgress(
   today: string,
 ): Promise<{ calendar: CalendarProgress; error: boolean }> {
   const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
-  const monthEnd = `${year}-${String(month).padStart(2, '0')}-31`;
+  // First day of the NEXT month — a half-open range avoids an invalid date literal like 2026-11-31
+  // (which a .lte would reject in Postgres and fail the whole calendar query).
+  const nextMonthStart =
+    month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, '0')}-01`;
 
   const copiesP = supabase
     .from('programs')
@@ -255,7 +258,7 @@ export async function getCalendarProgress(
     .select('scheduled_date, completed_at, status')
     .eq('client_id', clientId)
     .gte('scheduled_date', monthStart)
-    .lte('scheduled_date', monthEnd);
+    .lt('scheduled_date', nextMonthStart);
 
   const [{ data: copies, error: copiesErr }, { data: logs, error: logsErr }] = await Promise.all([
     copiesP,
@@ -269,7 +272,7 @@ export async function getCalendarProgress(
   };
   if (copiesErr || logsErr) return { calendar: emptyCal, error: true };
 
-  const inMonth = (d: string) => d >= monthStart && d <= monthEnd;
+  const inMonth = (d: string) => d >= monthStart && d < nextMonthStart;
 
   const scheduled: string[] = [];
   for (const copy of (copies ?? []) as unknown as CopyRow[]) {

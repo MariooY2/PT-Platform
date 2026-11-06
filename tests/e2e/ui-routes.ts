@@ -24,7 +24,8 @@ export const uiRoutes: UiRoute[] = [
   { path: '/reset', as: 'anon', states: ['default'] },
   { path: '/invite/seed-invite-token-alpha', as: 'anon', states: ['valid'] },
   { path: '/coach/onboarding', as: 'coach-empty', states: ['step-1'] },
-  { path: '/coach', as: 'coach-empty', states: ['setup-checklist'] },
+  { path: '/coach', as: 'coach', states: ['default', 'loading', 'error'] },
+  { path: '/coach', as: 'coach-empty', states: ['empty'] },
   // P0-05 navigation and layout shells — every destination gets a screenshot + axe scan (A3/A4).
   { path: '/coach/clients', as: 'coach', states: ['default', 'no-results', 'invite-dialog'] },
   { path: '/coach/clients', as: 'coach-empty', states: ['empty'] },
@@ -65,7 +66,11 @@ export const uiRoutes: UiRoute[] = [
     as: 'client',
     states: ['default'],
   },
-  { path: '/client/progress', as: 'client', states: ['empty'] },
+  {
+    path: '/client/progress',
+    as: 'client',
+    states: ['default', 'empty', 'loading', 'error', 'body', 'photos', 'calendar'],
+  },
   { path: '/client/messages', as: 'client', states: ['empty'] },
   { path: '/client/checkins', as: 'client', states: ['default', 'empty', 'loading', 'error'] },
   // Mobile check-in fill screen (one question per screen) + the submitted reply view (seeded ids).

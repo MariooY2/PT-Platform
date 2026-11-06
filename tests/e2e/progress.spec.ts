@@ -162,7 +162,7 @@ test.describe('P1-08 progress', () => {
     // The private-by-default lock note is always shown.
     await expect(page.getByText('Only you and your coach can see these.')).toBeVisible();
 
-    await page.getByLabel('Photo').setInputFiles({
+    await page.getByLabel('Photo', { exact: true }).setInputFiles({
       name: 'front.png',
       mimeType: 'image/png',
       buffer: PNG_1x1,

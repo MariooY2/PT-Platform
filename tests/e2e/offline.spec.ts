@@ -148,6 +148,9 @@ test('A2 offline set syncs on reconnect', async ({ page, context }) => {
   await page.waitForURL(/\/client\/workout\//, { timeout: 15_000 });
   const logId = page.url().split('/client/workout/')[1]!;
 
+  // Let the player fully load online first (otherwise going offline can race the initial render).
+  await expect(page.getByRole('button', { name: 'Log set 1' })).toBeVisible({ timeout: 15_000 });
+
   // Go offline, then log a set. It is saved locally and the indicator says so.
   await context.setOffline(true);
   await page.getByRole('button', { name: 'Log set 1' }).click();
