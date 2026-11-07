@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { EmptyState } from '@/components/shared/states';
 import { RelativeDate } from '@/components/format';
+import { cn } from '@/lib/utils';
 import { startWorkoutAction } from '../actions';
 import type { TodayState, TodayWorkoutCard } from '../types';
 
@@ -17,17 +18,22 @@ function WorkoutCardShell({
   workout,
   children,
   tone = 'default',
+  edge = 'primary',
 }: {
   workout: TodayWorkoutCard;
   children: React.ReactNode;
   tone?: 'default' | 'success';
+  edge?: 'primary' | 'success';
 }) {
   const names = workout.exerciseNames.slice(0, 4).join(', ');
   const more = workout.exerciseNames.length > 4 ? '…' : '';
   return (
     <section
       aria-labelledby="today-workout-title"
-      className="space-y-4 rounded-xl border bg-card p-4"
+      className={cn(
+        'space-y-4 rounded-xl border border-t-[3px] bg-card p-4',
+        edge === 'success' ? 'border-t-success' : 'border-t-primary',
+      )}
     >
       <div className="space-y-1">
         <p className="text-sm num text-muted-foreground">
@@ -84,7 +90,7 @@ export function TodayCard({ state }: { state: TodayState }) {
   if (state.kind === 'completed') {
     return (
       <>
-        <WorkoutCardShell workout={state.workout}>
+        <WorkoutCardShell workout={state.workout} edge="success">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-success">
               <CheckCircle2 className="size-5" aria-hidden />

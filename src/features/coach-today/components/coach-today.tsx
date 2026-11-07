@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { AlertTriangle, ChevronRight, TriangleAlert } from 'lucide-react';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { ErrorState } from '@/components/shared/states';
 import { StatusChip } from '@/components/shared/status-chip';
 import { SetupChecklist } from '@/features/onboarding/components/setup-checklist';
@@ -48,6 +50,7 @@ export function CoachToday({
         <SetupChecklist hasClient={data.hasAnyClient} storefrontPublished={storefrontPublished} />
       ) : (
         <div className="space-y-6">
+          <HeroNumbers numbers={data.numbers} />
           <NeedsAttention
             rows={data.attention.rows}
             hadError={data.attention.error}
@@ -66,24 +69,32 @@ export function CoachToday({
               onRetry={() => router.refresh()}
             />
           </div>
-          <NumbersLine numbers={data.numbers} />
         </div>
       )}
     </div>
   );
 }
 
+const SECTION_EDGE: Record<string, string> = {
+  none: '',
+  primary: 'border-t-[3px] border-t-primary',
+  success: 'border-t-[3px] border-t-success',
+  warning: 'border-t-[3px] border-t-warning',
+};
+
 function SectionCard({
   title,
   count,
+  edge = 'none',
   children,
 }: {
   title: string;
   count?: number;
+  edge?: 'none' | 'primary' | 'success' | 'warning';
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-3 rounded-xl border bg-card p-4 sm:p-5">
+    <section className={cn('space-y-3 rounded-xl border bg-card p-4 sm:p-5', SECTION_EDGE[edge])}>
       <h2 className="text-base font-semibold">
         {title}
         {count != null && count > 0 && (
@@ -121,7 +132,7 @@ function NeedsAttention({
   onRetry: () => void;
 }) {
   return (
-    <SectionCard title="Needs attention" count={rows.length}>
+    <SectionCard title="Needs attention" count={rows.length} edge="warning">
       {hadError ? (
         <SectionError onRetry={onRetry} />
       ) : rows.length === 0 ? (
@@ -162,7 +173,7 @@ function CheckinsToReview({
   onRetry: () => void;
 }) {
   return (
-    <SectionCard title="Check-ins to review" count={rows.length}>
+    <SectionCard title="Check-ins to review" count={rows.length} edge="primary">
       {hadError ? (
         <SectionError onRetry={onRetry} />
       ) : rows.length === 0 ? (
@@ -211,7 +222,7 @@ function TodaysTraining({
   onRetry: () => void;
 }) {
   return (
-    <SectionCard title="Today’s training">
+    <SectionCard title="Today’s training" edge="success">
       {hadError ? (
         <SectionError onRetry={onRetry} />
       ) : (
@@ -254,19 +265,23 @@ function TodaysTraining({
   );
 }
 
-function NumbersLine({ numbers }: { numbers: CoachTodayData['numbers'] }) {
+// The coach's morning opens with the one number that matters — 14-day compliance, stencilled large —
+// with active clients alongside. Calibrated (UX-01), replacing the small bottom numbers line.
+function HeroNumbers({ numbers }: { numbers: CoachTodayData['numbers'] }) {
   const { activeClients, compliancePct } = numbers;
   return (
-    <p className="text-sm text-muted-foreground">
-      <span className="num text-foreground">{activeClients}</span>{' '}
-      {activeClients === 1 ? 'active client' : 'active clients'} ·{' '}
-      {compliancePct == null ? (
-        <span className="text-foreground">—</span>
-      ) : (
-        <span className="num text-foreground">{compliancePct}%</span>
-      )}{' '}
-      14-day compliance
-    </p>
+    <Card edge="primary" className="flex items-end justify-between gap-4 p-5">
+      <div>
+        <p className="text-xs font-medium text-muted-foreground">14-day compliance</p>
+        <div className="mt-1 num-hero">{compliancePct == null ? '—' : `${compliancePct}%`}</div>
+      </div>
+      <div className="text-right">
+        <p className="text-xs font-medium text-muted-foreground">
+          {activeClients === 1 ? 'Active client' : 'Active clients'}
+        </p>
+        <div className="mt-1 num-xl">{activeClients}</div>
+      </div>
+    </Card>
   );
 }
 

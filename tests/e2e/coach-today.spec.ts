@@ -241,12 +241,11 @@ test.describe('P1-12 coach Today', () => {
     await signInUi(page, 'trainer.a@ptplatform.test');
     await page.goto('/coach');
 
-    const numbers = page.getByText(/14-day compliance/);
-    await expect(numbers).toBeVisible();
-    // Active-client count (seed guarantees ≥1 active client for Trainer Alpha).
-    await expect(numbers).toContainText(/active client/);
-    await expect(numbers).toContainText(/\d/);
-    // A compliance figure: a percentage, or "—" when nothing was scheduled.
-    await expect(numbers).toContainText(/%|—/);
+    // Calibrated hero band (UX-01): compliance and active clients are separate stat tiles in a Card.
+    await expect(page.getByText(/14-day compliance/)).toBeVisible();
+    // Active-client count label (seed guarantees ≥1 active client for Trainer Alpha).
+    await expect(page.getByText(/Active clients?/)).toBeVisible();
+    // The compliance figure: a percentage, or "—" when nothing was scheduled.
+    await expect(page.getByText(/^\d+%$|^—$/).first()).toBeVisible();
   });
 });
