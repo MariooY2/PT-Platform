@@ -121,12 +121,12 @@ export function BodyTab({
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs text-muted-foreground">Latest weight</p>
+      <div className="rounded-xl border border-t-[3px] border-t-success bg-card p-4">
+        <p className="text-xs font-medium text-muted-foreground">Latest weight</p>
         {body.latestWeight == null ? (
-          <p className="num-lg text-muted-foreground">—</p>
+          <p className="num-xl text-muted-foreground">—</p>
         ) : (
-          <Weight kg={body.latestWeight} className="num-lg" />
+          <Weight kg={body.latestWeight} className="num-xl" />
         )}
       </div>
 

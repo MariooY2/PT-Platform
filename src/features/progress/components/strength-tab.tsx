@@ -56,7 +56,7 @@ function LiftRow({ lift }: { lift: StrengthLift }) {
   }`;
 
   return (
-    <li className="rounded-xl border">
+    <li className="rounded-xl border border-t-[3px] border-t-primary bg-card">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -69,7 +69,7 @@ function LiftRow({ lift }: { lift: StrengthLift }) {
           <p className="text-xs text-muted-foreground">{changeLabel(lift.deltaE1rm)}</p>
         </div>
         <div className="shrink-0 text-right">
-          <Weight kg={lift.latestE1rm} className="num-lg" />
+          <Weight kg={lift.latestE1rm} className="num-xl" />
           <p className="text-xs text-muted-foreground">est. 1RM</p>
         </div>
         <ChevronDown
