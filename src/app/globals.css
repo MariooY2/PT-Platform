@@ -108,6 +108,8 @@
 
 @theme inline {
   --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  /* "Calibrated" display face: heavy condensed numerals + wordmark (UX-01). */
+  --font-display: var(--font-anton), var(--font-archivo), ui-sans-serif, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -165,19 +167,48 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+/* num-lg / num-xl / num-hero are the stencilled display figures (Calibrated, UX-01): the condensed
+   display face carries the hero numbers. Small inline `num` stays Archivo-condensed for table alignment. */
 @utility num-lg {
-  font-stretch: 75%;
-  font-weight: 650;
-  font-size: 1.75rem;
-  line-height: 2rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.875rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
   font-variant-numeric: tabular-nums;
 }
 @utility num-xl {
-  font-stretch: 75%;
-  font-weight: 700;
-  font-size: 2.5rem;
-  line-height: 2.5rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 2.75rem;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
   font-variant-numeric: tabular-nums;
+}
+@utility num-hero {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(3.25rem, 11vw, 5.5rem);
+  line-height: 0.85;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The one celebratory moment: a personal record stamps in once. Reduced-motion is handled by the
+   global guard in @layer base (durations clamp to 1ms). */
+@keyframes pr-pop {
+  0% {
+    transform: scale(0.92);
+  }
+  55% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@utility pr-pop {
+  animation: pr-pop 0.6s var(--ease-out) 1 both;
 }
 
 @layer base {

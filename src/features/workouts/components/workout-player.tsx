@@ -261,9 +261,13 @@ export function WorkoutPlayer({ data }: { data: WorkoutPlayerData }) {
         </header>
 
         <dl className="grid grid-cols-2 gap-3">
-          <SummaryStat label="Duration" value={elapsed} />
-          <SummaryStat label="Sets logged" value={String(setsCompleted)} />
-          <SummaryStat label="Total volume" value={`${Math.round(totalVolume)} kg`} />
+          <SummaryStat label="Duration" value={elapsed} edge="primary" />
+          <SummaryStat label="Sets logged" value={String(setsCompleted)} edge="primary" />
+          <SummaryStat
+            label="Total volume"
+            value={`${Math.round(totalVolume)} kg`}
+            edge="success"
+          />
           <SummaryStat
             label="Personal records"
             value={prCount === 0 ? 'None' : `${prCount} new`}
@@ -593,24 +597,35 @@ function SetRow({
   );
 }
 
+const SUMMARY_EDGE: Record<string, string> = {
+  primary: 'border-t-primary',
+  success: 'border-t-success',
+  warning: 'border-t-warning',
+  destructive: 'border-t-destructive',
+};
+
 function SummaryStat({
   label,
   value,
   tone = 'default',
+  edge = 'primary',
 }: {
   label: string;
   value: string;
   tone?: 'default' | 'pr';
+  edge?: 'primary' | 'success' | 'warning' | 'destructive';
 }) {
+  // Calibrated stat tile (UX-01): steel Card, a plate-colour top edge for status, the figure stencilled
+  // large in the display face. Structure from the border, never a shadow.
   return (
     <div
       className={cn(
-        'rounded-xl border p-3',
-        tone === 'pr' ? 'border-pr bg-pr-soft text-pr-soft-foreground' : 'bg-card',
+        'rounded-xl border border-t-[3px] bg-card p-3.5',
+        tone === 'pr' ? 'border-pr bg-pr-soft text-pr-soft-foreground' : SUMMARY_EDGE[edge],
       )}
     >
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="num-lg">{value}</dd>
+      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 num-xl">{value}</dd>
     </div>
   );
 }
@@ -640,16 +655,18 @@ function CompletedView({
         <p className="text-sm text-muted-foreground">{data.title}</p>
       </header>
       <dl className="grid grid-cols-2 gap-3">
-        <SummaryStat label="Duration" value={duration} />
-        <SummaryStat label="Sets logged" value={String(setsCompleted)} />
-        <SummaryStat label="Total volume" value={`${Math.round(totalVolume)} kg`} />
+        <SummaryStat label="Duration" value={duration} edge="primary" />
+        <SummaryStat label="Sets logged" value={String(setsCompleted)} edge="primary" />
+        <SummaryStat label="Total volume" value={`${Math.round(totalVolume)} kg`} edge="success" />
         <SummaryStat
           label="Session RPE"
           value={data.sessionRpe == null ? '—' : String(data.sessionRpe)}
+          edge="warning"
         />
       </dl>
       {prCount > 0 && (
-        <p className="rounded-md border border-pr bg-pr-soft px-3 py-2 text-sm font-medium text-pr-soft-foreground">
+        <p className="flex pr-pop items-center gap-2.5 rounded-xl border-l-[5px] border-pr bg-pr-soft px-4 py-3 text-sm font-semibold text-pr-soft-foreground">
+          <span className="inline-block size-2.5 flex-none rounded-full bg-pr" aria-hidden />
           {prCount} new {prCount === 1 ? 'personal record' : 'personal records'}
         </p>
       )}

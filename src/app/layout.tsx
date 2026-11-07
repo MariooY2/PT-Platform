@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { Archivo } from 'next/font/google';
+import { Archivo, Anton } from 'next/font/google';
 import './globals.css';
 import { PWA_COLORS } from '@/lib/pwa/colors';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -9,6 +9,14 @@ const archivo = Archivo({
   subsets: ['latin'],
   axes: ['wdth'],
   variable: '--font-archivo',
+});
+
+// "Calibrated" display face — a heavy condensed grotesque for hero numerals and the wordmark,
+// like load markings stencilled on a plate. One weight (400 is already very heavy). UX-01.
+const anton = Anton({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-anton',
 });
 
 export const metadata: Metadata = {
@@ -26,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" className={archivo.variable} suppressHydrationWarning>
+    <html lang="en" className={`${archivo.variable} ${anton.variable}`} suppressHydrationWarning>
       <body>
         <ThemeProvider
           attribute="class"

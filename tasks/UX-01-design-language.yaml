@@ -1,0 +1,106 @@
+id: UX-01
+title: Design language foundation — "Calibrated"
+phase: 1
+status: approved
+approved_by: human (design reinvention approved 2026-11-06; spike at claude.ai/artifact/RwYVrarj5zTQoYwXicCbTL)
+approved_at: 2026-11-06
+depends_on: []
+
+objective: >
+  Establish the "Calibrated" visual direction in the real app and prove it on one hero screen before any
+  rollout. Competition-plate colour semantics (the existing primary/pr/destructive/success tokens =
+  20/15/25/10 kg plates), stencilled numerals in a condensed display face, a material Card surface, a real
+  PR moment, and a brand mark. Update docs/ui/design-system.md so the look is specified, rebuild the
+  /dev/ui gallery to show it, and repaint the workout session-summary as the hero proof. This is the spike
+  gate: the human reviews the gallery + session screen (both themes) before Phase B (landing + auth).
+
+context:
+  - docs/ui/design-system.md            # the current "chalk and iron" spec — being evolved to "Calibrated"
+  - docs/ui/patterns.md, docs/ui/copy.md # states + copy rules still hold
+  - src/app/globals.css                 # the token source (gated edit → human approves)
+  - src/app/layout.tsx                  # next/font wiring (Archivo today)
+  - src/app/dev/ui/page.tsx             # the gallery to rebuild
+  - src/features/workouts/components/   # the session-summary / player hero screen
+  - scripts/check-architecture.mjs      # tokens-only rules the new utilities must satisfy
+  - tests/unit/tokens-contrast.test.ts  # AA contrast gate the palette must keep green
+
+scope:
+  - src/app/globals.css                 # add --font-display; expose the motion tokens in @theme inline; a PR-moment keyframe/utility; point num-lg/num-xl at the display face; refine neutrals if needed (plate colours already exist)
+  - src/app/layout.tsx                  # add the condensed display font (next/font) + expose its CSS var on <html>
+  - src/components/ui/card.tsx          # NEW Card primitive (the material steel surface: border + optional plate-colour edge; shadows only when floating)
+  - src/components/shared/brand/        # NEW wordmark/logo component (replace the ~4 hardcoded "PT Platform" render sites) + src/app/icon.svg refresh
+  - src/app/dev/ui/page.tsx + gallery-interactive.tsx   # rebuild to showcase the new language (plate system, numerals, Card, PR moment) in both themes
+  - src/features/workouts/components/** # repaint the session-summary (and player header) in the new language — hero numerals on Card tiles + the PR moment
+  - docs/ui/design-system.md            # update the spec to "Calibrated" (gated → human approves)
+  - .harness/decisions.md               # record the direction decision
+  - tests/e2e/ui-routes.ts              # ensure the session screen + /dev/ui states are captured
+
+constraints:
+  - Tokens only — no raw hex / palette colours / off-scale text outside globals.css (check-architecture).
+    Any colour change keeps tokens-contrast.test.ts green (AA 4.5:1) in BOTH themes.
+  - Semantic token NAMES stay shadcn-compatible (primary/pr/destructive/success/…); this is a look change,
+    not a rename, so existing components keep working.
+  - Motion answers actions only; nothing animates on page load except the one PR moment. prefers-reduced-motion
+    removes transforms (keep the existing guard).
+  - Every data view keeps its loading/empty/no-results/error states; 360 px first; touch targets ≥44px
+    (≥48 in the player); copy per docs/ui/copy.md; formatting components for every number/date.
+  - Boldness in one place: the numerals. Keep surfaces quiet; shadows only on floating elements.
+
+acceptance:
+  - id: A1
+    claim: the "Calibrated" tokens + condensed display font are wired in globals.css + layout.tsx; motion tokens are exposed; a PR-moment utility exists; tokens-contrast.test.ts stays green
+    evidence: globals.css + layout.tsx diff; step test (tokens-contrast); verify --full green
+  - id: A2
+    claim: a Card primitive exists and is used for the material surfaces on the rebuilt gallery + session screen (replacing inline rounded-xl border bg-card there)
+    evidence: src/components/ui/card.tsx; usage in dev/ui + workouts
+  - id: A3
+    claim: the /dev/ui gallery showcases the new language (plate system, numeral scale, Card, PR moment, states) in light and dark
+    evidence: step test:e2e screenshots dev-ui 360/1280 light+dark
+  - id: A4
+    claim: the workout session-summary is repainted in the new language — hero numerals on Card tiles + a real PR moment
+    evidence: step test:e2e screenshots client-workout 360/1280 light+dark
+  - id: A5
+    claim: a brand mark/wordmark component replaces the hardcoded "PT Platform" text at the nav/auth/marketing sites; icon.svg refreshed
+    evidence: src/components/shared/brand usage; grep shows no stray hardcoded wordmark in those sites
+  - id: A6
+    claim: docs/ui/design-system.md describes "Calibrated"; the decision is recorded in decisions.md
+    evidence: docs/ui/design-system.md diff; .harness/decisions.md D-0xx
+  - id: A7
+    claim: states preserved; screenshots 360/1280 light+dark; zero axe; verify --full green
+    evidence: .harness/last-verify.json (full)
+  - id: A8
+    claim: the gallery + session screen match the updated spec and checklist
+    evidence: ui-reviewer ACCEPT
+
+ui:
+  specs: [docs/ui/design-system.md]
+  routes:
+    - { path: /dev/ui, as: public, states: [default] }
+    - { path: /client/workout/dddd0000-0000-0000-0000-000000000001, as: client, states: [default] }
+  gallery_states: []
+
+approval_required:
+  - Any NEW dependency (fonts load via next/font/Google; no new npm packages expected — flag if one is needed)
+  - The globals.css + docs/ui/design-system.md edits (design-token/spec files — the human approves the prompt)
+
+out_of_scope:
+  - Landing page + auth screens (Phase B — UX-02)
+  - Client app screens beyond the session hero, coach tools, admin (Phases C/D/E — later contracts)
+  - A new brand NAME (parked; the mark ships as "PT Platform" and swaps later)
+
+budget:
+  max_attempts_per_failure: 3
+  max_files_changed: 40
+
+notes: |
+  Spike-first: this contract IS the in-codebase spike. After A1–A8 are green and the human approves the
+  look (gallery + session screen, both themes), the rollout contracts (UX-02 landing+auth, then client app,
+  coach tools) follow. Reference mock: claude.ai/artifact/RwYVrarj5zTQoYwXicCbTL.
+
+  Prerequisite from the plan: the e2e test:e2e cap (L-010) should be raised/sharded before the broad rollout
+  so verify --full stays runnable as baselines churn — queued in approvals.md. For UX-01 alone (2 routes)
+  the current cap is fine.
+
+  Display font candidate: a heavy condensed face (the spike used Anton for hero numerals + Archivo for body).
+  Confirm tabular figures; if the chosen face lacks them, keep Archivo-condensed for aligned columns and use
+  the display face for single hero figures only.

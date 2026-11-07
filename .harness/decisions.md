@@ -12,6 +12,19 @@ Alternatives considered: <...>
 Affects: <docs / tasks / code>
 ```
 
+## D-037 — "Calibrated" visual direction + Phase-0 harness fixes (2026-11-07, decided by: human)
+The human approved a full visual reinvention (UX-01) after seeing a rendered spike
+(claude.ai/artifact/RwYVrarj5zTQoYwXicCbTL) and the first in-app screen. Direction "Calibrated":
+the existing competition-plate token semantics (primary=20kg blue, pr=15kg yellow, destructive=25kg red,
+success=10kg green) used for meaning; a heavy condensed display face (Anton via next/font) for hero
+numerals + wordmark, wired as --font-display and driving num-lg/num-xl/num-hero (small inline `num` stays
+Archivo-condensed for table alignment); a Card primitive as the material surface; one PR moment (pr-pop).
+Token NAMES unchanged (shadcn-compatible) — a look change, not a rename. Rollout is contracted screen by
+screen (UX-01 = foundation + /dev/ui + session hero; later contracts for landing/auth, client app, coach).
+Also landed as Phase-0 prerequisites in scripts/verify.mjs: the test:e2e cap 600s→1200s (L-010), and
+injecting the LOCAL supabase NEXT_PUBLIC_* keys into the build so a developer's cloud-keyed .env.local no
+longer poisons the e2e browser build (L-003). verify --full green at fp 22582467dab64669.
+
 ## D-036 — human approved editing the two harness-owned files for the NEXT_PUBLIC build-env fix (2026-11-06, decided by: human)
 Asked whether to proceed with the NEXT_PUBLIC_* build-env fix, which requires editing two harness-owned
 files (scripts/verify.mjs and .github/workflows/ci.yml) that autopilot otherwise may not touch, the human

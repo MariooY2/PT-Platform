@@ -15,7 +15,11 @@ const args = new Set(process.argv.slice(2));
 const mode = args.has('--full') ? 'full' : 'fast';
 const keepGoing = args.has('--keep-going');
 const isWin = process.platform === 'win32';
-const STEP_TIMEOUT_MS = 10 * 60 * 1000;
+// Raised 600s → 1200s (L-010 / UX-01): the e2e screenshot suite (every route × state × theme × viewport)
+// outgrew the 600s cap after the Phase-1 UI wave and the design reinvention. Non-e2e steps finish in
+// seconds, so a higher ceiling only affects test:e2e. CI (single-worker, 30-min job cap) still needs the
+// e2e suite sharded — tracked separately in approvals.md.
+const STEP_TIMEOUT_MS = 20 * 60 * 1000;
 const TAIL = 4000;
 
 const harnessDir = join(projectDir, '.harness');
@@ -63,6 +67,28 @@ if (mode === 'full') {
   steps.push({ name: 'test:rls', kind: 'pnpm' }, { name: 'build', kind: 'pnpm' }, { name: 'test:e2e', kind: 'pnpm' });
 }
 
+// The `build` bakes NEXT_PUBLIC_* into the browser bundle, so the e2e browser's Supabase client must point
+// at the LOCAL stack — otherwise a developer's `.env.local` (e.g. CLOUD keys) poisons the build and every
+// browser-side auth call hits the wrong database, hanging the whole e2e suite (L-003). Resolve the local
+// keys from `supabase status` and inject them; being set in process.env, they override any .env.local value.
+let publicEnv = {};
+if (mode === 'full') {
+  try {
+    const st = spawnSync('pnpm', ['exec', 'supabase', 'status', '-o', 'json'], {
+      cwd: projectDir, encoding: 'utf8', shell: isWin, timeout: 60_000,
+    });
+    if (st.status === 0 && st.stdout) {
+      const s = JSON.parse(st.stdout);
+      const url = s.API_URL ?? s.api_url;
+      const anon = s.ANON_KEY ?? s.anon_key ?? s.PUBLISHABLE_KEY ?? s.publishable_key;
+      if (url && anon) publicEnv = { NEXT_PUBLIC_SUPABASE_URL: url, NEXT_PUBLIC_SUPABASE_ANON_KEY: anon };
+      else console.log('verify: supabase status gave no API_URL/ANON_KEY; build runs without NEXT_PUBLIC_*');
+    }
+  } catch {
+    // Stack down or CLI output shape changed: leave publicEnv empty (build behaves as before).
+  }
+}
+
 const results = [];
 let failed = false;
 
@@ -84,7 +110,7 @@ for (const step of steps) {
     ? spawnSync(process.execPath, step.cmd, { cwd: projectDir, encoding: 'utf8', timeout: STEP_TIMEOUT_MS })
     : spawnSync('pnpm', ['run', step.name], {
         cwd: projectDir, encoding: 'utf8', timeout: STEP_TIMEOUT_MS, shell: isWin,
-        env: { ...process.env, CI: '1', FORCE_COLOR: '0' },
+        env: { ...process.env, CI: '1', FORCE_COLOR: '0', ...publicEnv },
       });
   const output = `${res.stdout ?? ''}${res.stderr ?? ''}`;
   let status = res.status === 0 ? 'pass' : 'fail';
