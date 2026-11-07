@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { Wordmark } from '@/components/shared/brand';
 import { NAV_LABEL, SIDEBAR_NAV, isActive, type NavVariant } from './nav-items';
 
 export function SideNav({ variant }: { variant: NavVariant }) {
@@ -13,7 +14,7 @@ export function SideNav({ variant }: { variant: NavVariant }) {
       aria-label={`${NAV_LABEL[variant]} sidebar`}
       className="hidden w-60 shrink-0 flex-col gap-6 overflow-y-auto border-r bg-sidebar p-4 text-sidebar-foreground lg:flex"
     >
-      <span className="px-2 text-lg font-bold">PT Platform</span>
+      <Wordmark className="px-2" textClassName="text-lg" />
       {groups.map((group, i) => (
         <div key={group.title ?? i} className="space-y-1">
           {group.title && (

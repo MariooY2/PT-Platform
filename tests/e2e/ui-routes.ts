@@ -18,6 +18,7 @@ export interface UiRoute {
 // Default-state, URL-reachable screens live here; interaction-driven states (login error, invite
 // expired, onboarding step 2/3, slug taken) are captured in auth.spec.ts after driving them.
 export const uiRoutes: UiRoute[] = [
+  { path: '/', as: 'anon', states: ['default'] },
   { path: '/dev/ui', as: 'anon', states: ['default'] },
   { path: '/login', as: 'anon', states: ['default'] },
   { path: '/signup', as: 'anon', states: ['default'] },
